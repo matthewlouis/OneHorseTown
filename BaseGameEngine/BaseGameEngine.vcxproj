@@ -136,6 +136,7 @@
     <ClInclude Include="MainGame.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Sprite.h" />
+    <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BaseGameEngine.rc" />

@@ -1,0 +1,26 @@
+﻿Build started 9/21/2016 12:21:17 PM.
+     1>Project "C:\Users\Jarred\Desktop\C++\BaseGameEngine\OdinEngine\OdinEngine.vcxproj" on node 2 (Build target(s)).
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(392,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (OdinEngine.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"Debug\\" /Fd"Debug\vc140.pdb" /Gd /TP /analyze- /errorReport:prompt Errors.cpp GLSLProgram.cpp main.cpp MainGame.cpp Sprite.cpp
+         Sprite.cpp
+         MainGame.cpp
+         main.cpp
+         GLSLProgram.cpp
+         Errors.cpp
+         Generating Code...
+       ResourceCompile:
+         C:\Program Files (x86)\Windows Kits\8.1\bin\x86\rc.exe /l"0x0409" /nologo /fo"Debug\OdinEngine.res" OdinEngine.rc 
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Jarred\Desktop\C++\BaseGameEngine\Debug\BaseGameEngine.exe" /INCREMENTAL /NOLOGO SDL2.lib SDL2main.lib opengl32.lib glew32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /Debug /PDB:"C:\Users\Jarred\Desktop\C++\BaseGameEngine\Debug\BaseGameEngine.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Jarred\Desktop\C++\BaseGameEngine\Debug\BaseGameEngine.lib" /MACHINE:X86 Debug\OdinEngine.res
+         Debug\Errors.obj
+         Debug\GLSLProgram.obj
+         Debug\main.obj
+         Debug\MainGame.obj
+         Debug\Sprite.obj
+         OdinEngine.vcxproj -> C:\Users\Jarred\Desktop\C++\BaseGameEngine\Debug\BaseGameEngine.exe
+     1>Done Building Project "C:\Users\Jarred\Desktop\C++\BaseGameEngine\OdinEngine\OdinEngine.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:03.34
