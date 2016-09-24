@@ -6,13 +6,13 @@
 #include <string>
 
 
-MainGame::MainGame()
-{
-	_window = nullptr;
-	_screenWidth = constants::WINDOW_WIDTH;
-	_screenHeight = constants::WINDOW_HEIGHT;
-	_gameState = GameState::PLAY;
-}
+MainGame::MainGame() : 
+	_window(nullptr),
+	_screenWidth(constants::WINDOW_WIDTH),
+	_screenHeight(constants::WINDOW_HEIGHT),
+	_gameState(GameState::PLAY),
+	_time(0)
+{}
 
 
 MainGame::~MainGame()
@@ -22,7 +22,7 @@ MainGame::~MainGame()
 void MainGame::run() {
 	initSystems();
 	
-	_sprite.init(-1.0f, -1.0f, 1.0f, 1.0f);
+	_sprite.init(-1.0f, -1.0f, 2.0f, 2.0f); //create sprite to cover whole screen right now
 
 	gameLoop();
 }
@@ -70,6 +70,7 @@ void MainGame::gameLoop() {
 
 	while (_gameState != GameState::EXIT) {
 		processInput();
+		_time += 0.01f; //need to setup time step
 		drawGame();
 	}
 }
@@ -105,6 +106,9 @@ void MainGame::drawGame() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	_colorShaderProgram.use();
+
+	GLuint timeLocation = _colorShaderProgram.getUniformLocation("time");
+	glUniform1f(timeLocation, _time); //passing time to shader
 
 	_sprite.draw();
 
