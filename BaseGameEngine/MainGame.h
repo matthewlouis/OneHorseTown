@@ -5,6 +5,7 @@
 
 #include "Sprite.h"
 #include "GLSLProgram.h"
+#include "GLTexture.h"
 
 
 enum class GameState {PLAY, PAUSE, EXIT};
@@ -26,7 +27,10 @@ private:
 	SDL_Window* _window;
 	int			_screenWidth, _screenHeight;
 	GameState   _gameState;
+
 	Sprite _sprite;
+	GLTexture _playerTexture; //temp texture testing
+
 	GLSLProgram _colorShaderProgram;
 
 	float _time;

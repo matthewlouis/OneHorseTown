@@ -2,8 +2,9 @@
 
 #include <fstream>
 
-bool IOManager::readFileToBuffer(std::string filePath, std::vector<unsigned char> &buffer){
-	std::ifstream file(filePath, std::ios::binary); //read in file as binary
+
+bool IOManager::readFileToBuffer(std::string filePath, std::vector<unsigned char>& buffer) {
+	std::ifstream file(filePath, std::ios::binary);
 	if (file.fail()) {
 		perror(filePath.c_str());
 		return false;
@@ -12,15 +13,16 @@ bool IOManager::readFileToBuffer(std::string filePath, std::vector<unsigned char
 	//seek to end of file
 	file.seekg(0, std::ios::end);
 
-	//Get the size of the file
-	int fileSize = file.tellg();
-	file.seekg(0, std::ios::beg); //go back to beginning
+	//Get the file size then seek back to beginning
+	unsigned int fileSize = (unsigned int)file.tellg();
+	file.seekg(0, std::ios::beg);
 
-	fileSize -= file.tellg(); //get proper filesize minus any header data (if any)
+	//Reduce the file size by any header bytes that might be present
+	fileSize -= (unsigned int)file.tellg();
 
-	buffer.resize(fileSize); //now buffer can fit data
-	file.read((char *)&buffer[0], fileSize);
+	buffer.resize(fileSize);
+	file.read((char *)&(buffer[0]), fileSize);
 	file.close();
 
-	return true; //success!
+	return true;
 }

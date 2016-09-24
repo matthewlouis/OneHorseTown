@@ -4,34 +4,37 @@
 #include "Errors.h"
 
 GLTexture ImageLoader::loadPNG(std::string filePath) {
-	GLTexture texture = {}; //init everything to 0
-	
-	std::vector<unsigned char> inImage;
-	std::vector<unsigned char> outImage;
+	GLTexture texture = {}; //init all to 0
+
+
+	std::vector<unsigned char> in; //input image
+	std::vector<unsigned char> out; //output image
+
 	unsigned long width, height;
 
-	if (IOManager::readFileToBuffer(filePath, inImage) == false) {
-		fatalError("Failed to load PNG file to buffer: " + filePath);
+	if (!IOManager::readFileToBuffer(filePath, in)) { //if failed to read
+		fatalError("Failed to read PNG to buffer: " + filePath);
 	}
 
-	//do actual image decoding
-	int errorCode = decodePNG(outImage, width, height, &(inImage[0]), inImage.size());
+	int errorCode = decodePNG(out, width, height, &(in[0]), in.size());
+
 	if (errorCode != 0) {
-		fatalError("decodePNG failed with error: " + errorCode);
+		fatalError("decodePNG failed with error: " + std::to_string(errorCode));
 	}
 
-	glGenTextures(1, &(texture.id));
-	glBindTexture(GL_TEXTURE_2D, texture.id);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, GL_FALSE, GL_RGBA, GL_UNSIGNED_BYTE, &(outImage[0])); //fill with pixel data
-	
+	glGenTextures(1, &(texture.id)); //generate texture
+	glBindTexture(GL_TEXTURE_2D, texture.id); //bind texture
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(out[0])); //send graphics data to VRAM!
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); //using GL_NEAREST for pixel art
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
 
-	//for now, no mipmapping
-	//glGenerateMipmap(GL_TEXTURE_2D);
+	//generate mipmaps (may not need this with pixel art)
+	glGenerateMipmap(GL_TEXTURE_2D);
 
+	//unbind texture
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	texture.width = width;

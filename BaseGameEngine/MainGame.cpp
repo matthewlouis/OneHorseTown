@@ -1,6 +1,7 @@
 #include "MainGame.h"
 #include "GameConstants.h"
 #include "Errors.h"
+#include "ImageLoader.h"
 
 #include <iostream>
 #include <string>
@@ -22,7 +23,8 @@ MainGame::~MainGame()
 void MainGame::run() {
 	initSystems();
 	
-	_sprite.init(-1.0f, -1.0f, 2.0f, 2.0f); //create sprite to cover whole screen right now
+	_sprite.init(-1.0f, -1.0f, 1.0f, 1.0f); //create sprite to cover whole screen right now
+	_playerTexture = ImageLoader::loadPNG("Textures/pixel_cowboy.png");
 
 	gameLoop();
 }
@@ -63,6 +65,7 @@ void MainGame::initShaders() {
 	_colorShaderProgram.compileShaders("Shaders/colorShading.vert", "Shaders/colorShading.frag");
 	_colorShaderProgram.addAttribute("vertexPosition");
 	_colorShaderProgram.addAttribute("vertexColor");
+	_colorShaderProgram.addAttribute("vertexUV");
 	_colorShaderProgram.linkShaders();
 }
 
@@ -70,7 +73,7 @@ void MainGame::gameLoop() {
 
 	while (_gameState != GameState::EXIT) {
 		processInput();
-		_time += 0.01f; //need to setup time step
+		_time += 0.004; //need to setup time step
 		drawGame();
 	}
 }
@@ -106,12 +109,20 @@ void MainGame::drawGame() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	_colorShaderProgram.use();
+	
+	//set active texture 
+	glActiveTexture(GL_TEXTURE0);
+	GLint textureLocation = _colorShaderProgram.getUniformLocation("textureSampler");
+	glUniform1i(textureLocation, 0);
 
-	GLuint timeLocation = _colorShaderProgram.getUniformLocation("time");
+	glBindTexture(GL_TEXTURE_2D, _playerTexture.id);
+
+	GLint timeLocation = _colorShaderProgram.getUniformLocation("time");
 	glUniform1f(timeLocation, _time); //passing time to shader
 
 	_sprite.draw();
 
+	glBindTexture(GL_TEXTURE_2D, 0);
 	_colorShaderProgram.unUse();
 
 	SDL_GL_SwapWindow(_window); //swaps buffer
