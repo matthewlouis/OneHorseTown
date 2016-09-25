@@ -1,13 +1,12 @@
 #include "MainGame.h"
 #include "GameConstants.h"
-#include "Errors.h"
-
+#include <OdinEngine/Errors.h>
+#include <OdinEngine/OdinEngine.h>
 #include <iostream>
 #include <string>
 
 
 MainGame::MainGame() : 
-	_window(nullptr),
 	_screenWidth(constants::WINDOW_WIDTH),
 	_screenHeight(constants::WINDOW_HEIGHT),
 	_gameState(GameState::PLAY),
@@ -23,49 +22,21 @@ void MainGame::run() {
 	initSystems();
 	
 	//create cowboy sprite
-	_sprites.push_back(new Sprite());
+	_sprites.push_back(new OdinEngine::Sprite());
 	_sprites.back()->init(-1.0f, -1.0f, 1.0f, 1.0f, "Textures/pixel_cowboy.png"); 
 
 	//create horse sprite
-	_sprites.push_back(new Sprite());
+	_sprites.push_back(new OdinEngine::Sprite());
 	_sprites.back()->init(0.0f, -1.0f, 1.0f, 1.0f, "Textures/pixel_cowboy.png");
 
 	gameLoop();
 }
 
 void MainGame::initSystems() {
-	//Initialize SDL
-	SDL_Init(SDL_INIT_EVERYTHING);
 
-	//enable double buffering for a smoooooth experience.
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	OdinEngine::init();
 
-	//Create OpenGL window
-	//SDL_WINDOWPOS_CENTERED creates window in the center position using given width/height
-	_window = SDL_CreateWindow(constants::NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-								_screenWidth, _screenHeight, SDL_WINDOW_OPENGL);
-
-	//simple error checking
-	if (_window == nullptr) {
-		fatalError("SDL Window could not be created.");
-	}
-
-	SDL_GLContext glContext = SDL_GL_CreateContext(_window);
-	if (glContext == nullptr) {
-		fatalError("SDL_GL context could not be created.");
-	}
-
-	GLenum error = glewInit();
-	if (error != GLEW_OK) {
-		fatalError("Could not init glew.");
-	}
-
-	printf("*** OpenGL Version: %s ***", glGetString(GL_VERSION)); //output opengl version for debugging
-
-	glClearColor(0.5f, 0, 0, 1); //set clear color to deep, dark, bloody red
-
-	//Sets VSYNC 0 for off, 1 for on
-	SDL_GL_SetSwapInterval(constants::VSYNC_ON);
+	_window.create("Spaghetti Western: WORKING TITLE :P", constants::WINDOW_WIDTH, constants::WINDOW_HEIGHT, 0);
 
 	initShaders();
 }
@@ -156,7 +127,7 @@ void MainGame::drawGame() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 	_colorShaderProgram.unUse();
 
-	SDL_GL_SwapWindow(_window); //swaps buffer
+	_window.swapBuffer();
 }
 
 void MainGame::calcualteFPS() {

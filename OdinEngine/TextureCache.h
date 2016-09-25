@@ -4,15 +4,16 @@
 #include <map>
 #include "GLTexture.h"
 
-class TextureCache
-{
-public:
-	TextureCache();
-	~TextureCache();
+namespace OdinEngine {
+	class TextureCache
+	{
+	public:
+		TextureCache();
+		~TextureCache();
 
-	GLTexture getTexture(std::string texturePath);
+		GLTexture getTexture(std::string texturePath);
 
-private:
-	std::map<std::string, GLTexture> _textureMap;
-};
-
+	private:
+		std::map<std::string, GLTexture> _textureMap;
+	};
+}

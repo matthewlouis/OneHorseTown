@@ -4,9 +4,10 @@
 #include <GL/glew.h>
 #include <vector>
 
-#include "Sprite.h"
-#include "GLSLProgram.h"
-#include "GLTexture.h"
+#include <OdinEngine/Sprite.h>
+#include <OdinEngine/GLSLProgram.h>
+#include <OdinEngine/GLTexture.h>
+#include <OdinEngine/Window.h>
 
 
 enum class GameState {PLAY, PAUSE, EXIT};
@@ -26,13 +27,13 @@ private:
 	void drawGame();
 	void calcualteFPS();
 
-	SDL_Window* _window;
+	OdinEngine::Window _window;
 	int			_screenWidth, _screenHeight;
 	GameState   _gameState;
 
-	std::vector <Sprite*> _sprites;
+	std::vector <OdinEngine::Sprite*> _sprites;
 
-	GLSLProgram _colorShaderProgram;
+	OdinEngine::GLSLProgram _colorShaderProgram;
 
 	//fps variables
 	float _fps;
