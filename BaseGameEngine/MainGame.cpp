@@ -37,6 +37,9 @@ void MainGame::initSystems() {
 	//Initialize SDL
 	SDL_Init(SDL_INIT_EVERYTHING);
 
+	//enable double buffering for a smoooooth experience.
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
 	//Create OpenGL window
 	//SDL_WINDOWPOS_CENTERED creates window in the center position using given width/height
 	_window = SDL_CreateWindow(constants::NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -57,10 +60,12 @@ void MainGame::initSystems() {
 		fatalError("Could not init glew.");
 	}
 
-	//enable double buffering for a smoooooth experience.
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	printf("*** OpenGL Version: %s ***", glGetString(GL_VERSION)); //output opengl version for debugging
 
-	glClearColor(0.5f, 0, 0, 1); //set clear color to red
+	glClearColor(0.5f, 0, 0, 1); //set clear color to deep, dark, bloody red
+
+	//Sets VSYNC 0 for off, 1 for on
+	SDL_GL_SetSwapInterval(constants::VSYNC_ON);
 
 	initShaders();
 }
@@ -88,7 +93,7 @@ void MainGame::gameLoop() {
 		static int frameCounter = 0;
 		++frameCounter;
 		if (frameCounter == 10) {
-			std::cout << _fps << std::endl;
+			printf("FPS: %f\n", _fps);
 			frameCounter = 0;
 		}
 
@@ -121,7 +126,7 @@ void MainGame::processInput() {
 			//handle controller button up
 			break;
 		case SDL_MOUSEMOTION:
-			std::cout << event.motion.x << " " << event.motion.y << '\n';
+			//mouse movement - probably not needed
 			break;
 		case SDL_QUIT:
 			_gameState = GameState::EXIT;
