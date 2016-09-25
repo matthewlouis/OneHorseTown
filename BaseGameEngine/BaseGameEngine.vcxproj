@@ -137,6 +137,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Errors.h" />
+    <ClInclude Include="GameConstants.h" />
     <ClInclude Include="GLSLProgram.h" />
     <ClInclude Include="GLTexture.h" />
     <ClInclude Include="ImageLoader.h" />

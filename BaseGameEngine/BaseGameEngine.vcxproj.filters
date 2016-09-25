@@ -83,6 +83,9 @@
     <ClInclude Include="TextureCache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GameConstants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="BaseGameEngine.rc">

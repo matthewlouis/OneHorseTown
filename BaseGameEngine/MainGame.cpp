@@ -76,9 +76,30 @@ void MainGame::initShaders() {
 void MainGame::gameLoop() {
 
 	while (_gameState != GameState::EXIT) {
+		//used for frame time measuring
+		float startTicks = SDL_GetTicks();
+
 		processInput();
 		_time += 0.004; //need to setup time step
 		drawGame();
+		calcualteFPS();
+
+		//print FPS every ten frames
+		static int frameCounter = 0;
+		++frameCounter;
+		if (frameCounter == 10) {
+			std::cout << _fps << std::endl;
+			frameCounter = 0;
+		}
+
+
+		//Limit the FPS using SDL to delay processing
+		float frameTicks = SDL_GetTicks() - startTicks; //this calculates how long it took to run the whole game loop
+		static float targetFrameTicks = 1000.0f / constants::FPS_LIMIT;
+		if (targetFrameTicks > frameTicks) {
+			SDL_Delay(targetFrameTicks - frameTicks); //delay by difference between target and actual to sloooow thiiiiings dooown
+		}
+
 	}
 }
 
@@ -131,4 +152,40 @@ void MainGame::drawGame() {
 	_colorShaderProgram.unUse();
 
 	SDL_GL_SwapWindow(_window); //swaps buffer
+}
+
+void MainGame::calcualteFPS() {
+	static const int NUM_SAMPLES = 10; //how many frames we are going to average accross
+	static float frameTimes[NUM_SAMPLES];
+	static int currentFrame = 0;
+
+	static float previousTicks = SDL_GetTicks();
+
+	float currentTicks;
+	currentTicks = SDL_GetTicks();
+
+	_frameTime = currentTicks - previousTicks;
+	frameTimes[currentFrame % NUM_SAMPLES] = _frameTime; //place into our circular buffer
+	previousTicks = currentTicks;
+
+	int count;
+	if (++currentFrame < NUM_SAMPLES) { //if less than our sample size, only average what we have
+		count = currentFrame;
+	}
+	else { //average accross NUM_SAMPLE frames
+		count = NUM_SAMPLES;
+	}
+
+	float frameTimeAverage = 0;
+	for (int i = 0; i < count; ++i) {
+		frameTimeAverage += frameTimes[i]; //get total frame time
+	}
+	frameTimeAverage /= count; //calculate actual average
+
+	if (frameTimeAverage > 0) {
+		_fps = 1000.0f / frameTimeAverage;
+	}
+	else {
+		_fps = 60.0f;
+	}
 }
