@@ -11,7 +11,9 @@ MainGame::MainGame() :
 	_screenHeight(constants::WINDOW_HEIGHT),
 	_gameState(GameState::PLAY),
 	_time(0)
-{}
+{
+	_camera.init(_screenWidth, _screenHeight); //init our camera
+}
 
 
 MainGame::~MainGame()
@@ -23,11 +25,11 @@ void MainGame::run() {
 	
 	//create cowboy sprite
 	_sprites.push_back(new OdinEngine::Sprite());
-	_sprites.back()->init(-1.0f, -1.0f, 1.0f, 1.0f, "Textures/pixel_cowboy.png"); 
+	_sprites.back()->init(0.0f, 0.0f, _screenWidth/2, _screenWidth / 2, "Textures/pixel_cowboy.png");
 
 	//create horse sprite
 	_sprites.push_back(new OdinEngine::Sprite());
-	_sprites.back()->init(0.0f, -1.0f, 1.0f, 1.0f, "Textures/pixel_cowboy.png");
+	_sprites.back()->init(_screenWidth / 2, 0.0f, _screenWidth / 2, _screenWidth / 2, "Textures/pixel_cowboy.png");
 
 	gameLoop();
 }
@@ -57,6 +59,9 @@ void MainGame::gameLoop() {
 
 		processInput();
 		_time += 0.004; //need to setup time step
+
+		_camera.update();
+
 		drawGame();
 		calcualteFPS();
 
@@ -84,6 +89,9 @@ void MainGame::processInput() {
 	//check what the fack players have been doing
 	SDL_Event event;
 
+	static const float CAMERA_SPEED = 20.0f;
+	static const float SCALE_SPEED  = 0.1f;
+
 	//while the players have actually mashed some buttons or keys
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {
@@ -98,6 +106,29 @@ void MainGame::processInput() {
 			break;
 		case SDL_MOUSEMOTION:
 			//mouse movement - probably not needed
+			break;
+		case SDL_KEYDOWN:
+			//key press
+			switch (event.key.keysym.sym) { //testing camera movement
+				case SDLK_UP:
+					_camera.setPosition(_camera.getPosition() + glm::vec2(0.0, CAMERA_SPEED));
+					break;
+				case SDLK_DOWN:
+					_camera.setPosition(_camera.getPosition() + glm::vec2(0.0, -CAMERA_SPEED));
+					break;
+				case SDLK_LEFT:
+					_camera.setPosition(_camera.getPosition() + glm::vec2(-CAMERA_SPEED, 0.0));
+					break;
+				case SDLK_RIGHT:
+					_camera.setPosition(_camera.getPosition() + glm::vec2(CAMERA_SPEED, 0.0));
+					break;
+				case SDLK_w:
+					_camera.setScale(_camera.getScale() + SCALE_SPEED);
+					break;
+				case SDLK_q:
+					_camera.setScale(_camera.getScale() + -SCALE_SPEED);
+					break;
+			}
 			break;
 		case SDL_QUIT:
 			_gameState = GameState::EXIT;
@@ -116,8 +147,15 @@ void MainGame::drawGame() {
 	GLint textureLocation = _colorShaderProgram.getUniformLocation("textureSampler");
 	glUniform1i(textureLocation, 0);
 
+	
 	GLint timeLocation = _colorShaderProgram.getUniformLocation("time");
 	glUniform1f(timeLocation, _time); //passing time to shader
+
+	//Set the camera matrix
+	GLint pLocation = _colorShaderProgram.getUniformLocation("P");
+	glm::mat4 cameraMatrix = _camera.getCameraMatrix();
+	glUniformMatrix4fv(pLocation, 1, GL_FALSE, &(cameraMatrix[0][0]));
+
 
 	for (int i = 0; i < _sprites.size(); ++i) {
 		_sprites[i]->draw();

@@ -8,6 +8,7 @@
 #include <OdinEngine/GLSLProgram.h>
 #include <OdinEngine/GLTexture.h>
 #include <OdinEngine/Window.h>
+#include <OdinEngine/Camera.h>
 
 
 enum class GameState {PLAY, PAUSE, EXIT};
@@ -30,6 +31,8 @@ private:
 	OdinEngine::Window _window;
 	int			_screenWidth, _screenHeight;
 	GameState   _gameState;
+
+	OdinEngine::Camera _camera;
 
 	std::vector <OdinEngine::Sprite*> _sprites;
 
