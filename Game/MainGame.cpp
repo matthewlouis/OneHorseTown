@@ -2,6 +2,7 @@
 #include "GameConstants.h"
 #include <OdinEngine/Errors.h>
 #include <OdinEngine/OdinEngine.h>
+#include <OdinEngine/ResourceManager.h>
 #include <iostream>
 #include <string>
 
@@ -22,14 +23,6 @@ MainGame::~MainGame()
 
 void MainGame::run() {
 	initSystems();
-	
-	//create cowboy sprite
-	_sprites.push_back(new OdinEngine::Sprite());
-	_sprites.back()->init(0.0f, 0.0f, _screenWidth/2, _screenWidth / 2, "Textures/pixel_cowboy.png");
-
-	//create horse sprite
-	_sprites.push_back(new OdinEngine::Sprite());
-	_sprites.back()->init(_screenWidth / 2, 0.0f, _screenWidth / 2, _screenWidth / 2, "Textures/pixel_cowboy.png");
 
 	gameLoop();
 }
@@ -41,6 +34,8 @@ void MainGame::initSystems() {
 	_window.create("Spaghetti Western: WORKING TITLE :P", constants::WINDOW_WIDTH, constants::WINDOW_HEIGHT, 0);
 
 	initShaders();
+
+	_spriteBatch.init();
 }
 
 void MainGame::initShaders() {
@@ -147,7 +142,7 @@ void MainGame::drawGame() {
 	GLint textureLocation = _colorShaderProgram.getUniformLocation("textureSampler");
 	glUniform1i(textureLocation, 0);
 
-	
+	//set time for shader
 	GLint timeLocation = _colorShaderProgram.getUniformLocation("time");
 	glUniform1f(timeLocation, _time); //passing time to shader
 
@@ -155,13 +150,23 @@ void MainGame::drawGame() {
 	GLint pLocation = _colorShaderProgram.getUniformLocation("P");
 	glm::mat4 cameraMatrix = _camera.getCameraMatrix();
 	glUniformMatrix4fv(pLocation, 1, GL_FALSE, &(cameraMatrix[0][0]));
-
-
-	for (int i = 0; i < _sprites.size(); ++i) {
-		_sprites[i]->draw();
-	}
 	
+	_spriteBatch.begin();
 
+	//creating sprites for testing
+	glm::vec4 uv(0.0f, 0.0f, 1.0f, 1.0f);
+	glm::vec4 pos(0.0f, 0.0f, 50.0f, 50.0f);
+	static OdinEngine::GLTexture texture = OdinEngine::ResourceManager::getTexture("Textures/pixel_cowboy.png");
+
+	//testing efficiency: drawing 1000 sprites at once
+	for (int i = 0; i < 500; i++) {
+		_spriteBatch.draw(pos, uv, texture.id, 0.0f, OdinEngine::Color());
+		_spriteBatch.draw(pos + glm::vec4(100.0f, 0.0f, 0.0f, 0.0f), uv * glm::vec4(1, 1, -1, 1), texture.id, 0.0f, OdinEngine::Color());
+	}
+	_spriteBatch.end();
+	_spriteBatch.renderBatch();
+
+	//unbind texture
 	glBindTexture(GL_TEXTURE_2D, 0);
 	_colorShaderProgram.unUse();
 

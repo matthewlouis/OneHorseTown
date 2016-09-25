@@ -9,6 +9,7 @@
 #include <OdinEngine/GLTexture.h>
 #include <OdinEngine/Window.h>
 #include <OdinEngine/Camera.h>
+#include <OdinEngine/SpriteBatch.h>
 
 
 enum class GameState {PLAY, PAUSE, EXIT};
@@ -34,7 +35,7 @@ private:
 
 	OdinEngine::Camera _camera;
 
-	std::vector <OdinEngine::Sprite*> _sprites;
+	OdinEngine::SpriteBatch _spriteBatch;
 
 	OdinEngine::GLSLProgram _colorShaderProgram;
 

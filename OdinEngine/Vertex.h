@@ -11,6 +11,12 @@ namespace OdinEngine {
 	};
 
 	struct Color {
+		Color(GLubyte r = 255, GLubyte g = 255, GLubyte b = 255, GLubyte a = 255) {
+			this->r = r;
+			this->g = g;
+			this->b = b;
+			this->a = a;
+		}
 		GLubyte r;
 		GLubyte g;
 		GLubyte b;
