@@ -1,7 +1,6 @@
 #include "MainGame.h"
 #include "GameConstants.h"
 #include "Errors.h"
-#include "ImageLoader.h"
 
 #include <iostream>
 #include <string>
@@ -23,8 +22,13 @@ MainGame::~MainGame()
 void MainGame::run() {
 	initSystems();
 	
-	_sprite.init(-1.0f, -1.0f, 1.0f, 1.0f); //create sprite to cover whole screen right now
-	_playerTexture = ImageLoader::loadPNG("Textures/pixel_cowboy.png");
+	//create cowboy sprite
+	_sprites.push_back(new Sprite());
+	_sprites.back()->init(-1.0f, -1.0f, 1.0f, 1.0f, "Textures/pixel_cowboy.png"); 
+
+	//create horse sprite
+	_sprites.push_back(new Sprite());
+	_sprites.back()->init(0.0f, -1.0f, 1.0f, 1.0f, "Textures/pixel_cowboy.png");
 
 	gameLoop();
 }
@@ -115,12 +119,13 @@ void MainGame::drawGame() {
 	GLint textureLocation = _colorShaderProgram.getUniformLocation("textureSampler");
 	glUniform1i(textureLocation, 0);
 
-	glBindTexture(GL_TEXTURE_2D, _playerTexture.id);
-
 	GLint timeLocation = _colorShaderProgram.getUniformLocation("time");
 	glUniform1f(timeLocation, _time); //passing time to shader
 
-	_sprite.draw();
+	for (int i = 0; i < _sprites.size(); ++i) {
+		_sprites[i]->draw();
+	}
+	
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	_colorShaderProgram.unUse();
