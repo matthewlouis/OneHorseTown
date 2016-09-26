@@ -52,6 +52,7 @@ void MainGame::gameLoop() {
 
 		_fpsLimiter.beginFrame();
 
+		_inputManager.update();
 		processInput();
 
 		_camera.update();
@@ -59,14 +60,6 @@ void MainGame::gameLoop() {
 		drawGame();
 
 		_fps = _fpsLimiter.endFrame();
-
-		//DEBUG: print FPS every ten frames
-		static int frameCounter = 0;
-		++frameCounter;
-		if (frameCounter == 10) {
-			printf("FPS: %f\n", _fps);
-			frameCounter = 0;
-		}
 	}
 }
 
@@ -106,23 +99,23 @@ void MainGame::processInput() {
 		}
 
 
-
-		if (_inputManager.isKeyPressed(SDLK_w)) {
+		//for testing input and camera movement:
+		if (_inputManager.isKeyDown(SDLK_w)) {
 			_camera.setPosition(_camera.getPosition() + glm::vec2(0.0f, CAMERA_SPEED));
 		}
-		if (_inputManager.isKeyPressed(SDLK_s)) {
+		if (_inputManager.isKeyDown(SDLK_s)) {
 			_camera.setPosition(_camera.getPosition() + glm::vec2(0.0f, -CAMERA_SPEED));
 		}
-		if (_inputManager.isKeyPressed(SDLK_a)) {
+		if (_inputManager.isKeyDown(SDLK_a)) {
 			_camera.setPosition(_camera.getPosition() + glm::vec2(-CAMERA_SPEED, 0.0f));
 		}
-		if (_inputManager.isKeyPressed(SDLK_d)) {
+		if (_inputManager.isKeyDown(SDLK_d)) {
 			_camera.setPosition(_camera.getPosition() + glm::vec2(CAMERA_SPEED, 0.0f));
 		}
-		if (_inputManager.isKeyPressed(SDLK_q)) {
+		if (_inputManager.isKeyDown(SDLK_q)) {
 			_camera.setScale(_camera.getScale() + SCALE_SPEED);
 		}
-		if (_inputManager.isKeyPressed(SDLK_e)) {
+		if (_inputManager.isKeyDown(SDLK_e)) {
 			_camera.setScale(_camera.getScale() - SCALE_SPEED);
 		}
 	}
