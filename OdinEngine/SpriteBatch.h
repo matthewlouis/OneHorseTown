@@ -12,6 +12,27 @@ namespace OdinEngine {
 
 	//single sprite
 	struct Glyph {
+		Glyph() {};
+		Glyph(const glm::vec4& destRect, const glm::vec4& uvRect, GLuint texture, float depth, const Color& color) :
+		texture(texture), depth(depth){
+			topLeft.color = color;
+			topLeft.setPosition(destRect.x, destRect.y + destRect.w); //destRect w/z are width/height
+			topLeft.setUV(uvRect.x, uvRect.y + uvRect.w);
+
+			bottomLeft.color = color;
+			bottomLeft.setPosition(destRect.x, destRect.y);
+			bottomLeft.setUV(uvRect.x, uvRect.y);
+
+			bottomRight.color = color;
+			bottomRight.setPosition(destRect.x + destRect.z, destRect.y);
+			bottomRight.setUV(uvRect.x + uvRect.z, uvRect.y);
+
+			topRight.color = color;
+			topRight.setPosition(destRect.x + destRect.z, destRect.y + destRect.w);
+			topRight.setUV(uvRect.x + uvRect.z, uvRect.y + uvRect.w);
+
+		};
+
 		GLuint texture;
 		float  depth; //for rendering sprites behind or in front of eachother
 
@@ -57,8 +78,10 @@ namespace OdinEngine {
 		GLuint _vbo;
 		GLuint _vao;
 		
-		std::vector<Glyph*> _glyphs;
 		GlyphSortType _sortType;
+
+		std::vector<Glyph> _glyphs;			//actual glyphs
+		std::vector<Glyph*> _glyphPointers; //used for sorting
 
 		std::vector<RenderBatch> _renderBatches;
 	};
