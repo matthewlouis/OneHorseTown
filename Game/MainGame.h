@@ -10,6 +10,8 @@
 #include <OdinEngine/Window.h>
 #include <OdinEngine/Camera.h>
 #include <OdinEngine/SpriteBatch.h>
+#include <OdinEngine/InputManager.h>
+#include <OdinEngine/Timing.h>
 
 
 enum class GameState {PLAY, PAUSE, EXIT};
@@ -27,22 +29,20 @@ private:
 	void gameLoop();
 	void processInput();
 	void drawGame();
-	void calcualteFPS();
-
+ 
 	OdinEngine::Window _window;
 	int			_screenWidth, _screenHeight;
 	GameState   _gameState;
 
 	OdinEngine::Camera _camera;
-
 	OdinEngine::SpriteBatch _spriteBatch;
+	OdinEngine::InputManager _inputManager; //handles input
 
 	OdinEngine::GLSLProgram _colorShaderProgram;
 
-	//fps variables
-	float _fps;
-	float _frameTime;
+	OdinEngine::FPSLimiter _fpsLimiter;
 
+	float _fps;
 	float _time;
 };
 
