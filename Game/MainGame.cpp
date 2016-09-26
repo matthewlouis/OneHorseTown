@@ -10,8 +10,7 @@
 MainGame::MainGame() : 
 	_screenWidth(constants::WINDOW_WIDTH),
 	_screenHeight(constants::WINDOW_HEIGHT),
-	_gameState(GameState::PLAY),
-	_time(0)
+	_gameState(GameState::PLAY)
 {
 	_camera.init(_screenWidth, _screenHeight); //init our camera
 }
@@ -54,7 +53,6 @@ void MainGame::gameLoop() {
 		_fpsLimiter.beginFrame();
 
 		processInput();
-		_time += 0.004; //need to setup time step
 
 		_camera.update();
 
@@ -141,10 +139,6 @@ void MainGame::drawGame() {
 	GLint textureLocation = _colorShaderProgram.getUniformLocation("textureSampler");
 	glUniform1i(textureLocation, 0);
 
-	//set time for shader
-	GLint timeLocation = _colorShaderProgram.getUniformLocation("time");
-	glUniform1f(timeLocation, _time); //passing time to shader
-
 	//Set the camera matrix
 	GLint pLocation = _colorShaderProgram.getUniformLocation("P");
 	glm::mat4 cameraMatrix = _camera.getCameraMatrix();
@@ -154,11 +148,11 @@ void MainGame::drawGame() {
 
 	//creating sprites for testing
 	glm::vec4 uv(0.0f, 0.0f, 1.0f, 1.0f);
-	glm::vec4 pos(0.0f, 0.0f, 50.0f, 50.0f);
+	glm::vec4 pos(0.0f, 0.0f, 60.0f, 140.0f);
 	static OdinEngine::GLTexture texture = OdinEngine::ResourceManager::getTexture("Textures/pixel_cowboy.png");
 
 	_spriteBatch.draw(pos, uv, texture.id, 0.0f, OdinEngine::Color());
-	_spriteBatch.draw(pos + glm::vec4(100.0f, 0.0f, 0.0f, 0.0f), uv * glm::vec4(1, 1, -1, 1), texture.id, 0.0f, OdinEngine::Color());
+	_spriteBatch.draw(pos + glm::vec4(200.0f, 0.0f, 0.0f, 0.0f), uv * glm::vec4(1, 1, -1, 1), texture.id, 0.0f, OdinEngine::Color());
 	
 	_spriteBatch.end();
 	_spriteBatch.renderBatch();

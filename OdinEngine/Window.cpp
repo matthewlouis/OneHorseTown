@@ -55,6 +55,10 @@ namespace OdinEngine {
 		//Sets VSYNC 0 for off, 1 for on
 		SDL_GL_SetSwapInterval(0);
 
+		//allowing transparency
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 		return 0;
 	}
 

@@ -43,6 +43,5 @@ private:
 	OdinEngine::FPSLimiter _fpsLimiter;
 
 	float _fps;
-	float _time;
 };
 
