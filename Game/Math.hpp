@@ -1,9 +1,12 @@
+// Andrew Meckling
 #pragma once
 
 #include <Box2D/Common/b2Math.h>
 #include <glm/vec2.hpp>
 #include <cmath>
 
+// Simple vector2 object which allows automatic conversion between
+// glm::vec2 and b2Vec2.
 union Vec2
 {
     glm::vec2 glmvec2;

@@ -1,7 +1,10 @@
+// Andrew Meckling
 #pragma once
 
 #include "Math.hpp"
 
+// Base entity object of the entity-component system. Contains 
+// data required by most components.
 struct Entity
 {
     Vec2        position    = { 0, 0 };

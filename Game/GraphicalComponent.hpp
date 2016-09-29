@@ -8,19 +8,19 @@
 
 struct VertexAttribute
 {
-    GLuint          index;
-    const GLenum    type;
-    const GLint     width;
-    const GLsizei   size;
+    GLuint  index;
+    GLenum  type;
+    GLint   size;
+    GLsizei width;
 
     VertexAttribute( GLuint  index,
                      GLenum  type,
-                     GLint   width,
-                     GLsizei size )
+                     GLint   size,
+                     GLsizei width )
         : index( index )
         , type( type )
-        , width( width )
         , size( size )
+        , width( width )
     {
     }
 };
@@ -38,9 +38,9 @@ VertexAttribute make_vert_attr( GLuint index )
 
 struct GraphicalComponent
 {
-    glm::vec3* pVertices = nullptr;
-    int        count    = 0;
-    glm::vec3  color    = { 1, 1, 1 };
+    void*      pData = nullptr;
+    int        count = 0;
+    glm::vec3  color = { 1, 1, 1 };
 
     int        texture = 0;
     GLuint     vertexArray = 0;
@@ -49,48 +49,44 @@ struct GraphicalComponent
 
     GraphicalComponent() = default;
 
-    template<
-        typename Vertex,
-        typename... Attrs
-    >
+    template< typename Vertex, typename... Attrs >
     GraphicalComponent( const Vertex* pVertices,
                         int           count,
                         glm::vec3     color = { 1, 1, 1 },
                         Attrs&&...    attrs )
-        : pVertices( new glm::vec3[ count ] )
+        : pData( new char[ sizeof( Vertex ) * count ] )
         , count( count )
         , color( color )
     {
-        //for ( size_t i = 0; i < count; i++ )
-        //    this->pVertices[ i ] = pVertices[ i ];
+        size_t size = sizeof( Vertex ) * count;
+        std::memcpy( pData, pVertices, size );
 
         glGenVertexArrays( 1, &vertexArray );
         glBindVertexArray( vertexArray );
 
         glGenBuffers( 1, &vertexBuffer );
         glBindBuffer( GL_ARRAY_BUFFER, vertexBuffer );
-        glBufferData( GL_ARRAY_BUFFER, sizeof( Vertex ) * count,
-                      pVertices, GL_STATIC_DRAW );
+        glBufferData( GL_ARRAY_BUFFER, size, pData, GL_STATIC_DRAW );
 
         int offset = 0;
-        for ( VertexAttribute attr : { std::forward< Attrs >( attrs )... } )
+        for ( VertexAttribute attr : { attrs... } )
         {
             glEnableVertexAttribArray( attr.index );
-            glVertexAttribPointer( attr.index, attr.width, attr.type,
-                GL_FALSE, sizeof( Vertex ), (GLvoid*) offset );
-            offset += attr.size;
+            glVertexAttribPointer( attr.index, attr.size, attr.type,
+                GL_FALSE, sizeof( Vertex ), (void*) offset );
+            offset += attr.width;
         }
     }
 
     ~GraphicalComponent()
     {
-        glDeleteBuffers( 1, &vertexBuffer );
         glDeleteVertexArrays( 1, &vertexArray );
-        delete[] pVertices;
+        glDeleteBuffers( 1, &vertexBuffer );
+        delete[] pData;
     }
 
     GraphicalComponent( GraphicalComponent&& move )
-        : pVertices( move.pVertices )
+        : pData( move.pData )
         , count( move.count )
         , color( move.color )
         , texture( move.texture )
@@ -98,7 +94,7 @@ struct GraphicalComponent
         , vertexBuffer( move.vertexBuffer )
         , programId( move.programId )
     {
-        move.pVertices = nullptr;
+        move.pData = nullptr;
         move.count = 0;
         move.texture = 0;
         move.vertexArray = 0;
@@ -109,7 +105,7 @@ struct GraphicalComponent
     GraphicalComponent& operator =( GraphicalComponent&& move )
     {
         using std::swap;
-        swap( pVertices, move.pVertices );
+        swap( pData, move.pData );
         swap( count, move.count );
         color = move.color;
         swap( texture, move.texture );

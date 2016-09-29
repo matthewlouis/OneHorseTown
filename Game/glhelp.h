@@ -1,11 +1,7 @@
+// Andrew Meckling
 #pragma once
 
-#include "GL/glew.h"
-
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/matrix_access.hpp"
-#include "glm/gtc/quaternion.hpp"
+#include <GL/glew.h>
 
 template< typename T >
 constexpr GLenum gl_type_constant( T = {} );

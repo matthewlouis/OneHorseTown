@@ -1,5 +1,6 @@
 /*
 * Copyright (c) 2007-2011 Erin Catto http://www.box2d.org
+* Copyright (c) 2015, Justin Hoffman https://github.com/skitzoid
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -45,8 +46,8 @@ b2RopeJoint::b2RopeJoint(const b2RopeJointDef* def)
 
 void b2RopeJoint::InitVelocityConstraints(const b2SolverData& data)
 {
-	m_indexA = m_bodyA->m_islandIndex;
-	m_indexB = m_bodyB->m_islandIndex;
+	m_indexA = m_bodyA->GetIslandIndex();
+	m_indexB = m_bodyB->GetIslandIndex();
 	m_localCenterA = m_bodyA->m_sweep.localCenter;
 	m_localCenterB = m_bodyB->m_sweep.localCenter;
 	m_invMassA = m_bodyA->m_invMass;
@@ -227,8 +228,8 @@ b2LimitState b2RopeJoint::GetLimitState() const
 
 void b2RopeJoint::Dump()
 {
-	int32 indexA = m_bodyA->m_islandIndex;
-	int32 indexB = m_bodyB->m_islandIndex;
+	int32 indexA = m_bodyA->GetIslandIndex();
+	int32 indexB = m_bodyB->GetIslandIndex();
 
 	b2Log("  b2RopeJointDef jd;\n");
 	b2Log("  jd.bodyA = bodies[%d];\n", indexA);

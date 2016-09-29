@@ -1,3 +1,4 @@
+// Andrew Meckling
 #pragma once
 
 #include "Util.h"
@@ -10,7 +11,7 @@
 
 #include "BinarySearchMap.hpp"
 template< typename KeyType, typename ValueType >
-using Map = meck::BinarySearchMap< KeyType, ValueType >;
+using Map = BinarySearchMap< KeyType, ValueType >;
 
 #include "Constants.h"
 
@@ -26,6 +27,7 @@ enum class ComponentType
 
 class Game;
 
+// Lazy entity proxy object.
 struct EntityView
 {
     EntityId eid;
@@ -34,7 +36,6 @@ struct EntityView
     EntityView( EntityId eid, Game* game )
         : eid( eid ), pGame( game )
     {
-        //pGame->entities[ eid ]; // Ensure entity exists
     }
 
     void attach( GraphicalComponent gfx );
@@ -55,14 +56,15 @@ public:
 
     GLuint                              program;
     Map< EntityId, GraphicalComponent > gfxComponents;
+    GLint                               uMatrix, uColor, uTexture;
 
-    b2World                             b2world = { { 0.f, -9.81f } };
+    b2ThreadPool                        b2thd;
+    b2World                             b2world = { { 0.f, -9.81f }, &b2thd };
     Map< EntityId, PhysicalComponent >  fsxComponents;
 
     unsigned short _bulletCount = 0;
     bool running = false;
 
-    GLint uMatrix, uColor, uTexture;
 
     Game()
         : program( loadShaders( "vertexShader.glsl", "fragmentShader.glsl" ) )
@@ -70,7 +72,6 @@ public:
         , uColor( glGetUniformLocation( program, "uColor" ) )
         , uTexture( glGetUniformLocation( program, "uTexture" ) )
     {
-
     }
 
     void draw( const GraphicalComponent& gfx, EntityId eid );

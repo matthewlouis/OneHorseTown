@@ -1,8 +1,11 @@
+// Andrew Meckling
 #pragma once
 #include <cstdint>
 #include <type_traits>
 #include <iostream>
 
+// 64bit (8byte) data structure used to uniquely identify 
+// entities in the entity-component system.
 union EntityId
 {
     std::uint64_t   _bitPattern;

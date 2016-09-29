@@ -1,5 +1,6 @@
 /*
 * Copyright (c) 2006-2007 Erin Catto http://www.box2d.org
+* Copyright (c) 2015, Justin Hoffman https://github.com/skitzoid
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -95,7 +96,7 @@ float32 b2MouseJoint::GetDampingRatio() const
 
 void b2MouseJoint::InitVelocityConstraints(const b2SolverData& data)
 {
-	m_indexB = m_bodyB->m_islandIndex;
+	m_indexB = m_bodyB->GetIslandIndex();
 	m_localCenterB = m_bodyB->m_sweep.localCenter;
 	m_invMassB = m_bodyB->m_invMass;
 	m_invIB = m_bodyB->m_invI;

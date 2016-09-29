@@ -1,5 +1,6 @@
 /*
 * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
+* Copyright (c) 2015, Justin Hoffman https://github.com/skitzoid
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -150,6 +151,7 @@ protected:
 	friend class b2ContactSolver;
 	friend class b2Body;
 	friend class b2Fixture;
+	friend class b2ClearContactIslandFlagsTask;
 
 	// Flags stored in m_flags
 	enum
@@ -170,7 +172,10 @@ protected:
 		e_bulletHitFlag		= 0x0010,
 
 		// This contact has a valid TOI in m_toi
-		e_toiFlag			= 0x0020
+		e_toiFlag			= 0x0020,
+
+		// This contact must be checked for TOI events.
+		e_toiCandidateFlag	= 0x0040
 	};
 
 	/// Flag this contact for filtering. Filtering will occur the next time step.
@@ -187,7 +192,7 @@ protected:
 	b2Contact(b2Fixture* fixtureA, int32 indexA, b2Fixture* fixtureB, int32 indexB);
 	virtual ~b2Contact() {}
 
-	void Update(b2ContactListener* listener);
+	bool Update(b2ContactListener* listener, bool canWakeBodies);
 
 	static b2ContactRegister s_registers[b2Shape::e_typeCount][b2Shape::e_typeCount];
 	static bool s_initialized;
@@ -217,6 +222,8 @@ protected:
 	float32 m_restitution;
 
 	float32 m_tangentSpeed;
+
+	int32 m_managerIndex;
 };
 
 inline b2Manifold* b2Contact::GetManifold()

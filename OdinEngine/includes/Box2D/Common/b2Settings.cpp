@@ -1,5 +1,6 @@
 /*
 * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
+* Copyright (c) 2015, Justin Hoffman https://github.com/skitzoid
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -21,7 +22,24 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-b2Version b2_version = {2, 3, 2};
+b2Version b2_version = { 2, 3, 2 };
+
+b2ThreadLocal int32 b2_threadId = 0;
+
+int32 b2GetIslandCost(int32 bodyCount, int32 contactCount, int32 jointCount)
+{
+	return bodyCount + contactCount * 10 + jointCount * 10;
+}
+
+void b2SetThreadId(int32 threadId)
+{
+	b2_threadId = threadId;
+}
+
+int32 b2GetThreadId()
+{
+	return b2_threadId;
+}
 
 // Memory allocators. Modify these to use your own allocator.
 void* b2Alloc(int32 size)

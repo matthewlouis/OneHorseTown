@@ -1,3 +1,4 @@
+// Andrew Meckling
 #include "EntityId.hpp"
 #include <cstring>
 

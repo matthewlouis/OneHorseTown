@@ -1,5 +1,6 @@
 /*
 * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
+* Copyright (c) 2015, Justin Hoffman https://github.com/skitzoid
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -20,11 +21,39 @@
 #define B2_CONTACT_MANAGER_H
 
 #include <Box2D/Collision/b2BroadPhase.h>
+#include <Box2D/Common/b2GrowableArray.h>
 
 class b2Contact;
 class b2ContactFilter;
 class b2ContactListener;
 class b2BlockAllocator;
+class b2Body;
+struct b2FixtureProxy;
+
+struct b2DeferredContactCreate
+{
+	b2FixtureProxy* proxyA;
+	b2FixtureProxy* proxyB;
+};
+
+struct b2DeferredMoveProxy
+{
+	b2FixtureProxy* proxy;
+	b2Vec2 displacement;
+};
+
+struct b2ContactManagerPerThreadData
+{
+	b2ContactManagerPerThreadData();
+
+	b2GrowableArray<b2Contact*> m_deferredAwakes;
+	b2GrowableArray<b2Contact*> m_deferredDestroys;
+	b2GrowableArray<b2DeferredContactCreate> m_deferredCreates;
+	b2GrowableArray<b2DeferredMoveProxy> m_deferredMoveProxies;
+	b2GrowableArray<int32> m_tempProxyIds;
+
+	uint8 m_padding[b2_cacheLineSize];
+};
 
 // Delegate of b2World.
 class b2ContactManager
@@ -35,18 +64,42 @@ public:
 	// Broad-phase callback.
 	void AddPair(void* proxyUserDataA, void* proxyUserDataB);
 
-	void FindNewContacts();
+	void FindNewContacts(int32 moveBegin, int32 moveEnd);
+
+	void Collide(b2Contact** contacts, int32 count);
 
 	void Destroy(b2Contact* c);
 
-	void Collide();
+	void GenerateDeferredMoveProxies(b2Body** bodies, int32 count);
+
+	void ConsumeDeferredAwakes();
+	void ConsumeDeferredDestroys();
+	void ConsumeDeferredCreates();
+	void ConsumeDeferredMoveProxies();
+
+	void OnContactCreate(b2Contact* c);
+
+	int32 GetContactCount() const;
             
 	b2BroadPhase m_broadPhase;
 	b2Contact* m_contactList;
-	int32 m_contactCount;
 	b2ContactFilter* m_contactFilter;
 	b2ContactListener* m_contactListener;
 	b2BlockAllocator* m_allocator;
+
+	b2GrowableArray<b2Contact*> m_contactsNonTOI;
+	b2GrowableArray<b2Contact*> m_contactsTOI;
+
+	b2ContactManagerPerThreadData m_perThreadData[b2_maxThreads];
+
+	bool m_deferAwakenings;
+	bool m_deferDestroys;
+	bool m_deferCreates;
 };
+
+inline int32 b2ContactManager::GetContactCount() const
+{
+	return m_contactsNonTOI.GetCount() + m_contactsTOI.GetCount();
+}
 
 #endif

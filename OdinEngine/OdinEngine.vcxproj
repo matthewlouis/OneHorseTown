@@ -71,7 +71,6 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(ProjectDir)/includes;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(ProjectDir)/includes;$(IncludePath)</IncludePath>
@@ -161,6 +160,7 @@
     <ClCompile Include="includes\Box2D\Common\b2Math.cpp" />
     <ClCompile Include="includes\Box2D\Common\b2Settings.cpp" />
     <ClCompile Include="includes\Box2D\Common\b2StackAllocator.cpp" />
+    <ClCompile Include="includes\Box2D\Common\b2Threading.cpp" />
     <ClCompile Include="includes\Box2D\Common\b2Timer.cpp" />
     <ClCompile Include="includes\Box2D\Dynamics\b2Body.cpp" />
     <ClCompile Include="includes\Box2D\Dynamics\b2ContactManager.cpp" />
@@ -223,10 +223,12 @@
     <ClInclude Include="includes\Box2D\Collision\Shapes\b2Shape.h" />
     <ClInclude Include="includes\Box2D\Common\b2BlockAllocator.h" />
     <ClInclude Include="includes\Box2D\Common\b2Draw.h" />
+    <ClInclude Include="includes\Box2D\Common\b2GrowableArray.h" />
     <ClInclude Include="includes\Box2D\Common\b2GrowableStack.h" />
     <ClInclude Include="includes\Box2D\Common\b2Math.h" />
     <ClInclude Include="includes\Box2D\Common\b2Settings.h" />
     <ClInclude Include="includes\Box2D\Common\b2StackAllocator.h" />
+    <ClInclude Include="includes\Box2D\Common\b2Threading.h" />
     <ClInclude Include="includes\Box2D\Common\b2Timer.h" />
     <ClInclude Include="includes\Box2D\Dynamics\b2Body.h" />
     <ClInclude Include="includes\Box2D\Dynamics\b2ContactManager.h" />

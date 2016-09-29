@@ -1,5 +1,6 @@
 /*
 * Copyright (c) 2006-2009 Erin Catto http://www.box2d.org
+* Copyright (c) 2015, Justin Hoffman https://github.com/skitzoid
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -22,10 +23,6 @@
 #include <stddef.h>
 #include <assert.h>
 #include <float.h>
-
-#if !defined(NDEBUG)
-	#define b2DEBUG
-#endif
 
 #define B2_NOT_USED(x) ((void)(x))
 #define b2Assert(A) assert(A)
@@ -128,6 +125,39 @@ typedef double float64;
 
 /// A body cannot sleep if its angular velocity is above this tolerance.
 #define b2_angularSleepTolerance	(2.0f / 180.0f * b2_pi)
+
+
+// Threading
+
+/// Thread local storage (thread_local isn't supported by some otherwise compatible compilers).
+// TODO: Check version numbers and other platforms. Adjust as needed.
+#if defined(_MSC_VER)
+#define b2ThreadLocal __declspec(thread)
+#else
+#define b2ThreadLocal __thread
+#endif
+
+/// The size of a cache line.
+#define b2_cacheLineSize			64
+
+/// The maximum number of thread pool threads.
+#define b2_maxThreadPoolThreads		7
+
+/// The maximum number of threads.
+#define b2_maxThreads				(b2_maxThreadPoolThreads + 1)
+
+/// How much does an island need to cost before the world stops adding bodies to it?
+#define b2_minIslandCost			100
+
+/// Get the estimated cost of solving an island with the specified attributes
+int32 b2GetIslandCost(int32 bodyCount, int32 contactCount, int32 jointCount);
+
+/// Set the calling thread's ID.
+void b2SetThreadId(int32 threadId);
+
+/// Get the calling thread's ID.
+int32 b2GetThreadId();
+
 
 // Memory Allocation
 

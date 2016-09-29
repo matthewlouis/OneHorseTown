@@ -24,7 +24,6 @@
 #include <Box2D/Dynamics/b2World.h>
 #include <Box2D/Common/b2StackAllocator.h>
 
-// Solver debugging is normally disabled because the block solver sometimes has to deal with a poorly conditioned effective mass matrix.
 #define B2_DEBUG_SOLVER 0
 
 bool g_blockSolve = true;
@@ -77,8 +76,8 @@ b2ContactSolver::b2ContactSolver(b2ContactSolverDef* def)
 		vc->friction = contact->m_friction;
 		vc->restitution = contact->m_restitution;
 		vc->tangentSpeed = contact->m_tangentSpeed;
-		vc->indexA = bodyA->m_islandIndex;
-		vc->indexB = bodyB->m_islandIndex;
+		vc->indexA = bodyA->GetIslandIndex();
+		vc->indexB = bodyB->GetIslandIndex();
 		vc->invMassA = bodyA->m_invMass;
 		vc->invMassB = bodyB->m_invMass;
 		vc->invIA = bodyA->m_invI;
@@ -89,8 +88,8 @@ b2ContactSolver::b2ContactSolver(b2ContactSolverDef* def)
 		vc->normalMass.SetZero();
 
 		b2ContactPositionConstraint* pc = m_positionConstraints + i;
-		pc->indexA = bodyA->m_islandIndex;
-		pc->indexB = bodyB->m_islandIndex;
+		pc->indexA = bodyA->GetIslandIndex();
+		pc->indexB = bodyB->GetIslandIndex();
 		pc->invMassA = bodyA->m_invMass;
 		pc->invMassB = bodyB->m_invMass;
 		pc->localCenterA = bodyA->m_sweep.localCenter;
@@ -346,9 +345,9 @@ void b2ContactSolver::SolveVelocityConstraints()
 		// Solve normal constraints
 		if (pointCount == 1 || g_blockSolve == false)
 		{
-			for (int32 j = 0; j < pointCount; ++j)
+			for (int32 k = 0; k < pointCount; ++k)
 			{
-				b2VelocityConstraintPoint* vcp = vc->points + j;
+				b2VelocityConstraintPoint* vcp = vc->points + k;
 
 				// Relative velocity at contact
 				b2Vec2 dv = vB + b2Cross(wB, vcp->rB) - vA - b2Cross(wA, vcp->rA);
@@ -376,7 +375,7 @@ void b2ContactSolver::SolveVelocityConstraints()
 			// Block solver developed in collaboration with Dirk Gregorius (back in 01/07 on Box2D_Lite).
 			// Build the mini LCP for this contact patch
 			//
-			// vn = A * x + b, vn >= 0, x >= 0 and vn_i * x_i = 0 with i = 1..2
+			// vn = A * x + b, vn >= 0, , vn >= 0, x >= 0 and vn_i * x_i = 0 with i = 1..2
 			//
 			// A = J * W * JT and J = ( -n, -r1 x n, n, r2 x n )
 			// b = vn0 - velocityBias
@@ -486,6 +485,7 @@ void b2ContactSolver::SolveVelocityConstraints()
 				x.y = 0.0f;
 				vn1 = 0.0f;
 				vn2 = vc->K.ex.y * x.x + b.y;
+
 				if (x.x >= 0.0f && vn2 >= 0.0f)
 				{
 					// Get the incremental impulse

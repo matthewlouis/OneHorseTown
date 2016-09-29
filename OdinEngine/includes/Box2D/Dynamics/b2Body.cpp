@@ -1,5 +1,6 @@
 /*
 * Copyright (c) 2006-2007 Erin Catto http://www.box2d.org
+* Copyright (c) 2015, Justin Hoffman https://github.com/skitzoid
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -103,6 +104,10 @@ b2Body::b2Body(const b2BodyDef* bd, b2World* world)
 
 	m_fixtureList = NULL;
 	m_fixtureCount = 0;
+
+	memset(m_islandIndex, 0, sizeof(m_islandIndex));
+
+	m_worldIndex = -1;
 }
 
 b2Body::~b2Body()
@@ -123,6 +128,17 @@ void b2Body::SetType(b2BodyType type)
 		return;
 	}
 
+	if (m_type == b2_staticBody)
+	{
+		// Remove from static bodies.
+		m_world->m_staticBodies.Peek()->m_worldIndex = m_worldIndex;
+		m_world->m_staticBodies.RemoveAndSwap(m_worldIndex);
+
+		// Add to non static bodies.
+		m_worldIndex = m_world->m_nonStaticBodies.GetCount();
+		m_world->m_nonStaticBodies.Push(this);
+	}
+
 	m_type = type;
 
 	ResetMassData();
@@ -134,6 +150,14 @@ void b2Body::SetType(b2BodyType type)
 		m_sweep.a0 = m_sweep.a;
 		m_sweep.c0 = m_sweep.c;
 		SynchronizeFixtures();
+
+		// Remove from non static bodies.
+		m_world->m_nonStaticBodies.Peek()->m_worldIndex = m_worldIndex;
+		m_world->m_nonStaticBodies.RemoveAndSwap(m_worldIndex);
+
+		// Add to static bodies.
+		m_worldIndex = m_world->m_staticBodies.GetCount();
+		m_world->m_staticBodies.Push(this);
 	}
 
 	SetAwake(true);
@@ -213,11 +237,6 @@ b2Fixture* b2Body::CreateFixture(const b2Shape* shape, float32 density)
 
 void b2Body::DestroyFixture(b2Fixture* fixture)
 {
-	if (fixture == nullptr)
-	{
-		return;
-	}
-
 	b2Assert(m_world->IsLocked() == false);
 	if (m_world->IsLocked() == true)
 	{
@@ -271,9 +290,9 @@ void b2Body::DestroyFixture(b2Fixture* fixture)
 		fixture->DestroyProxies(broadPhase);
 	}
 
+	fixture->Destroy(allocator);
 	fixture->m_body = NULL;
 	fixture->m_next = NULL;
-	fixture->Destroy(allocator);
 	fixture->~b2Fixture();
 	allocator->Free(fixture, sizeof(b2Fixture));
 
@@ -525,7 +544,7 @@ void b2Body::SetFixedRotation(bool flag)
 
 void b2Body::Dump()
 {
-	int32 bodyIndex = m_islandIndex;
+	int32 bodyIndex = GetIslandIndex();
 
 	b2Log("{\n");
 	b2Log("  b2BodyDef bd;\n");

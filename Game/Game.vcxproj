@@ -75,7 +75,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(SolutionDir)OdinEngine/includes/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)deps/lib/;$(SolutionDir)Debug/;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)deps/lib/;$(SolutionDir)Release/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -111,6 +111,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glew32.lib;OdinEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -136,14 +137,12 @@
     <ClInclude Include="Constants.h" />
     <ClInclude Include="Entity.hpp" />
     <ClInclude Include="EntityId.hpp" />
-    <ClInclude Include="EntityView.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameConstants.h" />
     <ClInclude Include="glhelp.h" />
     <ClInclude Include="GraphicalComponent.hpp" />
     <ClInclude Include="InputComponent.h" />
     <ClInclude Include="Math.hpp" />
-    <ClInclude Include="opengl_help.hpp" />
     <ClInclude Include="PhysicalComponent.hpp" />
     <ClInclude Include="template_helper.hpp" />
     <ClInclude Include="Util.h" />

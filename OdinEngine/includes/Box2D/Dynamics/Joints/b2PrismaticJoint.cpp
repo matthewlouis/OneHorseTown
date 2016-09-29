@@ -1,5 +1,6 @@
 /*
 * Copyright (c) 2006-2011 Erin Catto http://www.box2d.org
+* Copyright (c) 2015, Justin Hoffman https://github.com/skitzoid
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -125,8 +126,8 @@ b2PrismaticJoint::b2PrismaticJoint(const b2PrismaticJointDef* def)
 
 void b2PrismaticJoint::InitVelocityConstraints(const b2SolverData& data)
 {
-	m_indexA = m_bodyA->m_islandIndex;
-	m_indexB = m_bodyB->m_islandIndex;
+	m_indexA = m_bodyA->GetIslandIndex();
+	m_indexB = m_bodyB->GetIslandIndex();
 	m_localCenterA = m_bodyA->m_sweep.localCenter;
 	m_localCenterB = m_bodyB->m_sweep.localCenter;
 	m_invMassA = m_bodyA->m_invMass;
@@ -173,6 +174,9 @@ void b2PrismaticJoint::InitVelocityConstraints(const b2SolverData& data)
 
 		m_s1 = b2Cross(d + rA, m_perp);
 		m_s2 = b2Cross(rB, m_perp);
+
+        float32 s1test;
+        s1test = b2Cross(rA, m_perp);
 
 		float32 k11 = mA + mB + iA * m_s1 * m_s1 + iB * m_s2 * m_s2;
 		float32 k12 = iA * m_s1 + iB * m_s2;
@@ -357,13 +361,6 @@ void b2PrismaticJoint::SolveVelocityConstraints(const b2SolverData& data)
 	data.velocities[m_indexB].w = wB;
 }
 
-// A velocity based solver computes reaction forces(impulses) using the velocity constraint solver.Under this context,
-// the position solver is not there to resolve forces.It is only there to cope with integration error.
-//
-// Therefore, the pseudo impulses in the position solver do not have any physical meaning.Thus it is okay if they suck.
-//
-// We could take the active state from the velocity solver.However, the joint might push past the limit when the velocity
-// solver indicates the limit is inactive.
 bool b2PrismaticJoint::SolvePositionConstraints(const b2SolverData& data)
 {
 	b2Vec2 cA = data.positions[m_indexA].c;
@@ -612,8 +609,8 @@ float32 b2PrismaticJoint::GetMotorForce(float32 inv_dt) const
 
 void b2PrismaticJoint::Dump()
 {
-	int32 indexA = m_bodyA->m_islandIndex;
-	int32 indexB = m_bodyB->m_islandIndex;
+	int32 indexA = m_bodyA->GetIslandIndex();
+	int32 indexB = m_bodyB->GetIslandIndex();
 
 	b2Log("  b2PrismaticJointDef jd;\n");
 	b2Log("  jd.bodyA = bodies[%d];\n", indexA);

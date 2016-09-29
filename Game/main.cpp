@@ -47,14 +47,11 @@ GLuint load_texture( int index, const char* filename )
     return load_texture( index, width, height, image );
 }
 
-void setup_game( Game& game );
-void process_events( Game& game );
-
-int main( int argc, char** argv )
+SDL_Window* create_window( const char* title )
 {
     //Create OpenGL window
     //SDL_sdlWindowPOS_CENTERED creates window in the center position using given width/height
-    SDL_Window* _sdlWindow = SDL_CreateWindow( "Spaghetti Western", SDL_WINDOWPOS_CENTERED,
+    SDL_Window* _sdlWindow = SDL_CreateWindow( title, SDL_WINDOWPOS_CENTERED,
                                 SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL );
     //simple error checking
     if ( _sdlWindow == nullptr ) {
@@ -76,12 +73,21 @@ int main( int argc, char** argv )
     SDL_GL_SetSwapInterval( 0 );
     printf( "OpenGL %s\n\n", glGetString( GL_VERSION ) );
 
+    return _sdlWindow;
+}
+
+void setup_game( Game& game );
+void process_events( Game& game );
+
+int main( int argc, char** argv )
+{
+    SDL_Window* sdl_window = create_window( "One Horse Town" );
+
     Game game;
     setup_game( game );
 
     // main loop
-    for ( game.running = true; game.running;
-          SDL_GL_SwapWindow( _sdlWindow ) )
+    for ( game.running = true; game.running; SDL_GL_SwapWindow( sdl_window ) )
     {
         const double tgtFrameTime = 1 / 60.0;
         const int tgtFrameTime_ms = tgtFrameTime * 1000;
@@ -107,14 +113,17 @@ int main( int argc, char** argv )
         // Cap framerate at 60fps
         int tFrameEnd = SDL_GetTicks();
         int frameTime_ms = (tFrameEnd - tFrameStart);
+
         if ( frameTime_ms <= tgtFrameTime_ms )
             SDL_Delay( tgtFrameTime_ms - frameTime_ms );
         else
             printf( "Frame %ims slow\n", frameTime_ms - tgtFrameTime_ms );
+
+        //printf( "ft: %ims\n", frameTime_ms );
     }
     // exit main loop
 
-    SDL_DestroyWindow( _sdlWindow );
+    SDL_DestroyWindow( sdl_window );
     SDL_Quit();
     return 0;
 }
@@ -139,11 +148,29 @@ void process_events( Game& game )
         case SDL_MOUSEMOTION:
             //mouse movement - probably not needed
             break;
-        case SDL_KEYDOWN:
+        case SDL_KEYDOWN: {
             //key press
             //_inputManager.keyDown(event.key.keysym.sym);
-            game.fireBullet( {-100, 0}, {100, 0} );
+            auto playerBody = game.fsxComponents[ "player" ].pBody;
+            Vec2 vel = playerBody->GetLinearVelocity();
+            switch ( event.key.keysym.sym )
+            {
+            case SDLK_LEFT:
+                playerBody->SetLinearVelocity( vel + Vec2{ -1, 0 } );
+                break;
+            case SDLK_RIGHT:
+                playerBody->SetLinearVelocity( vel + Vec2{ 1, 0 } );
+                break;
+            case SDLK_UP:
+                playerBody->SetLinearVelocity( vel + Vec2{ 0, 10 } );
+                break;
+            case SDLK_DOWN:
+                playerBody->SetLinearVelocity( vel + Vec2{ 0, -10 } );
+                break;
+            }
+            //game.fireBullet( {-20, 0}, {100, 0} );
             break;
+        }
         case SDL_KEYUP:
             //key press
             //_inputManager.keyUp(event.key.keysym.sym);
@@ -157,6 +184,15 @@ void process_events( Game& game )
 
 void setup_game( Game& game )
 {
+    game.gfxComponents.add( "player", GraphicalComponent::makeRect( 0.5, 1.5 ) );
+
+    b2BodyDef playerDef;
+    playerDef.position = { -7, -4 };
+    playerDef.fixedRotation = true;
+    playerDef.type = b2_dynamicBody;
+
+    game.fsxComponents.add( "player", PhysicalComponent::makeRect( 0.5, 1.5, game.b2world, playerDef ) );
+
     game.addEqTri( {"tri", 0}, 2, {5, -3}, 0, {1, 0, 0}, b2_kinematicBody );
     auto whttri = game.addEqTri( {"tri", 1}, 2, {0, 0}, 0, {1, 1, 1}, b2_dynamicBody );
     game.addEqTri( {"tri", 2}, 2, {0.5, 2.5}, 0, {0, 0, 1}, b2_dynamicBody );

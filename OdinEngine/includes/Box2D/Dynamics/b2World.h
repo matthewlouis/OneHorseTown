@@ -1,5 +1,6 @@
 /*
 * Copyright (c) 2006-2011 Erin Catto http://www.box2d.org
+* Copyright (c) 2015, Justin Hoffman https://github.com/skitzoid
 *
 * This software is provided 'as-is', without any express or implied
 * warranty.  In no event will the authors be held liable for any damages
@@ -22,6 +23,7 @@
 #include <Box2D/Common/b2Math.h>
 #include <Box2D/Common/b2BlockAllocator.h>
 #include <Box2D/Common/b2StackAllocator.h>
+#include <Box2D/Common/b2GrowableArray.h>
 #include <Box2D/Dynamics/b2ContactManager.h>
 #include <Box2D/Dynamics/b2WorldCallbacks.h>
 #include <Box2D/Dynamics/b2TimeStep.h>
@@ -34,6 +36,7 @@ class b2Body;
 class b2Draw;
 class b2Fixture;
 class b2Joint;
+class b2ThreadPool;
 
 /// The world class manages all physics entities, dynamic simulation,
 /// and asynchronous queries. The world also contains efficient memory
@@ -43,7 +46,8 @@ class b2World
 public:
 	/// Construct a world object.
 	/// @param gravity the world gravity vector.
-	b2World(const b2Vec2& gravity);
+	/// @param threadPool a thread pool that will enable multi-threaded stepping if provided.
+	b2World(const b2Vec2& gravity, b2ThreadPool* threadPool = NULL);
 
 	/// Destruct the world. All physics entities are destroyed and all heap memory is released.
 	~b2World();
@@ -188,6 +192,9 @@ public:
 	/// Is the world locked (in the middle of a time step).
 	bool IsLocked() const;
 
+	/// Is multi-threaded stepping enabled?
+	bool IsMultithreadedStepEnabled() const;
+
 	/// Set flag to control automatic clearing of forces after each time step.
 	void SetAutoClearForces(bool flag);
 
@@ -227,6 +234,12 @@ private:
 	void Solve(const b2TimeStep& step);
 	void SolveTOI(const b2TimeStep& step);
 
+	void SynchronizeFixturesMT();
+	void FindNewContactsMT();
+	void CollideMT();
+	void SolveMT(const b2TimeStep& step);
+	void ClearIslandFlagsMT();
+
 	void DrawJoint(b2Joint* joint);
 	void DrawShape(b2Fixture* shape, const b2Transform& xf, const b2Color& color);
 
@@ -242,6 +255,9 @@ private:
 
 	int32 m_bodyCount;
 	int32 m_jointCount;
+
+	b2GrowableArray<b2Body*> m_nonStaticBodies;
+	b2GrowableArray<b2Body*> m_staticBodies;
 
 	b2Vec2 m_gravity;
 	bool m_allowSleep;
@@ -261,6 +277,10 @@ private:
 	bool m_stepComplete;
 
 	b2Profile m_profile;
+
+	b2ThreadPool* m_threadPool;
+
+	int32 m_threadCount;
 };
 
 inline b2Body* b2World::GetBodyList()
@@ -305,7 +325,7 @@ inline int32 b2World::GetJointCount() const
 
 inline int32 b2World::GetContactCount() const
 {
-	return m_contactManager.m_contactCount;
+	return m_contactManager.GetContactCount();
 }
 
 inline void b2World::SetGravity(const b2Vec2& gravity)
@@ -321,6 +341,11 @@ inline b2Vec2 b2World::GetGravity() const
 inline bool b2World::IsLocked() const
 {
 	return (m_flags & e_locked) == e_locked;
+}
+
+inline bool b2World::IsMultithreadedStepEnabled() const
+{
+	return m_threadPool != NULL;
 }
 
 inline void b2World::SetAutoClearForces(bool flag)

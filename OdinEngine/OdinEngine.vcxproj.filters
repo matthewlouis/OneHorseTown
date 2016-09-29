@@ -204,6 +204,9 @@
     <ClCompile Include="includes\lodepng.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="includes\Box2D\Common\b2Threading.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Errors.h">
@@ -1038,6 +1041,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="includes\lodepng.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\Box2D\Common\b2GrowableArray.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\Box2D\Common\b2Threading.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
