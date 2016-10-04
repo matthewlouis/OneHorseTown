@@ -107,6 +107,11 @@ GLuint loadShaders( const char* vertex_file_path, const char* fragment_file_path
     GLuint ProgramID = glCreateProgram();
     glAttachShader(ProgramID, VertexShaderID);
     glAttachShader(ProgramID, FragmentShaderID);
+
+	//Setup attrib locations to support OpenGL 3.0
+	glBindAttribLocation(ProgramID, 0, "vertex");
+	glBindAttribLocation(ProgramID, 1, "texCoord");
+
     glLinkProgram(ProgramID);
 
     // Check the program
