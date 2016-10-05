@@ -15,6 +15,9 @@
 #include <thread>
 #include <chrono>
 
+#include <AudioEngine.h>
+
+
 template< typename Array >
 GLuint load_texture( int index, int width, int height, const Array& data )
 {
@@ -167,6 +170,8 @@ void process_events( Game& game )
             case SDLK_DOWN:
                 playerBody->SetLinearVelocity( vel + Vec2{ 0, -10 } );
                 break;
+			case SDLK_SPACE:
+				game.fireBullet({ -20, 0 }, { 100, 0 });
             }
             //game.fireBullet( {-20, 0}, {100, 0} );
             break;
@@ -218,7 +223,6 @@ void setup_game( Game& game )
     game.addRightTri( {"rtri", 0}, {-2, 2}, {0, -3}, 0, {0, 1, 1}, b2_dynamicBody );
     auto ylwramp = game.addRightTri( {"rtri", 1}, {3, 1}, {-2, -3}, 0, {1, 1, 0} );
 
-    game.fireBullet( {-170, 5.5f}, {100, 0} );
 
     //GLuint nul = load_texture( "null.png", 0 );
     GLuint nul = load_texture< GLubyte[4] >( 0, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF } );

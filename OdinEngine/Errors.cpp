@@ -19,7 +19,19 @@ namespace OdinEngine {
 
 	int fmodErrorCheck(FMOD_RESULT result) {
 		if (result != FMOD_OK) {
-			return 1; //everything worked
+			switch (result) {
+			case FMOD_ERR_FILE_NOTFOUND:
+				std::cout << "Fmod: File not found.\n";
+				break;
+			case FMOD_ERR_FORMAT:
+				std::cout << "Fmod: Unsupported format.\n";
+				break;
+			default:
+				std::cout << "Fmod error result: " << result << std::endl;
+				break;
+			}
+			return 1; //fail
 		}
+		return 0; //okay
 	}
 }

@@ -20,6 +20,8 @@ using Map = BinarySearchMap< KeyType, ValueType >;
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_access.hpp>
 
+#include <AudioEngine.h>
+
 enum class ComponentType
 {
     Graphical, Physical
@@ -62,6 +64,8 @@ public:
     b2World                             b2world = { { 0.f, -9.81f }, &b2thd };
     Map< EntityId, PhysicalComponent >  fsxComponents;
 
+	OdinEngine::AudioEngine audioEngine;
+
     unsigned short _bulletCount = 0;
     bool running = false;
 
@@ -72,6 +76,8 @@ public:
         , uColor( glGetUniformLocation( program, "uColor" ) )
         , uTexture( glGetUniformLocation( program, "uTexture" ) )
     {
+		audioEngine.init(); //must call this to init audio engine
+		audioEngine.loadSound("Audio/FX/shot.aif"); //debug for loading shot sound
     }
 
     void draw( const GraphicalComponent& gfx, EntityId eid );
@@ -90,6 +96,8 @@ public:
 
     EntityView fireBullet( Vec2 position, Vec2 velocity )
     {
+		audioEngine.playSound("Audio/FX/shot.aif"); //play effect
+
         EntityId eid( "bullet", _bulletCount++ );
 
         if ( !entities.add( eid, Entity( position, 0 ) ) )
@@ -261,4 +269,6 @@ void Game::update( const PhysicalComponent& fsx, EntityId eid )
     }
     
     entity.rotation = fsx.rotation();
+
+	audioEngine.update();
 }
