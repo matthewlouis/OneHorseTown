@@ -71,7 +71,7 @@ public:
 
 
     Game()
-        : program( loadShaders( "vertexShader.glsl", "fragmentShader.glsl" ) )
+        : program( loadShaders( "Shaders/vertexShader.glsl", "Shaders/fragmentShader.glsl" ) )
         , uMatrix( glGetUniformLocation( program, "uMatrix" ) ) 
         , uColor( glGetUniformLocation( program, "uColor" ) )
         , uTexture( glGetUniformLocation( program, "uTexture" ) )

@@ -226,8 +226,8 @@ void setup_game( Game& game )
 
     //GLuint nul = load_texture( "null.png", 0 );
     GLuint nul = load_texture< GLubyte[4] >( 0, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF } );
-    GLuint tex = load_texture( 1, "crate.png" );
-    GLuint tex2 = load_texture( 2, "crate2.png" );
+    GLuint tex = load_texture( 1, "Textures/crate.png" );
+    GLuint tex2 = load_texture( 2, "Textures/crate2.png" );
 
     blucrate.gfxComponent()->texture = 2;
     pnkcrate.gfxComponent()->texture = 1;
