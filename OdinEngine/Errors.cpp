@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <SDL/SDL.h>
+#include <FMOD/fmod.h>
 
 namespace OdinEngine {
 	void fatalError(std::string errorString)
@@ -14,5 +15,11 @@ namespace OdinEngine {
 		std::cin >> tmp;
 		SDL_Quit();
 		exit(EXIT_FAILURE);
+	}
+
+	int fmodErrorCheck(FMOD_RESULT result) {
+		if (result != FMOD_OK) {
+			return 1; //everything worked
+		}
 	}
 }
