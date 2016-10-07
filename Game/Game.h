@@ -1,28 +1,26 @@
 // Andrew Meckling
 #pragma once
 
-#include "Util.h"
-
 #include "Entity.hpp"
-#include "EntityId.hpp"
+#include <Odin/EntityId.hpp>
 
-#include "GraphicalComponent.hpp"
-#include "PhysicalComponent.hpp"
+#include <Odin/GraphicalComponent.hpp>
+#include <Odin/PhysicalComponent.hpp>
+#include <Odin/InputManager.hpp>
 
-#include "BinarySearchMap.hpp"
-template< typename KeyType, typename ValueType >
-using Map = BinarySearchMap< KeyType, ValueType >;
+#include <Odin/Math.hpp>
 
 #include "Constants.h"
 
-#include <glm/glm.hpp>
-#include <glm/matrix.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/matrix_access.hpp>
+using odin::EntityId;
+using odin::GraphicalComponent;
+using odin::PhysicalComponent;
+using odin::InputManager;
+using odin::InputListener;
 
 enum class ComponentType
 {
-    Graphical, Physical
+    Graphical, Physical, Input
 };
 
 class Game;
@@ -40,11 +38,13 @@ struct EntityView
 
     void attach( GraphicalComponent gfx );
     void attach( PhysicalComponent fsx );
+    void attach( InputListener lstn );
 
     void detach( ComponentType type );
 
     GraphicalComponent* gfxComponent();
     PhysicalComponent* fsxComponent();
+    InputListener* inputListener();
 };
 
 
@@ -52,31 +52,45 @@ class Game
 {
 public:
 
-    Map< EntityId, Entity >             entities;
+    template< typename ValueType >
+    using EntityMap = odin::BinarySearchMap< EntityId, ValueType >;
 
-    GLuint                              program;
-    Map< EntityId, GraphicalComponent > gfxComponents;
-    GLint                               uMatrix, uColor, uTexture;
 
-    b2ThreadPool                        b2thd;
-    b2World                             b2world = { { 0.f, -9.81f }, &b2thd };
-    Map< EntityId, PhysicalComponent >  fsxComponents;
+    EntityMap< Entity >             entities;
+
+    GLuint                          program;
+    EntityMap< GraphicalComponent > gfxComponents;
+    GLint                           uMatrix, uColor, uTexture;
+
+    b2ThreadPool                    b2thd;
+    b2World                         b2world = { { 0.f, -9.81f }, &b2thd };
+    EntityMap< PhysicalComponent >  fsxComponents;
+
+    InputManager                    inputManager;
+    EntityMap< InputListener >      listeners;
+
+    int _width;
+    int _height;
 
     unsigned short _bulletCount = 0;
     bool running = false;
 
 
-    Game()
+    Game( int width, int height )
         : program( loadShaders( "vertexShader.glsl", "fragmentShader.glsl" ) )
         , uMatrix( glGetUniformLocation( program, "uMatrix" ) ) 
         , uColor( glGetUniformLocation( program, "uColor" ) )
         , uTexture( glGetUniformLocation( program, "uTexture" ) )
+        , _width( width )
+        , _height( height )
     {
     }
 
     void draw( const GraphicalComponent& gfx, EntityId eid );
 
     void update( const PhysicalComponent& fsx, EntityId eid );
+
+    void trigger( const InputListener& lstn, EntityId eid );
 
     void add( EntityId eid, GraphicalComponent gfx )
     {
@@ -86,6 +100,11 @@ public:
     void add( EntityId eid, PhysicalComponent fsx )
     {
         fsxComponents.add( eid, std::move( fsx ) );
+    }
+
+    void add( EntityId eid, InputListener lstn )
+    {
+        listeners.add( eid, std::move( lstn ) );
     }
 
     EntityView fireBullet( Vec2 position, Vec2 velocity )
@@ -198,6 +217,11 @@ void EntityView::attach( PhysicalComponent fsx )
     pGame->fsxComponents[ eid ] = std::move( fsx );
 }
 
+void EntityView::attach( InputListener lstn )
+{
+    pGame->listeners[ eid ] = std::move( lstn );
+}
+
 void EntityView::detach( ComponentType type )
 {
     switch ( type )
@@ -207,6 +231,9 @@ void EntityView::detach( ComponentType type )
         break;
     case ComponentType::Physical :
         pGame->fsxComponents.remove( eid );
+        break;
+    case ComponentType::Input :
+        pGame->listeners.remove( eid );
         break;
     }
 }
@@ -223,14 +250,22 @@ PhysicalComponent* EntityView::fsxComponent()
     return itr ? (PhysicalComponent*) itr : nullptr;
 }
 
+InputListener* EntityView::inputListener()
+{
+    auto itr = pGame->listeners.search( eid );
+    return itr ? (InputListener*) itr : nullptr;
+}
 
 void Game::draw( const GraphicalComponent& gfx, EntityId eid )
 {
     using namespace glm;
     Entity& entity = entities[ eid ];
 
+    float zoom = 1.0 / SCALE;
+    float aspect = _width / (float) _height;
+
     mat4 mtx;
-    mtx = scale( mtx, vec3( SCALE / WIDTH, SCALE / HEIGHT, 1 ) );
+    mtx = scale( mtx, vec3( zoom, zoom * aspect, 1 ) );
     mtx = translate( mtx, vec3( entity.position.glmvec2, 0 ) );
     mtx = rotate( mtx, entity.rotation, vec3( 0, 0, 1 ) );
 
@@ -261,4 +296,9 @@ void Game::update( const PhysicalComponent& fsx, EntityId eid )
     }
     
     entity.rotation = fsx.rotation();
+}
+
+void Game::trigger( const InputListener& lstn, EntityId eid )
+{
+    lstn( inputManager, eid );
 }

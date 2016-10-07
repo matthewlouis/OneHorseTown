@@ -71,9 +71,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(ProjectDir)/includes;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)/lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(ProjectDir)/includes;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)/lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -139,10 +141,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="Errors.cpp" />
-    <ClCompile Include="GLSLProgram.cpp" />
-    <ClCompile Include="ImageLoader.cpp" />
     <ClCompile Include="includes\Box2D\Collision\b2BroadPhase.cpp" />
     <ClCompile Include="includes\Box2D\Collision\b2CollideCircle.cpp" />
     <ClCompile Include="includes\Box2D\Collision\b2CollideEdge.cpp" />
@@ -193,23 +191,9 @@
     <ClCompile Include="includes\glm\detail\dummy.cpp" />
     <ClCompile Include="includes\glm\detail\glm.cpp" />
     <ClCompile Include="includes\lodepng.cpp" />
-    <ClCompile Include="InputManager.cpp" />
-    <ClCompile Include="IOManager.cpp" />
-    <ClCompile Include="OdinEngine.cpp" />
-    <ClCompile Include="picoPNG.cpp" />
-    <ClCompile Include="ResourceManager.cpp" />
-    <ClCompile Include="Sprite.cpp" />
-    <ClCompile Include="SpriteBatch.cpp" />
-    <ClCompile Include="TextureCache.cpp" />
-    <ClCompile Include="Timing.cpp" />
-    <ClCompile Include="Window.cpp" />
+    <ClCompile Include="includes\Odin\EntityId.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="Errors.h" />
-    <ClInclude Include="GLSLProgram.h" />
-    <ClInclude Include="GLTexture.h" />
-    <ClInclude Include="ImageLoader.h" />
     <ClInclude Include="includes\Box2D\Box2D.h" />
     <ClInclude Include="includes\Box2D\Collision\b2BroadPhase.h" />
     <ClInclude Include="includes\Box2D\Collision\b2Collision.h" />
@@ -403,6 +387,17 @@
     <ClInclude Include="includes\glm\vector_relational.hpp" />
     <ClInclude Include="includes\GL\glew.h" />
     <ClInclude Include="includes\lodepng.h" />
+    <ClInclude Include="includes\Odin\BinarySearchMap.hpp" />
+    <ClInclude Include="includes\Odin\EntityId.hpp" />
+    <ClInclude Include="includes\Odin\glhelp.h" />
+    <ClInclude Include="includes\Odin\GraphicalComponent.hpp" />
+    <ClInclude Include="includes\Odin\InputManager.hpp" />
+    <ClInclude Include="includes\Odin\Math.hpp" />
+    <ClInclude Include="includes\Odin\Odin.h" />
+    <ClInclude Include="includes\Odin\PhysicalComponent.hpp" />
+    <ClInclude Include="includes\Odin\template_helper.hpp" />
+    <ClInclude Include="includes\Odin\TextureManager.hpp" />
+    <ClInclude Include="includes\Odin\Util.h" />
     <ClInclude Include="includes\SDL\begin_code.h" />
     <ClInclude Include="includes\SDL\close_code.h" />
     <ClInclude Include="includes\SDL\SDL.h" />
@@ -473,18 +468,6 @@
     <ClInclude Include="includes\SDL\SDL_types.h" />
     <ClInclude Include="includes\SDL\SDL_version.h" />
     <ClInclude Include="includes\SDL\SDL_video.h" />
-    <ClInclude Include="InputManager.h" />
-    <ClInclude Include="IOManager.h" />
-    <ClInclude Include="OdinEngine.h" />
-    <ClInclude Include="picoPNG.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="ResourceManager.h" />
-    <ClInclude Include="Sprite.h" />
-    <ClInclude Include="SpriteBatch.h" />
-    <ClInclude Include="TextureCache.h" />
-    <ClInclude Include="Timing.h" />
-    <ClInclude Include="Vertex.h" />
-    <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="includes\glm\detail\func_common.inl" />

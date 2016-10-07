@@ -71,11 +71,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(SolutionDir)OdinEngine/includes/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)deps/lib/;$(SolutionDir)Debug/;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)OdinEngine/lib/;$(SolutionDir)Debug/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(SolutionDir)OdinEngine/includes/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)deps/lib/;$(SolutionDir)Release/;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)OdinEngine/lib/;$(SolutionDir)Release/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -129,23 +129,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="EntityId.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BinarySearchMap.hpp" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="Entity.hpp" />
-    <ClInclude Include="EntityId.hpp" />
     <ClInclude Include="Game.h" />
-    <ClInclude Include="GameConstants.h" />
-    <ClInclude Include="glhelp.h" />
-    <ClInclude Include="GraphicalComponent.hpp" />
-    <ClInclude Include="InputComponent.h" />
-    <ClInclude Include="Math.hpp" />
-    <ClInclude Include="PhysicalComponent.hpp" />
-    <ClInclude Include="template_helper.hpp" />
-    <ClInclude Include="Util.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Game.rc" />
@@ -156,9 +145,10 @@
     <None Include="vertexShader.glsl" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="crate.jpg" />
-    <Image Include="crate.png" />
-    <Image Include="crate2.png" />
+    <Image Include="Textures\crate.png" />
+    <Image Include="Textures\crate2.png" />
+    <Image Include="Textures\pixel_cowboy.png" />
+    <Image Include="Textures\pixel_horse.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

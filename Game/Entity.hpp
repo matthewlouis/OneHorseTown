@@ -1,7 +1,7 @@
 // Andrew Meckling
 #pragma once
 
-#include "Math.hpp"
+#include <Odin/Math.hpp>
 
 // Base entity object of the entity-component system. Contains 
 // data required by most components.

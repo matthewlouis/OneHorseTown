@@ -9,6 +9,6 @@ out vec2 vTexCoord;
 
 void main()
 {
-    gl_Position = uMatrix * vec4( vertex, 1 );;
+    gl_Position = uMatrix * vec4( vertex, 1 );
     vTexCoord = texCoord;
 }
