@@ -237,6 +237,8 @@ namespace odin {
 			else {
 				scenes[idx] = scene;
 			}
+
+			scene->setup_scene();
 		}
 
 		void draw(float zoom, float aspect, GLint uMatrix, GLint uColor, GLint uTexture, GLuint program) {
