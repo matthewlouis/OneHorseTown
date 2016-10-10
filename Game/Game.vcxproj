@@ -133,8 +133,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Constants.h" />
-    <ClInclude Include="Entity.hpp" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="TestScene.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Game.rc" />
