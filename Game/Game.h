@@ -24,7 +24,6 @@ class Game
 public:
 	SceneManager sceneManager;
 
-	GLint                           uMatrix, uColor, uTexture;
 	GLuint                          program;
 
     int _width;
@@ -38,9 +37,6 @@ public:
 
 	Game(int width, int height)
 		: program(loadShaders("vertexShader.glsl", "fragmentShader.glsl"))
-		, uMatrix(glGetUniformLocation(program, "uMatrix"))
-		, uColor(glGetUniformLocation(program, "uColor"))
-		, uTexture(glGetUniformLocation(program, "uTexture"))
 		, _width(width)
 		, _height(height)
 		, sceneManager()
@@ -76,7 +72,7 @@ void Game::draw() {
 	float zoom = 1.0 / SCALE;
 	float aspect = _width / (float)_height;
 
-	sceneManager.draw(zoom, aspect, uMatrix, uColor, uTexture, program);
+	sceneManager.draw(zoom, aspect, program);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, WIDTH, HEIGHT);

@@ -140,11 +140,11 @@ namespace odin {
 			}
 		}
 
-		void draw(float zoom, float aspect, GLint uMatrix, GLint uColor, GLint uTexture, GLuint program) {
+		void draw(float zoom, float aspect, GLuint program) {
 			for (auto itr = gfxComponents.begin();
 			itr != gfxComponents.end(); ++itr)
 			{
-				drawComponent(*itr, itr.key(), zoom, aspect, uMatrix, uColor, uTexture, program);
+				drawComponent(*itr, itr.key(), zoom, aspect, program);
 			}
 		}
 
@@ -166,7 +166,7 @@ namespace odin {
 		}
 
 
-		void drawComponent(const GraphicalComponent& gfx, EntityId eid, float zoom, float aspect, GLint uMatrix, GLint uColor, GLint uTexture, GLuint program)
+		void drawComponent(const GraphicalComponent& gfx, EntityId eid, float zoom, float aspect, GLuint program)
 		{
 			using namespace glm;
 			Entity& entity = entities[eid];
@@ -175,6 +175,10 @@ namespace odin {
 			mtx = scale(mtx, vec3(zoom, zoom * aspect, 1));
 			mtx = translate(mtx, vec3(entity.position.glmvec2, 0));
 			mtx = rotate(mtx, entity.rotation, vec3(0, 0, 1));
+
+			GLint uMatrix = glGetUniformLocation(program, "uMatrix");
+			GLint uColor = glGetUniformLocation(program, "uColor");
+			GLint uTexture = glGetUniformLocation(program, "uTexture");
 
 			if (gfx.programId == 0)
 			{
@@ -241,9 +245,9 @@ namespace odin {
 			scene->setup_scene();
 		}
 
-		void draw(float zoom, float aspect, GLint uMatrix, GLint uColor, GLint uTexture, GLuint program) {
+		void draw(float zoom, float aspect, GLuint program) {
 			if(currentScene >= 0 && currentScene < scenes.size())
-				scenes[currentScene]->draw(zoom, aspect, uMatrix, uColor, uTexture, program);
+				scenes[currentScene]->draw(zoom, aspect, program);
 		}
 
 		void handleInput() {
