@@ -52,8 +52,8 @@ class Game
 {
 public:
 
-    template< typename ValueType >
-    using EntityMap = odin::BinarySearchMap< EntityId, ValueType >;
+    template< typename T >
+    using EntityMap = odin::BinarySearchMap< EntityId, T >;
 
 
     EntityMap< Entity >             entities;
@@ -77,7 +77,7 @@ public:
 
 
     Game( int width, int height )
-        : program( loadShaders( "vertexShader.glsl", "fragmentShader.glsl" ) )
+        : program( load_shaders( "vertexShader.glsl", "fragmentShader.glsl" ) )
         , uMatrix( glGetUniformLocation( program, "uMatrix" ) ) 
         , uColor( glGetUniformLocation( program, "uColor" ) )
         , uTexture( glGetUniformLocation( program, "uTexture" ) )
