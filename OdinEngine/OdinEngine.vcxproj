@@ -142,10 +142,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AudioEngine.cpp" />
-    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Errors.cpp" />
-    <ClCompile Include="GLSLProgram.cpp" />
-    <ClCompile Include="ImageLoader.cpp" />
     <ClCompile Include="includes\Box2D\Collision\b2BroadPhase.cpp" />
     <ClCompile Include="includes\Box2D\Collision\b2CollideCircle.cpp" />
     <ClCompile Include="includes\Box2D\Collision\b2CollideEdge.cpp" />
@@ -198,11 +195,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AudioEngine.h" />
-    <ClInclude Include="Camera.h" />
     <ClInclude Include="Errors.h" />
-    <ClInclude Include="GLSLProgram.h" />
-    <ClInclude Include="GLTexture.h" />
-    <ClInclude Include="ImageLoader.h" />
     <ClInclude Include="includes\Box2D\Box2D.h" />
     <ClInclude Include="includes\Box2D\Collision\b2BroadPhase.h" />
     <ClInclude Include="includes\Box2D\Collision\b2Collision.h" />
