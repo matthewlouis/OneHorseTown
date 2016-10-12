@@ -77,7 +77,7 @@ int main( int argc, char** argv )
 
         game.b2world.Step( tgtFrameTime, 50, 50 );
         for ( auto itr = game.fsxComponents.begin();
-        itr != game.fsxComponents.end(); ++itr )
+              itr != game.fsxComponents.end(); ++itr )
         {
             game.update( *itr, itr.key() );
         }
@@ -87,7 +87,7 @@ int main( int argc, char** argv )
 
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         for ( auto itr = game.gfxComponents.begin();
-        itr != game.gfxComponents.end(); ++itr )
+              itr != game.gfxComponents.end(); ++itr )
         {
             game.draw( *itr, itr.key() );
         }
@@ -137,7 +137,7 @@ void player_input( const InputManager& mngr, EntityView ntt )
         vel.x = tween<float>( vel.x, 0, 12 * (1/60.0) );
     }
     else
-    {
+        {
         //pFixt->SetFriction( 0 );
         vel.x -= actionLeft * (20 + 1) * (1/60.0);
         vel.x += actionRight * (20 + 1) * (1/60.0);
