@@ -24,8 +24,8 @@ class Game
 public:
 	SceneManager sceneManager;
 
+	
 	GLuint                          program;
-
     int _width;
     int _height;
 
@@ -36,7 +36,7 @@ public:
 	int tFrameStart = 0;
 
 	Game(int width, int height)
-		: program(loadShaders("vertexShader.glsl", "fragmentShader.glsl"))
+		: program(load_shaders("vertexShader.glsl", "fragmentShader.glsl"))
 		, _width(width)
 		, _height(height)
 		, sceneManager()
@@ -53,7 +53,6 @@ public:
 };
 
 void Game::handleInput() {
-	tFrameStart = SDL_GetTicks();
 
 	sceneManager.handleInput();
 }
@@ -64,7 +63,8 @@ void Game::update() {
 
 void Game::draw() {
 
-	
+	tFrameStart = SDL_GetTicks();
+
 	glViewport(0, 0, LOW_WIDTH, LOW_HEIGHT);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

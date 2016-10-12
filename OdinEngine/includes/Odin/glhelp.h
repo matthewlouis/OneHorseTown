@@ -9,8 +9,8 @@
 #include <fstream>
 #include <string>
 
-GLuint loadShaders( const char* vertexFilePath,
-                    const char* fragmentFilePath );
+GLuint load_shaders( const char* vertexFilePath,
+                     const char* fragmentFilePath );
 
 
 template< typename T >
@@ -96,7 +96,7 @@ void glUniform( GLint location, int num )
 }
 
 // Code grabbed from http://www.opengl-tutorial.org/beginners-tutorials/tutorial-2-the-first-triangle/
-GLuint loadShaders( const char* vertex_file_path, const char* fragment_file_path )
+GLuint load_shaders( const char* vertex_file_path, const char* fragment_file_path )
 {
     // Create the shaders
     GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);

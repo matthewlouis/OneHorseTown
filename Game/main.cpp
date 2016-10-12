@@ -5,9 +5,6 @@
 
 #include "Game.h"
 
-#include <thread>
-#include <chrono>
-
 SDL_Window* create_window( const char* title, int width, int height )
 {
     //Create OpenGL window
@@ -54,6 +51,8 @@ int main( int argc, char** argv )
 {
     SDL_Window* sdl_window = create_window( "One Horse Town", WIDTH, HEIGHT );
 
+    auto framebuffer = odin::make_framebuffer( LOW_WIDTH, LOW_HEIGHT,
+                                               odin::Framebuffer::COLOR );
 
     GLuint frameBuffer = 0;
     glGenFramebuffers( 1, &frameBuffer );
@@ -94,8 +93,6 @@ int main( int argc, char** argv )
 
     Game game( WIDTH, HEIGHT );
     // setup_game( game );
-
-    glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 
     // main loop
     for ( game.running = true; game.running; SDL_GL_SwapWindow( sdl_window ) )
