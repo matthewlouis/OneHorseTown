@@ -117,7 +117,6 @@
     <ClInclude Include="includes\Odin\PhysicalComponent.hpp" />
     <ClInclude Include="includes\Odin\SceneManager.hpp" />
     <ClInclude Include="includes\Odin\template_helper.hpp" />
-    <ClInclude Include="includes\Odin\TextureManager.hpp" />
     <ClInclude Include="includes\Odin\Util.h" />
     <ClInclude Include="includes\SDL\begin_code.h" />
     <ClInclude Include="includes\SDL\close_code.h" />
@@ -192,5 +191,6 @@
     <ClInclude Include="includes\Odin\AudioEngine.h" />
     <ClInclude Include="includes\Odin\Errors.h" />
     <ClInclude Include="includes\Odin\Scene.h" />
+    <ClInclude Include="includes\Odin\TextureManager.hpp" />
   </ItemGroup>
 </Project>

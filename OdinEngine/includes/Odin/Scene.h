@@ -69,6 +69,8 @@ namespace odin {
 
 		void add(EntityId eid, InputListener lstn);
 
+		virtual void player_input(const InputManager&, EntityId eid){}
+
 	};
 
 	struct EntityView

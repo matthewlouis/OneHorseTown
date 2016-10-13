@@ -2,6 +2,7 @@
 
 #include <Odin/SceneManager.hpp>
 #include <Odin/TextureManager.hpp>
+#include "EntityFactory.h"
 
 using odin::GraphicalComponent;
 using odin::PhysicalComponent;
@@ -32,20 +33,7 @@ public:
 			EntityId(0), GraphicalComponent::makeRect(_width / _scale, _height / _scale));
 		background->texture = 4;
 
-		auto pGfx = gfxComponents.add("player", GraphicalComponent::makeRect(1, 2.33));
-		pGfx->texture = 3;
-
-		b2BodyDef playerDef;
-		playerDef.position = { -7, -4 };
-		playerDef.fixedRotation = true;
-		playerDef.type = b2_dynamicBody;
-		playerDef.gravityScale = 2;
-
-		auto pFsx = fsxComponents.add("player", PhysicalComponent::makeRect(1, 2.33, b2world, playerDef));
-
-		listeners.add("player", [&](const InputManager& inmn, EntityId eid) {
-			return player_input(inmn, EntityView(eid, this));
-		});
+		EntityFactory::instance()->makePlayer("player", 1, 2.33, this);
 
 		addEqTri({ "tri", 0 }, 2, { 5, -3 }, 0, { 1, 0, 0 }, b2_kinematicBody);
 		auto whttri = addEqTri({ "tri", 1 }, 2, { 0, 0 }, 0, { 1, 1, 1 }, b2_dynamicBody);
@@ -75,13 +63,9 @@ public:
 		fireBullet({ -170, 5.5f }, { 100, 0 });
 
 		//GLuint nul = load_texture( "null.png", 0 );
-		GLuint nul = odin::load_texture< GLubyte[4] >(0, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF });
-		GLuint tex = odin::load_texture(1, "Textures/crate.png");
-		GLuint tex2 = odin::load_texture(2, "Textures/crate2.png");
-		GLuint tex3 = odin::load_texture(3, "Textures/pixel_cowboy.png");
-		GLuint tex4 = odin::load_texture(4, "Textures/background.png");
+		
 
-		blucrate.gfxComponent()->texture = 2;
+		blucrate.gfxComponent()->texture = Textures::CRATE2;
 		pnkcrate.gfxComponent()->texture = 1;
 		ylwramp.gfxComponent()->texture = 1;
 		whttri.gfxComponent()->texture = 1;
