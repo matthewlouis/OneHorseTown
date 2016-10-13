@@ -44,7 +44,18 @@ namespace odin {
 		InputManager                    inputManager;
 		EntityMap< InputListener >      listeners;
 
+		GLuint program;
+		GLint uMatrix, uColor, uTexture;
+
 		virtual void setup_scene(){}
+
+		Scene(GLuint _program)
+			:program(_program)
+		{
+			uMatrix = glGetUniformLocation(_program, "uMatrix");
+			uColor = glGetUniformLocation(_program, "uColor");
+			uTexture = glGetUniformLocation(_program, "uTexture");
+		}
 
 		EntityView addRect(EntityId   eid,
 			Vec2       dimen,
@@ -144,7 +155,7 @@ namespace odin {
 			for (auto itr = gfxComponents.begin();
 			itr != gfxComponents.end(); ++itr)
 			{
-				drawComponent(*itr, itr.key(), zoom, aspect, program);
+				drawComponent(*itr, itr.key(), zoom, aspect);
 			}
 		}
 
@@ -166,7 +177,7 @@ namespace odin {
 		}
 
 
-		void drawComponent(const GraphicalComponent& gfx, EntityId eid, float zoom, float aspect, GLuint program)
+		void drawComponent(const GraphicalComponent& gfx, EntityId eid, float zoom, float aspect)
 		{
 			using namespace glm;
 			Entity& entity = entities[eid];
@@ -175,10 +186,6 @@ namespace odin {
 			mtx = scale(mtx, vec3(zoom, zoom * aspect, 1));
 			mtx = translate(mtx, vec3(entity.position.glmvec2, 0));
 			mtx = rotate(mtx, entity.rotation, vec3(0, 0, 1));
-
-			GLint uMatrix = glGetUniformLocation(program, "uMatrix");
-			GLint uColor = glGetUniformLocation(program, "uColor");
-			GLint uTexture = glGetUniformLocation(program, "uTexture");
 
 			if (gfx.programId == 0)
 			{
