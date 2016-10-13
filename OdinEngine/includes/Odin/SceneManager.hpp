@@ -3,11 +3,6 @@
 #include "Scene.h"
 
 namespace odin {
-
-	
-
-	
-
 	class SceneManager {
 	public:
 		int currentScene = -1;
