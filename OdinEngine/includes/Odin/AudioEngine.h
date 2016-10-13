@@ -5,8 +5,8 @@
  **/
 #pragma once
 
-#include "includes\FMOD\fmod_studio.hpp"
-#include "includes\FMOD\fmod.hpp"
+#include "FMOD\fmod_studio.hpp"
+#include "FMOD\fmod.hpp"
 #include <string>
 #include <map>
 #include <vector>

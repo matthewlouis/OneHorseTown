@@ -141,8 +141,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AudioEngine.cpp" />
-    <ClCompile Include="Errors.cpp" />
+    <ClCompile Include="includes\Odin\AudioEngine.cpp" />
+    <ClCompile Include="includes\Odin\Errors.cpp" />
     <ClCompile Include="includes\Box2D\Collision\b2BroadPhase.cpp" />
     <ClCompile Include="includes\Box2D\Collision\b2CollideCircle.cpp" />
     <ClCompile Include="includes\Box2D\Collision\b2CollideEdge.cpp" />
@@ -195,8 +195,8 @@
     <ClCompile Include="includes\Odin\OdinGame.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AudioEngine.h" />
-    <ClInclude Include="Errors.h" />
+    <ClInclude Include="includes\Odin\AudioEngine.h" />
+    <ClInclude Include="includes\Odin\Errors.h" />
     <ClInclude Include="includes\Box2D\Box2D.h" />
     <ClInclude Include="includes\Box2D\Collision\b2BroadPhase.h" />
     <ClInclude Include="includes\Box2D\Collision\b2Collision.h" />

@@ -7,6 +7,22 @@
 
 SDL_Window* create_window( const char* title, int width, int height )
 {
+	//previously we were not initting all of the subsystems.
+	//best thing to do here is init everything
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+	{
+		printf("SDL_Init failed: %s.\n", SDL_GetError());
+		SDL_Quit();
+	}
+
+	//Request minimum version for compatibility.
+	if(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3))
+		printf("SDL_GL_SetAttribute failed: %s.\n", SDL_GetError());
+	if(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3))
+		printf("SDL_GL_SetAttribute failed: %s.\n", SDL_GetError());
+	if(SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE))
+		printf("SDL_GL_SetAttribute failed: %s.\n", SDL_GetError());
+
     //Create OpenGL window
     //SDL_sdlWindowPOS_CENTERED creates window in the center position using given width/height
     SDL_Window* _sdlWindow = SDL_CreateWindow( title, SDL_WINDOWPOS_CENTERED,
@@ -15,12 +31,6 @@ SDL_Window* create_window( const char* title, int width, int height )
     if ( _sdlWindow == nullptr )
     {
         printf( "SDL_Window could not be created.\n" );
-        SDL_Quit();
-    }
-
-    if ( SDL_Init( SDL_INIT_GAMECONTROLLER ) != 0 )
-    {
-        printf( "SDL_Init failed: %s.\n", SDL_GetError() );
         SDL_Quit();
     }
 
@@ -81,7 +91,7 @@ int main( int argc, char** argv )
     //glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer );
 
     // Set "renderedTexture" as our colour attachement #0
-    glFramebufferTexture( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderedTexture, 0 );
+	glFramebufferTexture( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderedTexture, 0 );
 
     // Set the list of draw buffers.
     //GLenum DrawBuffers[ 1 ] = { GL_COLOR_ATTACHMENT0 };
