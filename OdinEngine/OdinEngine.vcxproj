@@ -192,6 +192,7 @@
     <ClCompile Include="includes\Box2D\Rope\b2Rope.cpp" />
     <ClCompile Include="includes\lodepng.cpp" />
     <ClCompile Include="includes\Odin\EntityId.cpp" />
+    <ClCompile Include="includes\Odin\OdinGame.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AudioEngine.h" />
@@ -247,6 +248,7 @@
     <ClInclude Include="includes\Box2D\Rope\b2Rope.h" />
     <ClInclude Include="includes\lodepng.h" />
     <ClInclude Include="includes\Odin\BinarySearchMap.hpp" />
+    <ClInclude Include="includes\Odin\Entity.hpp" />
     <ClInclude Include="includes\Odin\EntityId.hpp" />
     <ClInclude Include="includes\Odin\glhelp.h" />
     <ClInclude Include="includes\Odin\GraphicalComponent.hpp" />
@@ -254,6 +256,7 @@
     <ClInclude Include="includes\Odin\Math.hpp" />
     <ClInclude Include="includes\Odin\Odin.h" />
     <ClInclude Include="includes\Odin\PhysicalComponent.hpp" />
+    <ClInclude Include="includes\Odin\SceneManager.hpp" />
     <ClInclude Include="includes\Odin\template_helper.hpp" />
     <ClInclude Include="includes\Odin\TextureManager.hpp" />
     <ClInclude Include="includes\Odin\Util.h" />

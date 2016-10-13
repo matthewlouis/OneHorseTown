@@ -168,6 +168,9 @@
     <ClCompile Include="Errors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="includes\Odin\OdinGame.hpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes\Box2D\Collision\Shapes\b2ChainShape.h">
@@ -563,11 +566,24 @@
     <ClInclude Include="includes\Odin\Odin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="includes\Odin\SceneManager.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\Odin\Entity.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="includes\glm\detail\func_common.inl">
     <ClInclude Include="AudioEngine.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Errors.h">
+	</ClInclude>
+	<ClInclude Include="Errors.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
+	</ClInclude>
+		<Filter>Header Files</Filter>	
+	</None>
+    
+    </None>
   </ItemGroup>
 </Project>
