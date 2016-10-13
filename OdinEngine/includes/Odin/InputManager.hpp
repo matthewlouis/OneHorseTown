@@ -349,7 +349,10 @@ namespace odin
                     _currKeys[ key_index( event.key.keysym.sym ) ] = false;
                     break;
                 case SDL_QUIT:
-                    std::invoke( callback );
+					//Matt: Allows us to close the program easily
+					SDL_Quit();
+					//exit(1); //Leaving this out so we can read the console before closing 
+                    //std::invoke( callback );
                     break;
                 }
             }
