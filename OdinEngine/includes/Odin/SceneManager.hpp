@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Entity.hpp"
+#include "AudioEngine.h"
 
 namespace odin {
 	class Scene;
@@ -44,17 +45,35 @@ namespace odin {
 		InputManager                    inputManager;
 		EntityMap< InputListener >      listeners;
 
+		std::string audioBankName;
+		AudioEngine audioEngine;
+
 		GLuint program;
 		GLint uMatrix, uColor, uTexture;
 
 		virtual void setup_scene(){}
 
-		Scene(GLuint _program)
-			:program(_program)
+		//scene can have no audio (_audioBankName == NULL)
+		Scene(GLuint _program, std::string _audioBankName = NULL)
+			:program(_program),
+			audioBankName(_audioBankName)
 		{
 			uMatrix = glGetUniformLocation(_program, "uMatrix");
 			uColor = glGetUniformLocation(_program, "uColor");
 			uTexture = glGetUniformLocation(_program, "uTexture");
+
+			if (!audioBankName.empty()) {
+				//each scene will be responsible for loading its own sounds
+				audioEngine.loadBank(audioBankName + ".bank", FMOD_STUDIO_LOAD_BANK_NORMAL);
+				audioEngine.loadBank(audioBankName + ".strings.bank", FMOD_STUDIO_LOAD_BANK_NORMAL); 
+			}
+		}
+
+		//destructor required to unload audio from engine on destroy
+		~Scene() {
+			if(!audioBankName.empty()) //unload the associate bank
+				audioEngine.unloadBank(audioBankName + ".bank");
+			    audioEngine.unloadBank(audioBankName + ".strings.bank");
 		}
 
 		EntityView addRect(EntityId   eid,

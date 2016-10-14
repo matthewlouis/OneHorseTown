@@ -6,7 +6,7 @@
 #include <SDL/SDL.h>
 #include <FMOD/fmod.h>
 
-namespace OdinEngine {
+namespace odin {
     void fatalError(std::string errorString)
     {
         std::cout << errorString << std::endl;
@@ -26,6 +26,9 @@ namespace OdinEngine {
             case FMOD_ERR_FORMAT:
                 std::cout << "Fmod: Unsupported format.\n";
                 break;
+			case FMOD_ERR_EVENT_NOTFOUND:
+				std::cout << "Fmod: event not found\n";
+				break;
             default:
                 std::cout << "Fmod error result: " << result << std::endl;
                 break;

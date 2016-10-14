@@ -18,7 +18,7 @@ public:
 	float _scale;
 
 	TestScene(int height, int width, float scale, GLuint program)
-		:Scene(program)
+		:Scene(program, "Audio/Banks/MasterBank")
 		, _height(height)
 		, _width(width)
 		, _scale(scale)
@@ -100,6 +100,11 @@ public:
 		fsxComponents["wall"]->CreateFixture(&floorShape, 1)
 			->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 
+		//load common events and play music
+		audioEngine.loadEvent("event:/Music/EnergeticTheme");
+		audioEngine.loadEvent("event:/Desperado/Shoot");
+
+		audioEngine.playEvent("event:/Music/EnergeticTheme");
 	}
 
 	EntityView fireBullet(Vec2 position, Vec2 velocity)
@@ -159,6 +164,14 @@ public:
 
 		if (mngr.gamepads.wasButtonReleased(0, SDL_CONTROLLER_BUTTON_A) && vel.y > 0)
 			vel.y *= 0.6f;
+
+		//for testing audio
+		if (mngr.wasKeyPressed(SDLK_SPACE))
+			audioEngine.playEvent("event:/Desperado/Shoot"); //simulate audio shoot
+		if (mngr.wasKeyPressed(SDLK_1))
+			audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0); //low energy test
+		if (mngr.wasKeyPressed(SDLK_2))
+			audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", 1.0); //high energy test
 
 		body.SetLinearVelocity(vel);
 	}

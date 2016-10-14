@@ -5,6 +5,7 @@
 #include "Constants.h"
 #include <Odin/SceneManager.hpp>
 #include "TestScene.hpp"
+#include <Odin\AudioEngine.h>;
 
 using odin::Entity;
 using odin::EntityId;
@@ -14,6 +15,7 @@ using odin::InputManager;
 using odin::InputListener;
 using odin::ComponentType;
 using odin::SceneManager;
+using odin::AudioEngine;
 
 enum Scenes {
 	TEST
@@ -23,7 +25,7 @@ class Game
 {
 public:
 	SceneManager sceneManager;
-
+	AudioEngine audioEngine;
 	
 	GLuint                          program;
     int _width;
@@ -40,16 +42,18 @@ public:
 		, _width(width)
 		, _height(height)
 		, sceneManager()
-    {
+	{
+		//audio engine setup
+		//this must come before sceneManager, as scenes rely on the engine
+		audioEngine.init();
+
 		sceneManager.addScene(TEST, new TestScene(_width, _height, SCALE, program));
 		sceneManager.changeScene(TEST);
-    }
+	}
 
-    
-	void handleInput();
-    void update();
-	void draw();
-   
+		void handleInput();
+		void update();
+		void draw();  
 };
 
 void Game::handleInput() {
@@ -59,6 +63,8 @@ void Game::handleInput() {
 
 void Game::update() {
 	sceneManager.update(tgtFrameTime);
+
+	audioEngine.update(); 
 }
 
 void Game::draw() {
