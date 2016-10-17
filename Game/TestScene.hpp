@@ -152,9 +152,6 @@ public:
 
 		//b2Fixture* pFixt = body.GetFixtureList();
 
-<<<<<<< HEAD
-		
-=======
 		if (actionLeft == 0 && actionRight == 0)
 		{
 			//pFixt->SetFriction( 2 );
@@ -169,7 +166,6 @@ public:
 			vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
 			gfx.switchAnimState(1); //running
 		}
->>>>>>> develop
 
 		if (mngr.wasKeyPressed(SDLK_UP)) {
 			vel.y = 11;
@@ -186,7 +182,6 @@ public:
 		if (mngr.gamepads.wasButtonReleased(0, SDL_CONTROLLER_BUTTON_A) && vel.y > 0)
 			vel.y *= 0.6f;
 
-<<<<<<< HEAD
 		// Handle Duck input on button B
 		if (mngr.gamepads.wasButtonPressed(0, SDL_CONTROLLER_BUTTON_X))
 		{
@@ -238,7 +233,7 @@ public:
 			vel.x += actionRight * (20 + 1) * (1 / 60.0); // for use w/keyboard
 			vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
 		}
-=======
+
 		//for testing audio
 		if (mngr.wasKeyPressed(SDLK_SPACE))
 			audioEngine.playEvent("event:/Desperado/Shoot"); //simulate audio shoot
@@ -246,7 +241,6 @@ public:
 			audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0); //low energy test
 		if (mngr.wasKeyPressed(SDLK_2))
 			audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", 1.0); //high energy test
->>>>>>> develop
 
 		body.SetLinearVelocity(vel);
 	}
