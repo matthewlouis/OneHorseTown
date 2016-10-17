@@ -32,7 +32,9 @@
     <None Include="vertexShader.glsl">
       <Filter>Resources\Shaders</Filter>
     </None>
-    <None Include="Shaders\vertexAnim.glsl" />
+    <None Include="Shaders\vertexAnim.glsl">
+      <Filter>Resources\Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
