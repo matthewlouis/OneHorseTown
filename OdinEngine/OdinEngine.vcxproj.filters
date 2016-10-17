@@ -190,5 +190,6 @@
     <ClInclude Include="includes\SDL\SDL_video.h" />
     <ClInclude Include="includes\Odin\AudioEngine.h" />
     <ClInclude Include="includes\Odin\Errors.h" />
+    <ClInclude Include="includes\SDL\SDL_image.h" />
   </ItemGroup>
 </Project>

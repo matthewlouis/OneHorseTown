@@ -9,12 +9,10 @@
     <ClInclude Include="Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Entity.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TestScene.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Game.rc" />
@@ -24,6 +22,7 @@
     <Image Include="Textures\crate2.png" />
     <Image Include="Textures\pixel_cowboy.png" />
     <Image Include="Textures\pixel_horse.png" />
+    <Image Include="Textures\CowboySS.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Game.aps" />
@@ -31,6 +30,9 @@
       <Filter>Resources\Shaders</Filter>
     </None>
     <None Include="vertexShader.glsl">
+      <Filter>Resources\Shaders</Filter>
+    </None>
+    <None Include="Shaders\vertexAnim.glsl">
       <Filter>Resources\Shaders</Filter>
     </None>
   </ItemGroup>

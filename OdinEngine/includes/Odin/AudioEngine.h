@@ -14,7 +14,7 @@
 #include <iostream>
 #include <glm\glm.hpp>
 
-namespace OdinEngine {
+namespace odin {
 	struct Implementation {
 		Implementation();
 		~Implementation();
@@ -46,7 +46,8 @@ namespace OdinEngine {
 		void loadBank(const std::string& strBankName, FMOD_STUDIO_LOAD_BANK_FLAGS flags);
 		void loadEvent(const std::string& strEventName);
 		void loadSound(const std::string& strSoundName, bool is3d = true, bool isLooping = false, bool isStreaming = false);
-		void unLoadSound(const std::string& strSoundName);
+		void unloadBank(const std::string& strBankName);
+		void unloadSound(const std::string& strSoundName);
 
 		int  playSound(const std::string& strSoundName, const glm::vec3& vPos = glm::vec3(0, 0, 0), float fVolumedB = 0.0f);
 		void playEvent(const std::string& strEventName);

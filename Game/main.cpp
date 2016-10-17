@@ -101,7 +101,7 @@ int main( int argc, char** argv )
     if ( glCheckFramebufferStatus( GL_FRAMEBUFFER ) != GL_FRAMEBUFFER_COMPLETE )
         return false;
 
-    Game game( WIDTH, HEIGHT );
+    Game game( WIDTH, HEIGHT, sdl_window );
     // setup_game( game );
 
     // main loop

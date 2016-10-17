@@ -3,7 +3,7 @@
 #include <string>
 #include <FMOD/fmod.h>
 
-namespace OdinEngine {
+namespace odin {
 	//call if error is game-breaking and need to output info to console
 	extern void fatalError(std::string errorString);
 

@@ -17,8 +17,8 @@ public:
 	int _height, _width;
 	float _scale;
 
-	TestScene(int height, int width, float scale, GLuint program)
-		:Scene(program)
+	TestScene(int height, int width, float scale, GLuint program, SDL_Renderer *renderer)
+		:Scene(program, renderer, "Audio/Banks/MasterBank")
 		, _height(height)
 		, _width(width)
 		, _scale(scale)
@@ -32,7 +32,8 @@ public:
 			EntityId(0), GraphicalComponent::makeRect(_width / _scale, _height / _scale));
 		background->texture = 4;
 
-		auto pGfx = gfxComponents.add("player", GraphicalComponent::makeRect(1, 2.33));
+	    int pAnimInfo[3] = { 1, 10, 3 }; //idle 1 frame, run 10 frame, jump 3 frame
+		auto pGfx = gfxComponents.add("player", GraphicalComponent::makeRect(2, 2, glm::vec3(1,1,1), 1.0, true, 3, pAnimInfo));
 		pGfx->texture = 3;
 
 		b2BodyDef playerDef;
@@ -41,7 +42,7 @@ public:
 		playerDef.type = b2_dynamicBody;
 		playerDef.gravityScale = 2;
 
-		auto pFsx = fsxComponents.add("player", PhysicalComponent::makeRect(1, 2.33, b2world, playerDef));
+		auto pFsx = fsxComponents.add("player", PhysicalComponent::makeRect(2, 2, b2world, playerDef));
 
 		listeners.add("player", [&](const InputManager& inmn, EntityId eid) {
 			return player_input(inmn, EntityView(eid, this));
@@ -78,7 +79,7 @@ public:
 		GLuint nul = odin::load_texture< GLubyte[4] >(0, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF });
 		GLuint tex = odin::load_texture(1, "Textures/crate.png");
 		GLuint tex2 = odin::load_texture(2, "Textures/crate2.png");
-		GLuint tex3 = odin::load_texture(3, "Textures/pixel_cowboy.png");
+		GLuint tex3 = odin::load_texture(3, "Textures/CowboySS.png");
 		GLuint tex4 = odin::load_texture(4, "Textures/background.png");
 
 		blucrate.gfxComponent()->texture = 2;
@@ -100,6 +101,11 @@ public:
 		fsxComponents["wall"]->CreateFixture(&floorShape, 1)
 			->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 
+		//load common events and play music
+		audioEngine.loadEvent("event:/Music/EnergeticTheme");
+		audioEngine.loadEvent("event:/Desperado/Shoot");
+
+		audioEngine.playEvent("event:/Music/EnergeticTheme");
 	}
 
 	EntityView fireBullet(Vec2 position, Vec2 velocity)
@@ -130,6 +136,7 @@ public:
 		static_assert(PLAYER >= 0 && PLAYER < odin::ControllerManager::MAX_PLAYERS, "");
 
 		b2Body& body = *ntt.fsxComponent()->pBody;
+		GraphicalComponent& gfx = *ntt.gfxComponent();
 
 		Vec2 vel = body.GetLinearVelocity();
 		float maxSpeed = 5.5f;
@@ -137,15 +144,40 @@ public:
 		float actionRight = mngr.isKeyDown(SDLK_RIGHT) ? 1 : 0;
 		int actionDir = 0;
 
+		//adjust facing direction
+		if (actionLeft)
+			gfx.direction = odin::LEFT;
+		if (actionRight)
+			gfx.direction = odin::RIGHT;
+
 		//b2Fixture* pFixt = body.GetFixtureList();
 
+<<<<<<< HEAD
 		
+=======
+		if (actionLeft == 0 && actionRight == 0)
+		{
+			//pFixt->SetFriction( 2 );
+			vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0));
+			gfx.switchAnimState(0); //idle state
+		}
+		else
+		{
+			//pFixt->SetFriction( 0 );
+			vel.x -= actionLeft * (20 + 1) * (1 / 60.0);
+			vel.x += actionRight * (20 + 1) * (1 / 60.0);
+			vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
+			gfx.switchAnimState(1); //running
+		}
+>>>>>>> develop
 
-		if (mngr.wasKeyPressed(SDLK_UP))
+		if (mngr.wasKeyPressed(SDLK_UP)) {
 			vel.y = 11;
+		}
 
-		if (mngr.wasKeyReleased(SDLK_UP) && vel.y > 0)
+		if (mngr.wasKeyReleased(SDLK_UP) && vel.y > 0) {
 			vel.y *= 0.6f;
+		}
 
 		// Handle Jump input on button A
 		if (mngr.gamepads.wasButtonPressed(0, SDL_CONTROLLER_BUTTON_A))
@@ -154,6 +186,7 @@ public:
 		if (mngr.gamepads.wasButtonReleased(0, SDL_CONTROLLER_BUTTON_A) && vel.y > 0)
 			vel.y *= 0.6f;
 
+<<<<<<< HEAD
 		// Handle Duck input on button B
 		if (mngr.gamepads.wasButtonPressed(0, SDL_CONTROLLER_BUTTON_X))
 		{
@@ -205,6 +238,15 @@ public:
 			vel.x += actionRight * (20 + 1) * (1 / 60.0); // for use w/keyboard
 			vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
 		}
+=======
+		//for testing audio
+		if (mngr.wasKeyPressed(SDLK_SPACE))
+			audioEngine.playEvent("event:/Desperado/Shoot"); //simulate audio shoot
+		if (mngr.wasKeyPressed(SDLK_1))
+			audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0); //low energy test
+		if (mngr.wasKeyPressed(SDLK_2))
+			audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", 1.0); //high energy test
+>>>>>>> develop
 
 		body.SetLinearVelocity(vel);
 	}
