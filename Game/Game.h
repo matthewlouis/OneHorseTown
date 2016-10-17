@@ -26,6 +26,8 @@ class Game
 public:
 	SceneManager sceneManager;
 	AudioEngine audioEngine;
+
+	SDL_Renderer* renderer;
 	
 	GLuint                          program;
     int _width;
@@ -37,8 +39,8 @@ public:
 	const int tgtFrameTime_ms = tgtFrameTime * 1000;
 	int tFrameStart = 0;
 
-	Game(int width, int height)
-		: program(load_shaders("vertexShader.glsl", "fragmentShader.glsl"))
+	Game(int width, int height, SDL_Window *window)
+		: program(load_shaders("Shaders/vertexAnim.glsl", "Shaders/fragmentShader.glsl"))
 		, _width(width)
 		, _height(height)
 		, sceneManager()
@@ -47,7 +49,10 @@ public:
 		//this must come before sceneManager, as scenes rely on the engine
 		audioEngine.init();
 
-		sceneManager.addScene(TEST, new TestScene(_width, _height, SCALE, program));
+		//set up renderer for drawing through SDL
+		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+		sceneManager.addScene(TEST, new TestScene(_width, _height, SCALE, program, renderer));
 		sceneManager.changeScene(TEST);
 	}
 

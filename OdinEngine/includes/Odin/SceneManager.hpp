@@ -48,19 +48,28 @@ namespace odin {
 		std::string audioBankName;
 		AudioEngine audioEngine;
 
+		SDL_Renderer* renderer;
+
 		GLuint program;
-		GLint uMatrix, uColor, uTexture;
+		GLint uMatrix, uColor, uTexture, uFacingDirection,
+			  uCurrentFrame, uCurrentAnim, uMaxFrame, uMaxAnim;
 
 		virtual void setup_scene(){}
 
 		//scene can have no audio (_audioBankName == NULL)
-		Scene(GLuint _program, std::string _audioBankName = NULL)
+		Scene(GLuint _program, SDL_Renderer* _renderer, std::string _audioBankName = NULL)
 			:program(_program),
-			audioBankName(_audioBankName)
+			audioBankName(_audioBankName),
+			renderer(_renderer)
 		{
 			uMatrix = glGetUniformLocation(_program, "uMatrix");
 			uColor = glGetUniformLocation(_program, "uColor");
 			uTexture = glGetUniformLocation(_program, "uTexture");
+			uFacingDirection = glGetUniformLocation(_program, "uFacingDirection");
+			uCurrentFrame = glGetUniformLocation(_program, "uCurrentFrame");
+			uCurrentAnim = glGetUniformLocation(_program, "uCurrentAnim");
+			uMaxFrame = glGetUniformLocation(_program, "uMaxFrames");
+			uMaxAnim = glGetUniformLocation(_program, "uTotalAnim");
 
 			if (!audioBankName.empty()) {
 				//each scene will be responsible for loading its own sounds
@@ -196,7 +205,7 @@ namespace odin {
 		}
 
 
-		void drawComponent(const GraphicalComponent& gfx, EntityId eid, float zoom, float aspect)
+		void drawComponent(GraphicalComponent& gfx, EntityId eid, float zoom, float aspect)
 		{
 			using namespace glm;
 			Entity& entity = entities[eid];
@@ -206,12 +215,20 @@ namespace odin {
 			mtx = translate(mtx, vec3(entity.position.glmvec2, 0));
 			mtx = rotate(mtx, entity.rotation, vec3(0, 0, 1));
 
+			gfx.incrementFrame();
+
+
 			if (gfx.programId == 0)
 			{
 				glUseProgram(program);
 				glUniform(uMatrix, mtx);
 				glUniform(uColor, gfx.color);
 				glUniform(uTexture, gfx.texture);
+				glUniform(uFacingDirection, gfx.direction);
+				glUniform(uCurrentFrame, gfx.currentFrame);
+				glUniform(uCurrentAnim, gfx.animState);
+				glUniform(uMaxFrame, gfx.maxFrames);
+				glUniform(uMaxAnim, gfx.totalAnim);
 			}
 
 			glBindVertexArray(gfx.vertexArray);

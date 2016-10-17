@@ -280,6 +280,7 @@
     <ClInclude Include="includes\SDL\SDL_gesture.h" />
     <ClInclude Include="includes\SDL\SDL_haptic.h" />
     <ClInclude Include="includes\SDL\SDL_hints.h" />
+    <ClInclude Include="includes\SDL\SDL_image.h" />
     <ClInclude Include="includes\SDL\SDL_joystick.h" />
     <ClInclude Include="includes\SDL\SDL_keyboard.h" />
     <ClInclude Include="includes\SDL\SDL_keycode.h" />
