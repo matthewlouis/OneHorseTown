@@ -143,6 +143,7 @@ public:
 		float actionLeft = mngr.isKeyDown(SDLK_LEFT) ? 1 : 0;
 		float actionRight = mngr.isKeyDown(SDLK_RIGHT) ? 1 : 0;
 		int actionDir = 0;
+		Vec2 aimDir(0, 0);
 
 		//adjust facing direction
 		if (actionLeft)
@@ -175,47 +176,40 @@ public:
 			vel.y *= 0.6f;
 		}
 
+		// Handle directions from left joystick axis
+		actionDir = mngr.gamepads.joystickAxisX(PLAYER);
+		aimDir.x = mngr.gamepads.joystickDir(PLAYER).x * 50; //50 is currently bullet fire velocity. 
+		aimDir.y = -mngr.gamepads.joystickDir(PLAYER).y * 50;
+
 		// Handle Jump input on button A
-		if (mngr.gamepads.wasButtonPressed(0, SDL_CONTROLLER_BUTTON_A))
+		if (mngr.gamepads.wasButtonPressed(PLAYER, SDL_CONTROLLER_BUTTON_A))
 			vel.y = 11;
 
-		if (mngr.gamepads.wasButtonReleased(0, SDL_CONTROLLER_BUTTON_A) && vel.y > 0)
+		if (mngr.gamepads.wasButtonReleased(PLAYER, SDL_CONTROLLER_BUTTON_A) && vel.y > 0)
 			vel.y *= 0.6f;
 
-		// Handle Duck input on button B
-		if (mngr.gamepads.wasButtonPressed(0, SDL_CONTROLLER_BUTTON_X))
+		// Handle Duck input on button X
+		if (mngr.gamepads.wasButtonPressed(PLAYER, SDL_CONTROLLER_BUTTON_X))
 		{
 
 		}
-		if (mngr.gamepads.wasButtonReleased(0, SDL_CONTROLLER_BUTTON_X))
+		if (mngr.gamepads.wasButtonReleased(PLAYER, SDL_CONTROLLER_BUTTON_X))
 		{
 
 		}
 
 		// Handle Shoot input on button B
-		if (mngr.gamepads.wasButtonPressed(0, SDL_CONTROLLER_BUTTON_B))
+		if (mngr.gamepads.wasButtonPressed(PLAYER, SDL_CONTROLLER_BUTTON_B))
 		{
-			fireBullet(Vec2(0, 0), Vec2(1, 1));
+			fireBullet(body.GetPosition(), aimDir);
 		}
-		if (mngr.gamepads.wasButtonReleased(0, SDL_CONTROLLER_BUTTON_B))
+		if (mngr.gamepads.wasButtonReleased(PLAYER, SDL_CONTROLLER_BUTTON_B))
 		{
 
-		}
-
-		// Handle directions from left joystick axis
-		//if (mngr.gamepads.joystickAxisX(0) != 0)
-		{
-			actionDir = mngr.gamepads.joystickAxisX(0);
-			//printf("actionDir: %d ", actionDir);
-			printf("joystickX: %d, joystickY: %d\n", mngr.gamepads.joystickAxisX(0), mngr.gamepads.joystickAxisY(0));
-		}
-		if (mngr.gamepads.joystickAxisY(0) != 0)
-		{
-			
 		}
 
 		// some funtionality to bring up menu or exit scene/game
-		if (mngr.wasKeyPressed(SDLK_ESCAPE))
+		if (mngr.wasKeyPressed(SDLK_ESCAPE) || mngr.gamepads.wasButtonPressed(PLAYER, SDL_CONTROLLER_BUTTON_START))
 		{
 			
 		}

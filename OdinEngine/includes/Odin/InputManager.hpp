@@ -27,25 +27,14 @@ namespace odin
         using PlayerList = std::array< SDL_JoystickID, MAX_PLAYERS >;
 
         using ButtonStates = std::array< std::bitset< SDL_CONTROLLER_BUTTON_MAX >, MAX_PLAYERS >;
-	
-		struct Axis {
-			Sint16 x;
-			Sint16 y;
-		};
-		enum AxisDirection { N, NE, E, SE, S, SW, W, NW };
-
-		using AxisStates = std::array < Axis, MAX_PLAYERS > ;
-		using AxisDirStates = std::array < AxisDirection, MAX_PLAYERS>;
+		using AxisStates = std::array < Vec2, MAX_PLAYERS > ;
 		
 		ControllerMap controllers; // Maps joystick ids to game controllers.
         PlayerList    players;     // Stores the joystick id of each player.
 
         ButtonStates  currButtons; // Represents the current down state of each button on each controller.
         ButtonStates  prevButtons; // Represents the previous down state of each button on each controller.
-		AxisStates	  currAxis; // Represents the current axis state possition for each controller
-		AxisDirStates    currAxisDir; // Represent the previous axis state position for each controller
-
-		
+		AxisStates	  currAxis; // Represents the current axis state possition for each controller		
 
         ControllerManager()
             : controllers( { {-1, nullptr} }, MAX_PLAYERS )
@@ -157,6 +146,11 @@ namespace odin
 		int joystickAxisY(PlayerIndex idx) const
 		{
 			return currAxis[idx].y;
+		}
+
+		Vec2 joystickDir(PlayerIndex idx) const
+		{
+			return currAxis[idx];
 		}
 
     };
@@ -373,11 +367,6 @@ namespace odin
 						else
 							gamepads.currAxis[playerNo].y = 0;
 					}
-					
-					
-					#ifdef _DEBUG
-					//printf("SDL_CONTROLLERAXISMOTION:x:%i, y:%i\n", gamepads.currAxis[playerNo].x, gamepads.currAxis[playerNo].y);
-					#endif
 					break;
 				}
                 case SDL_CONTROLLERBUTTONDOWN:
@@ -388,10 +377,10 @@ namespace odin
 
                     gamepads.currButtons[ playerNo ][ cbutton.button ] = cbutton.state;
                     #ifdef _DEBUG
-                    printf( "P%i button %s: %i\n",
+                    /*printf( "P%i button %s: %i\n",
                             playerNo,
                             cbutton.state ? "down" : "up",
-                            event.cbutton.button );
+                            event.cbutton.button );*/
                     #endif
                     break;
                 }
@@ -435,7 +424,6 @@ namespace odin
         {
             return _currKeys[ key_index( key ) ];
         }
-
     };
 
 } // namespace odin

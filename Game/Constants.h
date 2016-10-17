@@ -17,3 +17,5 @@ const int LOW_WIDTH = WIDTH / PIXEL_SIZE;
 const int LOW_HEIGHT = HEIGHT / PIXEL_SIZE;
 
 const float SCALE = 11.5;
+
+enum AXIS_DIRECTION { N, NE, E, SE, S, SW, W, NW };
