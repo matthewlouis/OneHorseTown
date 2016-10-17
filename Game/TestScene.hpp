@@ -152,7 +152,7 @@ public:
 		{
 			//pFixt->SetFriction( 2 );
 			vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0));
-			gfx.animState = 0; //idle
+			gfx.switchAnimState(0); //idle state
 		}
 		else
 		{
@@ -160,7 +160,7 @@ public:
 			vel.x -= actionLeft * (20 + 1) * (1 / 60.0);
 			vel.x += actionRight * (20 + 1) * (1 / 60.0);
 			vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
-			gfx.animState = 1; //running
+			gfx.switchAnimState(1); //running
 		}
 
 		if (mngr.wasKeyPressed(SDLK_UP)) {

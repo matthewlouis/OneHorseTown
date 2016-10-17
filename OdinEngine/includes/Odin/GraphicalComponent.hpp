@@ -176,8 +176,6 @@ namespace odin
 			if (!animated) //not animated
 				return;
 
-			printf("\nAnim: %d Frame: %d Dir: %d", animState, currentFrame, direction);
-
 			static int frameDelay = 0; //how many draws before changing animation frame
 			if (frameDelay++ < 3)
 				return;
@@ -260,6 +258,15 @@ namespace odin
 				make_vert_attr< glm::vec3 >(0),
 				make_vert_attr< glm::vec2 >(1));
         }
+
+		void switchAnimState(int state)
+		{
+			if (animState == state) //if we are already on this state
+				return;
+
+			animState = state;
+			currentFrame = 0; //start from first frame
+		}
 
     };
 

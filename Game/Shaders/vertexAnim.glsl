@@ -15,8 +15,8 @@ out vec2 vTexCoord;
 
 void main()
 {
-    gl_Position = uMatrix * vec4( vertex, 1 );
-	glScalef(1,0,0);
+	vec3 directedVertex = vec3(vertex.x * uFacingDirection, vertex.y, vertex.z);
+    gl_Position = uMatrix * vec4( directedVertex, 1 );
     vTexCoord =  vec2((uCurrentFrame + texCoord.x) * 1 / uMaxFrames,
 					  (uCurrentAnim + texCoord.y) * 1/ uTotalAnim);
 }
