@@ -18,7 +18,7 @@ void EntityFactory::makePlayer(EntityId id, float width, float height, Scene* sc
 
 	auto pFsx = scene->fsxComponents.add(id, PhysicalComponent::makeRect(width, height, scene->b2world, playerDef));
 
-	scene->listeners.add(id, [&](const InputManager& inmn, EntityId eid) {
+	scene->listeners.add(id, [scene](const InputManager& inmn, EntityId eid) {
 		return scene->player_input(inmn, eid);
 	});
 }
