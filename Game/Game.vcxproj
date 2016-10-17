@@ -71,11 +71,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(SolutionDir)OdinEngine/includes/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)OdinEngine/lib/;$(SolutionDir)Debug/;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)OdinEngine/$(Configuration)/;$(SolutionDir)OdinEngine/lib/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(SolutionDir)OdinEngine/includes/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)OdinEngine/lib/;$(SolutionDir)Release/;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)OdinEngine/$(Configuration)/;$(SolutionDir)OdinEngine/lib/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -86,7 +86,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;opengl32.lib;glew32.lib;OdinEngine.lib;fmod_vc.lib;fmodstudio_vc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glew32.lib;OdinEngine.lib;fmod_vc.lib;fmodstudio_vc.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
