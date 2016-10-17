@@ -124,29 +124,22 @@ public:
 		return EntityView(eid, this);
 	}
 
+	template< int PLAYER = 0 >
 	void player_input(const InputManager& mngr, EntityView ntt)
 	{
+		static_assert(PLAYER >= 0 && PLAYER < odin::ControllerManager::MAX_PLAYERS, "");
+
 		b2Body& body = *ntt.fsxComponent()->pBody;
 
 		Vec2 vel = body.GetLinearVelocity();
 		float maxSpeed = 5.5f;
 		float actionLeft = mngr.isKeyDown(SDLK_LEFT) ? 1 : 0;
 		float actionRight = mngr.isKeyDown(SDLK_RIGHT) ? 1 : 0;
+		int actionDir = 0;
 
 		//b2Fixture* pFixt = body.GetFixtureList();
 
-		if (actionLeft == 0 && actionRight == 0)
-		{
-			//pFixt->SetFriction( 2 );
-			vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0));
-		}
-		else
-		{
-			//pFixt->SetFriction( 0 );
-			vel.x -= actionLeft * (20 + 1) * (1 / 60.0);
-			vel.x += actionRight * (20 + 1) * (1 / 60.0);
-			vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
-		}
+		
 
 		if (mngr.wasKeyPressed(SDLK_UP))
 			vel.y = 11;
@@ -154,11 +147,64 @@ public:
 		if (mngr.wasKeyReleased(SDLK_UP) && vel.y > 0)
 			vel.y *= 0.6f;
 
+		// Handle Jump input on button A
 		if (mngr.gamepads.wasButtonPressed(0, SDL_CONTROLLER_BUTTON_A))
 			vel.y = 11;
 
 		if (mngr.gamepads.wasButtonReleased(0, SDL_CONTROLLER_BUTTON_A) && vel.y > 0)
 			vel.y *= 0.6f;
+
+		// Handle Duck input on button B
+		if (mngr.gamepads.wasButtonPressed(0, SDL_CONTROLLER_BUTTON_X))
+		{
+
+		}
+		if (mngr.gamepads.wasButtonReleased(0, SDL_CONTROLLER_BUTTON_X))
+		{
+
+		}
+
+		// Handle Shoot input on button B
+		if (mngr.gamepads.wasButtonPressed(0, SDL_CONTROLLER_BUTTON_B))
+		{
+			fireBullet(Vec2(0, 0), Vec2(1, 1));
+		}
+		if (mngr.gamepads.wasButtonReleased(0, SDL_CONTROLLER_BUTTON_B))
+		{
+
+		}
+
+		// Handle directions from left joystick axis
+		//if (mngr.gamepads.joystickAxisX(0) != 0)
+		{
+			actionDir = mngr.gamepads.joystickAxisX(0);
+			//printf("actionDir: %d ", actionDir);
+			printf("joystickX: %d, joystickY: %d\n", mngr.gamepads.joystickAxisX(0), mngr.gamepads.joystickAxisY(0));
+		}
+		if (mngr.gamepads.joystickAxisY(0) != 0)
+		{
+			
+		}
+
+		// some funtionality to bring up menu or exit scene/game
+		if (mngr.wasKeyPressed(SDLK_ESCAPE))
+		{
+			
+		}
+
+		if (actionLeft == 0 && actionRight == 0 && actionDir == 0)
+		{
+			//pFixt->SetFriction( 2 );
+			vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0));
+		}
+		else
+		{
+			//pFixt->SetFriction( 0 );
+			vel.x += (float)actionDir * (20 + 1) * (1 / 60.0); // for use w/gamepad
+			vel.x -= actionLeft * (20 + 1) * (1 / 60.0); // for use w/keyboard
+			vel.x += actionRight * (20 + 1) * (1 / 60.0); // for use w/keyboard
+			vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
+		}
 
 		body.SetLinearVelocity(vel);
 	}
