@@ -44,7 +44,7 @@ public:
 
 		auto pFsx = fsxComponents.add("player", PhysicalComponent::makeRect(2, 2, b2world, playerDef));
 
-		listeners.add("player", [&](const InputManager& inmn, EntityId eid) {
+		listeners.add("player", [this](const InputManager& inmn, EntityId eid) {
 			return player_input(inmn, EntityView(eid, this));
 		});
 
