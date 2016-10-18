@@ -5,7 +5,7 @@
 #include "Constants.h"
 #include <Odin/SceneManager.hpp>
 #include "TestScene.hpp"
-#include <Odin\AudioEngine.h>;
+#include <Odin\AudioEngine.h>
 
 using odin::Entity;
 using odin::EntityId;
@@ -36,7 +36,7 @@ public:
 	bool running = false;
 
 	const double tgtFrameTime = 1 / 60.0;
-	const int tgtFrameTime_ms = tgtFrameTime * 1000;
+	const int tgtFrameTime_ms = int( tgtFrameTime * 1000 );
 	int tFrameStart = 0;
 
 	Game(int width, int height, SDL_Window *window)
@@ -67,7 +67,7 @@ void Game::handleInput() {
 }
 
 void Game::update() {
-	sceneManager.update(tgtFrameTime);
+	sceneManager.update( (float) tgtFrameTime );
 
 	audioEngine.update(); 
 }
@@ -80,7 +80,7 @@ void Game::draw() {
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	float zoom = 1.0 / SCALE;
+	float zoom = 1.0f / SCALE;
 	float aspect = _width / (float)_height;
 
 	sceneManager.draw(zoom, aspect, program);

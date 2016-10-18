@@ -111,7 +111,7 @@ namespace odin
 
         // Allocates memory for the table of keys and values.
         // Default capacity is 12; capacity must be greater than 0.
-        explicit BinarySearchMap( long long capacity = 12 )
+        explicit BinarySearchMap( int capacity = 12 )
             : _pData( capacity > 0 ? _allocate( capacity ) : throw "capacity must be positive" )
             , _capacity( capacity )
             , _count( 0 )
@@ -119,7 +119,7 @@ namespace odin
         }
 
         // Allocates memory for the supplied table, plus an optional amount of padding.
-        BinarySearchMap( InitializerListType list, long long padding = 0 )
+        BinarySearchMap( InitializerListType list, int padding = 0 )
             : BinarySearchMap( padding >= 0 ? list.size() + padding : throw "extra capacity must be positive" )
         {
             // if the supplied table is already sorted we can skip sorting it later

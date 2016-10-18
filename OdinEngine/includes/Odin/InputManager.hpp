@@ -330,7 +330,7 @@ namespace odin
                     SDL_ControllerButtonEvent& cbutton = event.cbutton;
                     int playerNo = gamepads.findPlayerIndex( cbutton.which );
 
-                    gamepads.currButtons[ playerNo ][ cbutton.button ] = cbutton.state;
+                    gamepads.currButtons[ playerNo ][ cbutton.button ] = cbutton.state == SDL_PRESSED;
                     #ifdef _DEBUG
                     printf( "P%i button %s: %i\n",
                             playerNo,

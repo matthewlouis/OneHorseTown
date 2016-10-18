@@ -33,7 +33,7 @@ public:
 			EntityId(0), GraphicalComponent::makeRect(_width / _scale, _height / _scale));
 		background->texture = 4;
 
-		EntityFactory::instance()->makePlayer("player", 1, 2.33, this);
+		EntityFactory::instance()->makePlayer("player", 1, 2.33f, this);
 
 		addEqTri({ "tri", 0 }, 2, { 5, -3 }, 0, { 1, 0, 0 }, b2_kinematicBody);
 		auto whttri = addEqTri({ "tri", 1 }, 2, { 0, 0 }, 0, { 1, 1, 1 }, b2_dynamicBody);
@@ -107,7 +107,7 @@ public:
 		bodyDef.type = b2_dynamicBody;
 		bodyDef.bullet = true;
 
-		if (!fsxComponents.add(eid, PhysicalComponent::makeCircle(.05f, b2world, bodyDef, 0.01)))
+		if (!fsxComponents.add(eid, PhysicalComponent::makeCircle(.05f, b2world, bodyDef, 0.01f)))
 			std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
 
 		return EntityView(eid, this);
@@ -122,8 +122,8 @@ public:
 
 		Vec2 vel = body.GetLinearVelocity();
 		float maxSpeed = 5.5f;
-		float actionLeft = mngr.isKeyDown(SDLK_LEFT) ? 1 : 0;
-		float actionRight = mngr.isKeyDown(SDLK_RIGHT) ? 1 : 0;
+		float actionLeft = mngr.isKeyDown(SDLK_LEFT) ? 1.f : 0.f;
+		float actionRight = mngr.isKeyDown(SDLK_RIGHT) ? 1.f : 0.f;
 
 		//adjust facing direction
 		if (actionLeft)
@@ -136,14 +136,14 @@ public:
 		if (actionLeft == 0 && actionRight == 0)
 		{
 			//pFixt->SetFriction( 2 );
-			vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0));
+			vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0f));
 			gfx.switchAnimState(0); //idle state
 		}
 		else
 		{
 			//pFixt->SetFriction( 0 );
-			vel.x -= actionLeft * (20 + 1) * (1 / 60.0);
-			vel.x += actionRight * (20 + 1) * (1 / 60.0);
+			vel.x -= actionLeft * (20 + 1) * (1 / 60.0f);
+			vel.x += actionRight * (20 + 1) * (1 / 60.0f);
 			vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
 			gfx.switchAnimState(1); //running
 		}
