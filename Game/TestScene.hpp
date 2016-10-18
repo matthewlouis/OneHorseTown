@@ -115,7 +115,7 @@ public:
 		if (!entities.add(eid, Entity(position, 0)))
 			std::cout << "Entity " << eid << " already exists.\n";
 
-		if (!gfxComponents.add(eid, GraphicalComponent::makeRect(3.f, .1f)))
+		if (!gfxComponents.add(eid, GraphicalComponent::makeRect(.5f, .1f)))
 			std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
 
 		b2BodyDef bodyDef;
@@ -153,21 +153,6 @@ public:
 
 		//b2Fixture* pFixt = body.GetFixtureList();
 
-		if (actionLeft == 0 && actionRight == 0)
-		{
-			//pFixt->SetFriction( 2 );
-			vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0));
-			gfx.switchAnimState(0); //idle state
-		}
-		else
-		{
-			//pFixt->SetFriction( 0 );
-			vel.x -= actionLeft * (20 + 1) * (1 / 60.0);
-			vel.x += actionRight * (20 + 1) * (1 / 60.0);
-			vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
-			gfx.switchAnimState(1); //running
-		}
-
 		if (mngr.wasKeyPressed(SDLK_UP)) {
 			vel.y = 11;
 		}
@@ -180,6 +165,12 @@ public:
 		actionDir = mngr.gamepads.joystickAxisX(PLAYER);
 		aimDir.x = mngr.gamepads.joystickDir(PLAYER).x * 50; //50 is currently bullet fire velocity. 
 		aimDir.y = -mngr.gamepads.joystickDir(PLAYER).y * 50;
+
+		//adjust facing direction for joystick
+		if (actionDir == -1)
+			gfx.direction = odin::LEFT;
+		if (actionDir == 1)
+			gfx.direction = odin::RIGHT;
 
 		// Handle Jump input on button A
 		if (mngr.gamepads.wasButtonPressed(PLAYER, SDL_CONTROLLER_BUTTON_A))
@@ -201,7 +192,7 @@ public:
 		// Handle Shoot input on button B
 		if (mngr.gamepads.wasButtonPressed(PLAYER, SDL_CONTROLLER_BUTTON_B))
 		{
-			fireBullet(body.GetPosition(), aimDir);
+			fireBullet({body.GetPosition().x,body.GetPosition().y}, aimDir);
 		}
 		if (mngr.gamepads.wasButtonReleased(PLAYER, SDL_CONTROLLER_BUTTON_B))
 		{
@@ -218,6 +209,7 @@ public:
 		{
 			//pFixt->SetFriction( 2 );
 			vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0));
+			gfx.switchAnimState(0); //idle state
 		}
 		else
 		{
@@ -226,6 +218,7 @@ public:
 			vel.x -= actionLeft * (20 + 1) * (1 / 60.0); // for use w/keyboard
 			vel.x += actionRight * (20 + 1) * (1 / 60.0); // for use w/keyboard
 			vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
+			gfx.switchAnimState(1); //running
 		}
 
 		//for testing audio
