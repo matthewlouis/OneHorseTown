@@ -8,10 +8,10 @@ namespace odin
 {
     constexpr int NUM_TEX_UNITS = GL_MAX_TEXTURE_UNITS - GL_TEXTURE0;
 
-    GLuint texture_units[ NUM_TEX_UNITS ];
+    extern GLuint texture_units[ NUM_TEX_UNITS ];
 
     template< typename Array >
-    GLuint load_texture( int index, int width, int height, const Array& data )
+    inline GLuint load_texture( int index, int width, int height, const Array& data )
     {
         if ( index < 0 || index >= NUM_TEX_UNITS )
             return printf( "Texture unit index out of bounds (%i)\n", index ) , 0; // <- comma operator
@@ -37,7 +37,7 @@ namespace odin
         return texture_units[ index ];
     }
 
-    GLuint load_texture( int index, const char* filename )
+	inline GLuint load_texture( int index, const char* filename )
     {
         std::vector< GLubyte > image;
         unsigned width, height;
@@ -64,7 +64,7 @@ namespace odin
     };
 
 
-    Framebuffer make_framebuffer( int width, int height, Framebuffer::Mode mode )
+	inline Framebuffer make_framebuffer( int width, int height, Framebuffer::Mode mode )
     {
         Framebuffer buffer = { 0, 0, 0 };
 

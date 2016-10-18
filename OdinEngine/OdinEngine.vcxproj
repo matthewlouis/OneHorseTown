@@ -209,6 +209,8 @@
     <ClCompile Include="includes\lodepng.cpp" />
     <ClCompile Include="includes\Odin\EntityId.cpp" />
     <ClCompile Include="includes\Odin\OdinGame.hpp" />
+    <ClCompile Include="includes\Odin\Scene.cpp" />
+    <ClCompile Include="includes\Odin\TextureManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes\Odin\AudioEngine.h" />
@@ -272,6 +274,7 @@
     <ClInclude Include="includes\Odin\Math.hpp" />
     <ClInclude Include="includes\Odin\Odin.h" />
     <ClInclude Include="includes\Odin\PhysicalComponent.hpp" />
+    <ClInclude Include="includes\Odin\Scene.h" />
     <ClInclude Include="includes\Odin\SceneManager.hpp" />
     <ClInclude Include="includes\Odin\template_helper.hpp" />
     <ClInclude Include="includes\Odin\TextureManager.hpp" />
