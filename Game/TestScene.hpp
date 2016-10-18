@@ -66,9 +66,9 @@ public:
 		
 
 		blucrate.gfxComponent()->texture = Textures::CRATE2;
-		pnkcrate.gfxComponent()->texture = 1;
-		ylwramp.gfxComponent()->texture = 1;
-		whttri.gfxComponent()->texture = 1;
+		pnkcrate.gfxComponent()->texture = CRATE1;
+		ylwramp.gfxComponent()->texture = CRATE1;
+		whttri.gfxComponent()->texture = CRATE1;
 
 		b2BodyDef floorDef;
 		b2EdgeShape floorShape;
@@ -108,8 +108,10 @@ public:
 		return EntityView(eid, this);
 	}
 
-	void player_input(const InputManager& mngr, EntityView ntt)
+	virtual void player_input(const InputManager& mngr, EntityId eid)
 	{
+		EntityView ntt = EntityView(eid, this);
+		
 		b2Body& body = *ntt.fsxComponent()->pBody;
 
 		Vec2 vel = body.GetLinearVelocity();
