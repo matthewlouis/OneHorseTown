@@ -74,7 +74,7 @@ namespace odin {
 		entity.rotation = fsx.rotation();
 	}
 
-	void Scene::drawComponent(const GraphicalComponent& gfx, EntityId eid, float zoom, float aspect)
+	void Scene::drawComponent(GraphicalComponent& gfx, EntityId eid, float zoom, float aspect)
 	{
 		using namespace glm;
 		Entity& entity = entities[eid];
@@ -84,12 +84,20 @@ namespace odin {
 		mtx = translate(mtx, vec3(entity.position.glmvec2, 0));
 		mtx = rotate(mtx, entity.rotation, vec3(0, 0, 1));
 
+		gfx.incrementFrame();
+
+
 		if (gfx.programId == 0)
 		{
 			glUseProgram(program);
 			glUniform(uMatrix, mtx);
 			glUniform(uColor, gfx.color);
 			glUniform(uTexture, gfx.texture);
+			glUniform(uFacingDirection, gfx.direction);
+			glUniform(uCurrentFrame, gfx.currentFrame);
+			glUniform(uCurrentAnim, gfx.animState);
+			glUniform(uMaxFrame, gfx.maxFrames);
+			glUniform(uMaxAnim, gfx.totalAnim);
 		}
 
 		glBindVertexArray(gfx.vertexArray);

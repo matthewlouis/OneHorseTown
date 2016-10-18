@@ -68,7 +68,7 @@ namespace odin {
 		void updateComponent(const PhysicalComponent& fsx, EntityId eid);
 
 
-		void drawComponent(const GraphicalComponent& gfx, EntityId eid, float zoom, float aspect);
+		void drawComponent(GraphicalComponent& gfx, EntityId eid, float zoom, float aspect);
 
 		void trigger(const InputListener& lstn, EntityId eid);
 

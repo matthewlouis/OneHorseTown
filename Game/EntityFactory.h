@@ -35,7 +35,7 @@ private:
 		odin::load_texture< GLubyte[4] >(NULL_TEXTURE, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF });
 		odin::load_texture(CRATE1, "Textures/crate.png");
 		odin::load_texture(CRATE2, "Textures/crate2.png");
-		odin::load_texture(PLAYER, "Textures/CowboySS.png.png");
+		odin::load_texture(PLAYER, "Textures/CowboySS.png");
 		odin::load_texture(BACKGROUND, "Textures/background.png");
 	}
 };
