@@ -4,6 +4,7 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="EntityFactory.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Constants.h">
@@ -13,6 +14,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TestScene.hpp" />
+    <ClInclude Include="EntityFactory.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Game.rc" />

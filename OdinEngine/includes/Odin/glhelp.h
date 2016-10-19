@@ -65,38 +65,38 @@ constexpr GLenum gl_type_constant< GLdouble >( GLdouble )
 }
 
 
-void glUniform( GLint location, glm::mat4 mat )
+inline void glUniform( GLint location, glm::mat4 mat )
 {
     glUniformMatrix4fv( location, 1, GL_FALSE, (float*) &mat );
 }
 
-void glUniform( GLint location, glm::vec4 vec )
+inline void glUniform( GLint location, glm::vec4 vec )
 {
     glUniform4fv( location, 1, (float*) &vec );
 }
 
-void glUniform( GLint location, glm::vec3 vec )
+inline void glUniform( GLint location, glm::vec3 vec )
 {
     glUniform3fv( location, 1, (float*) &vec );
 }
 
-void glUniform( GLint location, glm::vec2 vec )
+inline void glUniform( GLint location, glm::vec2 vec )
 {
     glUniform2fv( location, 1, (float*) &vec );
 }
 
-void glUniform( GLint location, float num )
+inline void glUniform( GLint location, float num )
 {
     glUniform1f( location, num );
 }
 
-void glUniform( GLint location, int num )
+inline void glUniform( GLint location, int num )
 {
     glUniform1i( location, num );
 }
 
 // Code grabbed from http://www.opengl-tutorial.org/beginners-tutorials/tutorial-2-the-first-triangle/
-GLuint load_shaders( const char* vertex_file_path, const char* fragment_file_path )
+inline GLuint load_shaders( const char* vertex_file_path, const char* fragment_file_path )
 {
     // Create the shaders
     GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
