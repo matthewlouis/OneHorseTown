@@ -122,6 +122,8 @@ namespace odin
         }
 
         // Allocates memory for the supplied table, plus an optional amount of padding.
+        // The provided initializer_list does not need to be in any order, however,
+        // supplying duplicate keys will result in undefined behaviour.
         BinarySearchMap( InitializerListType list, size_t padding = 0 )
             : BinarySearchMap( list.size() + padding )
         {
