@@ -106,7 +106,6 @@ namespace odin {
 		lstn(inputManager, eid);
 	}
 
-
 	void Scene::add(EntityId eid, GraphicalComponent gfx)
 	{
 		gfxComponents.add(eid, std::move(gfx));
@@ -122,82 +121,7 @@ namespace odin {
 		listeners.add(eid, std::move(lstn));
 	}
 
-	EntityView Scene::addRect(
-		EntityId   eid,
-		Vec2       dimen,
-		Vec2       pos,
-		float      rot,
-		glm::vec3  color,
-		b2BodyType bodyType)
-	{
-		if (!entities.add(eid, Entity(pos, rot)))
-			std::cout << "Entity " << eid << " already exists.\n";
 
-		if (!gfxComponents.add(eid,
-			GraphicalComponent::makeRect(dimen.x, dimen.y, color)))
-			std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
-
-		b2BodyDef bodyDef;
-		bodyDef.position = pos;
-		bodyDef.angle = rot;
-		bodyDef.type = bodyType;
-
-		if (!fsxComponents.add(eid,
-			PhysicalComponent::makeRect(dimen.x, dimen.y, b2world, bodyDef)))
-			std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
-		return EntityView(eid, this);
-	}
-
-	EntityView Scene::addRightTri(EntityId   eid,
-		Vec2       dimen,
-		Vec2       pos,
-		float      rot,
-		glm::vec3  color,
-		b2BodyType bodyType)
-	{
-		if (!entities.add(eid, Entity(pos, rot)))
-			std::cout << "Entity " << eid << " already exists.\n";
-
-		if (!gfxComponents.add(eid,
-			GraphicalComponent::makeRightTri(dimen.x, dimen.y, color)))
-			std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
-
-		b2BodyDef bodyDef;
-		bodyDef.position = pos;
-		bodyDef.angle = rot;
-		bodyDef.type = bodyType;
-
-		if (!fsxComponents.add(eid,
-			PhysicalComponent::makeRightTri(dimen.x, dimen.y, b2world, bodyDef)))
-			std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
-
-		return EntityView(eid, this);
-
-	}
-
-	EntityView Scene::addEqTri(EntityId   eid,
-		float      length,
-		Vec2       pos,
-		float      rot,
-		glm::vec3  color,
-		b2BodyType bodyType)
-	{
-		if (!entities.add(eid, Entity(pos, rot)))
-			std::cout << "Entity " << eid << " already exists.\n";
-
-		if (!gfxComponents.add(eid, GraphicalComponent::makeEqTri(length, color)))
-			std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
-
-		b2BodyDef bodyDef;
-		bodyDef.position = pos;
-		bodyDef.angle = rot;
-		bodyDef.type = bodyType;
-
-		if (!fsxComponents.add(eid, PhysicalComponent::makeEqTri(length, b2world, bodyDef)))
-			std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
-
-		return EntityView(eid, this);
-	}
 
 	void EntityView::attach(GraphicalComponent gfx)
 	{
