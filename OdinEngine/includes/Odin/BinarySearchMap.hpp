@@ -156,8 +156,8 @@ namespace odin
         // Copies the contents of a map into the constructed map.
         BinarySearchMap( const BinarySearchMap& copy )
             : BinarySearchMap( copy._capacity )
-            , _count( copy._count )
         {
+            _count = copy._count;
             for ( size_t i = 0; i < copy._count; ++i )
                 _construct( i, copy._pKeys[ i ], copy._pValues[ i ] );
         }
@@ -169,8 +169,8 @@ namespace odin
             , _count( move._count )
         {
             move._pData = nullptr;
-            move._count = 0;
             move._capacity = 0;
+            move._count = 0;
         }
 
         // Copies the contents of one map into another map.
@@ -314,7 +314,7 @@ namespace odin
             if ( itr )
                 return nullptr;
 
-            return (ValueType*) _insert( itr._index( this ), key, std::move( value ) );
+            return _insert( itr._index( this ), key, std::move( value ) );
         }
 
         // Removes an entry from the map. Returns true if an entry was found, otherwise false.
