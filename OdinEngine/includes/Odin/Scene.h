@@ -3,8 +3,31 @@
 #include "AudioEngine.h"
 
 namespace odin {
+
+	class Scene;
+
 	// Lazy entity proxy object.
-	struct EntityView;
+	struct EntityView
+	{
+		EntityId eid;
+		Scene*    pScene;
+
+		EntityView(EntityId eid, Scene* game)
+			: eid(eid), pScene(game)
+		{
+		}
+
+		void attach(GraphicalComponent gfx);
+		void attach(PhysicalComponent fsx);
+		void attach(InputListener lstn);
+
+		void detach(ComponentType type);
+
+		GraphicalComponent* gfxComponent();
+		PhysicalComponent* fsxComponent();
+		InputListener* inputListener();
+	};
+
 
 	class Scene {
 	public:
@@ -78,29 +101,8 @@ namespace odin {
 
 		void add(EntityId eid, InputListener lstn);
 
-		virtual void player_input(const InputManager&, EntityId eid){}
+		virtual void player_input(const InputManager&, EntityView ntt){}
 
-	};
-
-	struct EntityView
-	{
-		EntityId eid;
-		Scene*    pScene;
-
-		EntityView(EntityId eid, Scene* game)
-			: eid(eid), pScene(game)
-		{
-		}
-
-		void attach(GraphicalComponent gfx);
-		void attach(PhysicalComponent fsx);
-		void attach(InputListener lstn);
-
-		void detach(ComponentType type);
-
-		GraphicalComponent* gfxComponent();
-		PhysicalComponent* fsxComponent();
-		InputListener* inputListener();
 	};
 
 

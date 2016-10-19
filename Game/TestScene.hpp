@@ -113,9 +113,10 @@ public:
 		return EntityView(eid, this);
 	}
 
-	template< int PLAYER = 0 >
-	void player_input(const InputManager& mngr, EntityView ntt)
+	//template< int PLAYER = 0 >
+	virtual void player_input(const InputManager& mngr, EntityView ntt)
 	{
+		constexpr int PLAYER = 0;
 		static_assert(PLAYER >= 0 && PLAYER < odin::ControllerManager::MAX_PLAYERS, "");
 
 

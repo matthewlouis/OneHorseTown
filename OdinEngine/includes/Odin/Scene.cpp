@@ -1,6 +1,7 @@
 #include "Scene.h"
 
 namespace odin {
+	
 
 	//scene can have no audio (_audioBankName == NULL)
 	Scene::Scene(GLuint _program, SDL_Renderer* _renderer, std::string _audioBankName)
