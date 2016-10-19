@@ -33,27 +33,24 @@ namespace odin {
 
 	void Scene::handleInput() {
 		inputManager.pollEvents();
-		for (auto itr = listeners.begin();
-		itr != listeners.end(); ++itr)
+		for ( auto x : listeners )
 		{
-			trigger(*itr, itr.key());
+			trigger( x.value, x.key );
 		}
 	}
 
 	void Scene::update(float tgtFrameTime) {
 		b2world.Step(tgtFrameTime, 50, 50);
-		for (auto itr = fsxComponents.begin();
-		itr != fsxComponents.end(); ++itr)
+        for ( auto x : fsxComponents )
 		{
-			updateComponent(*itr, itr.key());
+			updateComponent( x.value, x.key );
 		}
 	}
 
 	void Scene::draw(float zoom, float aspect, GLuint program) {
-		for (auto itr = gfxComponents.begin();
-		itr != gfxComponents.end(); ++itr)
+		for ( auto x : gfxComponents )
 		{
-			drawComponent(*itr, itr.key(), zoom, aspect);
+			drawComponent( x.value, x.key, zoom, aspect);
 		}
 	}
 
