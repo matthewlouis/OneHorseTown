@@ -61,27 +61,6 @@ namespace odin {
 		Scene(GLuint _program, SDL_Renderer* _renderer, std::string _audioBankName = NULL);
 		~Scene();
 
-		EntityView addRect(EntityId   eid,
-			Vec2       dimen,
-			Vec2       pos = { 0, 0 },
-			float      rot = 0,
-			glm::vec3  color = { 1, 1, 1 },
-			b2BodyType bodyType = b2BodyType::b2_staticBody);
-
-		EntityView addRightTri(EntityId   eid,
-			Vec2       dimen,
-			Vec2       pos = { 0, 0 },
-			float      rot = 0,
-			glm::vec3  color = { 1, 1, 1 },
-			b2BodyType bodyType = b2BodyType::b2_staticBody);
-
-		EntityView addEqTri(EntityId   eid,
-			float      length,
-			Vec2       pos = { 0, 0 },
-			float      rot = 0,
-			glm::vec3  color = { 1, 1, 1 },
-			b2BodyType bodyType = b2BodyType::b2_staticBody);
-
 		void handleInput();
 
 		void update(float tgtFrameTime);
@@ -96,9 +75,7 @@ namespace odin {
 		void trigger(const InputListener& lstn, EntityId eid);
 
 		void add(EntityId eid, GraphicalComponent gfx);
-
 		void add(EntityId eid, PhysicalComponent fsx);
-
 		void add(EntityId eid, InputListener lstn);
 
 		virtual void player_input(const InputManager&, EntityView ntt){}

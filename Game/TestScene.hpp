@@ -15,6 +15,8 @@ using odin::Scene;
 class TestScene : public Scene{
 public:
 
+	EntityFactory* factory;
+
 	int _height, _width;
 	float _scale;
 
@@ -23,7 +25,9 @@ public:
 		, _height(height)
 		, _width(width)
 		, _scale(scale)
-	{}
+	{
+		factory = EntityFactory::instance();
+	}
 
 	unsigned short _bulletCount = 0;
 
@@ -33,42 +37,15 @@ public:
 			EntityId(0), GraphicalComponent::makeRect(_width / _scale, _height / _scale));
 		background->texture = 4;
 
-		EntityFactory::instance()->makePlayer("player", 1, 2.33, this);
+		factory->makePlayer(this, "player");
 
-		addEqTri({ "tri", 0 }, 2, { 5, -3 }, 0, { 1, 0, 0 }, b2_kinematicBody);
-		auto whttri = addEqTri({ "tri", 1 }, 2, { 0, 0 }, 0, { 1, 1, 1 }, b2_dynamicBody);
-		addEqTri({ "tri", 2 }, 2, { 0.5, 2.5 }, 0, { 0, 0, 1 }, b2_dynamicBody);
-		addEqTri({ "tri", 3 }, 2, { 7, -1 }, 0, { 0, 1, 0 }, b2_kinematicBody);
+		factory->makePlatform(this, "plat1", 10);
 
-		fsxComponents[{"tri", 0}]->SetAngularVelocity(-1);
-		fsxComponents[{"tri", 3}]->SetAngularVelocity(2);
+		//factory->makeRect(this, "box", { 1,1 }, { 1,1 }, 0, { 1,1,1 });
 
-		b2RevoluteJointDef rjd;
-		b2BodyDef bodyDef;
-		auto ground = b2world.CreateBody(&bodyDef);
-		rjd.Initialize(ground, fsxComponents[{"tri", 1}].pBody, { 0, 0 });
-		b2world.CreateJoint(&rjd);
-
-		//             eid    dimens   pos   rot   color       body_type
-		addRect("rect", { 1, 2 }, { 0, 7 }, 0, { 1, 1, 0 }, b2_dynamicBody);
-		addRect({ "box", 0 }, { 1, 1 }, { -.5, 4 }, 0, { 1, 0, 1 }, b2_dynamicBody);
-		auto pnkcrate = addRect({ "box", 1 }, { 1, 1 }, { -.5, 5 }, 0, { 1, 0, 1 }, b2_dynamicBody);
-		addRect({ "box", 2 }, { 1, 1 }, { -.5, 6 }, 0, { 1, 0, 1 }, b2_dynamicBody);
-		addRect({ "box", 3 }, { 1, 1 }, { -.5, 7 }, 0, { 1, 0, 1 }, b2_dynamicBody);
-		addRect({ "box", 4 }, { 1, 1 }, { -.5, 8 }, 0, { 1, 0, 1 }, b2_dynamicBody);
-		auto blucrate = addRect({ "box", 5 }, { 1, 1 }, { .1f, 90 }, 0, { 0, 1, 1 }, b2_dynamicBody);
-		addRightTri({ "rtri", 0 }, { -2, 2 }, { 0, -3 }, 0, { 0, 1, 1 }, b2_dynamicBody);
-		auto ylwramp = addRightTri({ "rtri", 1 }, { 3, 1 }, { -2, -3 }, 0, { 1, 1, 0 });
-
-		fireBullet({ -170, 5.5f }, { 100, 0 });
+		//fireBullet({ -170, 5.5f }, { 100, 0 });
 
 		//GLuint nul = load_texture( "null.png", 0 );
-		
-
-		blucrate.gfxComponent()->texture = Textures::CRATE2;
-		pnkcrate.gfxComponent()->texture = CRATE1;
-		ylwramp.gfxComponent()->texture = CRATE1;
-		whttri.gfxComponent()->texture = CRATE1;
 
 		b2BodyDef floorDef;
 		b2EdgeShape floorShape;
@@ -91,8 +68,30 @@ public:
 		audioEngine.playEvent("event:/Music/EnergeticTheme");
 	}
 
-	EntityView fireBullet(Vec2 position, Vec2 velocity)
+	// Using bullet start position, the velocity  direction, and default facing direction.
+	EntityView fireBullet(Vec2 position, Vec2 velocity, odin::FacingDirection direction)
 	{
+		double bulletOffset = 0.5;
+		float bulletVelocity = 100;
+
+		// first set facing direction offset for bullet, eventually bullet should have a odin::FacingDirection
+		// correct bullet firing from left side using offset
+		if (direction == odin::LEFT)
+			position.x -= bulletOffset;
+
+		// ensure a default case for 0 velocity incase joystick is neither held left or right.
+		if (velocity.x == 0 && velocity.y == 0 && direction == odin::LEFT)
+			velocity.x = -1;
+
+		if (velocity.x == 0 && velocity.y == 0 && direction == odin::RIGHT)
+		{
+			velocity.x = 1;
+		}
+
+		// get new velocity based on direction and bullet velocity
+		velocity.x *= bulletVelocity;
+		velocity.y *= bulletVelocity;
+
 		EntityId eid("bullet", _bulletCount++);
 
 		if (!entities.add(eid, Entity(position, 0)))
@@ -107,7 +106,7 @@ public:
 		bodyDef.type = b2_dynamicBody;
 		bodyDef.bullet = true;
 
-		if (!fsxComponents.add(eid, PhysicalComponent::makeCircle(.05f, b2world, bodyDef, 0.01)))
+		if (!fsxComponents.add(eid, PhysicalComponent::makeCircle(.05f, b2world, bodyDef, 0.01f)))
 			std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
 
 		return EntityView(eid, this);
@@ -130,6 +129,7 @@ public:
 		int actionDir = 0;
 		Vec2 aimDir(0, 0);
 
+
 		//adjust facing direction
 		if (actionLeft)
 			gfx.direction = odin::LEFT;
@@ -148,8 +148,8 @@ public:
 
 		// Handle directions from left joystick axis
 		actionDir = mngr.gamepads.joystickAxisX(PLAYER);
-		aimDir.x = mngr.gamepads.joystickDir(PLAYER).x * 50; //50 is currently bullet fire velocity. 
-		aimDir.y = -mngr.gamepads.joystickDir(PLAYER).y * 50;
+		aimDir.x = mngr.gamepads.joystickDir(PLAYER).x; //50 is currently bullet fire velocity. 
+		aimDir.y = -mngr.gamepads.joystickDir(PLAYER).y;
 
 		//adjust facing direction for joystick
 		if (actionDir == -1)
@@ -177,7 +177,7 @@ public:
 		// Handle Shoot input on button B
 		if (mngr.gamepads.wasButtonPressed(PLAYER, SDL_CONTROLLER_BUTTON_B))
 		{
-			fireBullet({body.GetPosition().x,body.GetPosition().y}, aimDir);
+			fireBullet({body.GetPosition().x,body.GetPosition().y}, aimDir, gfx.direction);
 		}
 		if (mngr.gamepads.wasButtonReleased(PLAYER, SDL_CONTROLLER_BUTTON_B))
 		{

@@ -245,7 +245,7 @@ namespace odin
 			int       totalAnim = 1,
 			int*      animLength = nullptr)
         {
-            const float h = 0.86602540378 * length; // ?3/2 * a
+            const float h = float( 0.86602540378 * length ); // ?3/2 * a
 
             float vertices[][5] = {
                 { 0, 2 * h / 3,        0, 0.5, 0 },

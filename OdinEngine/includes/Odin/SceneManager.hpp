@@ -6,7 +6,7 @@
 namespace odin {
 	class SceneManager {
 	public:
-		int currentScene = -1;
+		size_t currentScene = -1;
 		std::vector<Scene*> scenes;
 
 		~SceneManager() {
@@ -17,13 +17,13 @@ namespace odin {
 			}
 		}
 
-		void changeScene(int newScene) {
+		void changeScene(size_t newScene) {
 			if (newScene < scenes.size()) {
 				currentScene = newScene;
 			}
 		}
 
-		void addScene(int idx, Scene* scene) {
+		void addScene(size_t idx, Scene* scene) {
 			if (idx >= scenes.size())
 				scenes.push_back(scene);
 			else {
@@ -34,17 +34,17 @@ namespace odin {
 		}
 
 		void draw(float zoom, float aspect, GLuint program) {
-			if(currentScene >= 0 && currentScene < scenes.size())
+			if(currentScene != -1 && currentScene < scenes.size())
 				scenes[currentScene]->draw(zoom, aspect, program);
 		}
 
 		void handleInput() {
-			if (currentScene >= 0 && currentScene < scenes.size())
+			if (currentScene != -1 && currentScene < scenes.size())
 				scenes[currentScene]->handleInput();
 		}
 
 		void update(float tgtFrameTime) {
-			if (currentScene >= 0 && currentScene < scenes.size())
+			if (currentScene != -1 && currentScene < scenes.size())
 				scenes[currentScene]->update(tgtFrameTime);
 		}
 	};

@@ -11,6 +11,26 @@ enum Textures {
 	BACKGROUND
 };
 
+enum Anchors {
+	CENTRE,
+	// TODO
+	//TOPLEFT,
+	//TOPRIGHT,
+	//TOPMIDDLE,
+	//BOTTOMLEFT,
+	//BOTTOMRIGHT,
+	//BOTTOMMIDDLE,
+	
+};
+
+using odin::Entity;
+using odin::EntityId;
+using odin::EntityView;
+using odin::GraphicalComponent;
+using odin::PhysicalComponent;
+using odin::InputManager;
+using odin::Scene;
+
 // Singleton class for easily creating game objects
 class EntityFactory {
 public:
@@ -26,8 +46,54 @@ public:
 		return &instance;
 	}
 
-	void makePlayer(odin::EntityId id, float width, float height, odin::Scene* scene);
+	EntityView makePlayer(
+		Scene*	   scene,
+		EntityId   eid, 
+		Vec2	   size = { 1, 2 }
+	);
+	
+	EntityView makeRightTri(
+		Scene*	   scene,
+		EntityId   eid, 
+		Vec2       dimen,
+		Vec2       pos,
+		float      rot,
+		glm::vec3  color,
+		Textures   text = CRATE1,
+		b2BodyType bodyType = b2_dynamicBody
+	);
+	
 
+	EntityView makeEqTri(
+		Scene*	   scene,
+		EntityId   eid,
+		float      length,
+		Vec2       pos,
+		float      rot,
+		glm::vec3  color,
+		Textures   text = CRATE1,
+		b2BodyType bodyType = b2_dynamicBody
+	);
+
+	EntityView makeRect(
+		Scene*	   scene,
+		EntityId   eid,
+		Vec2       dimen,
+		Vec2       pos,
+		float      rot,
+		glm::vec3  color,
+		Textures   text = CRATE1,
+		b2BodyType bodyType = b2_staticBody
+	);
+
+	void makePlatform(
+		Scene*		scene,
+		const char	(&id)[6],
+		uint16		length,
+		Vec2		offset = { 0, 0 },
+		Anchors		anchor = CENTRE
+	);
+	
 private:
 
 	// Load all of the textures

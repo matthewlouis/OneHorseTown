@@ -195,4 +195,7 @@
     <ClInclude Include="includes\Odin\TextureManager.hpp" />
     <ClInclude Include="includes\SDL\SDL_image.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="OdinEngine.natvis" />
+  </ItemGroup>
 </Project>
