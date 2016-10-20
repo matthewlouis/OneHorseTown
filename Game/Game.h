@@ -41,7 +41,7 @@ public:
 		, _height(height)
 		, sceneManager()
     {
-		sceneManager.addScene(TEST, new TestScene(_width, _height, SCALE));
+		sceneManager.addScene(TEST, new TestScene(_width, _height, SCALE, program));
 		sceneManager.changeScene(TEST);
     }
 

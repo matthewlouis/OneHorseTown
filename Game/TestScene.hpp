@@ -17,8 +17,8 @@ public:
 	int _height, _width;
 	float _scale;
 
-	TestScene(int height, int width, float scale)
-		:Scene()
+	TestScene(int height, int width, float scale, GLuint program)
+		:Scene(program)
 		, _height(height)
 		, _width(width)
 		, _scale(scale)
