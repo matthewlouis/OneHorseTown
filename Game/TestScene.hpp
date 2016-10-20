@@ -33,13 +33,23 @@ public:
 
 	virtual void setup_scene() {
 
+		/*
 		auto background = gfxComponents.add(
 			EntityId(0), GraphicalComponent::makeRect(_width / _scale, _height / _scale));
-		background->texture = 4;
+		background->texture = BACKGROUND;
+		
+		float h = _height / _scale;
+		float w = _width / _scale;
+		*/
+
+		auto bg = gfxComponents.add(EntityId(0), GraphicalComponent::makeRect(25, 16.5));
+		bg->texture = BACKGROUND;
 
 		factory->makePlayer(this, "player");
 
 		factory->makePlatform(this, "plat1", 10);
+		factory->makePlatform(this, "plat2", 10, { 0, 5 });
+		factory->makePlatform(this, "plat3", 10, { 0, -5 });
 
 		//factory->makeRect(this, "box", { 1,1 }, { 1,1 }, 0, { 1,1,1 });
 

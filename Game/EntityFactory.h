@@ -8,6 +8,8 @@ enum Textures {
 	PLAYER,
 	CRATE1,
 	CRATE2,
+	GROUND1,
+	GROUND2,
 	BACKGROUND
 };
 
@@ -101,6 +103,8 @@ private:
 		odin::load_texture< GLubyte[4] >(NULL_TEXTURE, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF });
 		odin::load_texture(CRATE1, "Textures/crate.png");
 		odin::load_texture(CRATE2, "Textures/crate2.png");
+		odin::load_texture(GROUND1, "Textures/ground.png");
+		odin::load_texture(GROUND2, "Textures/ground2.png");
 		odin::load_texture(PLAYER, "Textures/CowboySS.png");
 		odin::load_texture(BACKGROUND, "Textures/background.png");
 	}
