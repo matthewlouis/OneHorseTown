@@ -47,9 +47,20 @@ public:
 
 		factory->makePlayer(this, "player");
 
-		factory->makePlatform(this, "plat1", 10);
-		factory->makePlatform(this, "plat2", 10, { 0, 5 });
-		factory->makePlatform(this, "plat3", 10, { 0, -5 });
+		factory->makeHorse(this, "horse");
+
+		factory->makePlatform(this, "plat1", 3, {0, -3}); // Lower Middle
+		factory->makePlatform(this, "plat2", 6, { 0.5, 3 }); // Upper middle
+		
+		factory->makePlatform(this, "plat3", 4, { -9, 5 }); // Top Left
+		factory->makePlatform(this, "plat4", 4, { 10, 5 }); // Top Right
+		
+		factory->makePlatform(this, "plat5", 5, { -6, 0 }); // Middle Left
+		factory->makePlatform(this, "plat6", 5, { 6, 0 }); // Middle Right
+		
+		factory->makePlatform(this, "plat7", 2, { -3, -5.5 }); // Lower Left
+		factory->makePlatform(this, "plat8", 2, { 3, -5.5 }); // Lower Right
+		
 
 		//factory->makeRect(this, "box", { 1,1 }, { 1,1 }, 0, { 1,1,1 });
 
@@ -59,16 +70,22 @@ public:
 
 		b2BodyDef floorDef;
 		b2EdgeShape floorShape;
-		floorShape.Set({ -10, -8 }, { 10, -8 });
+		floorShape.Set({ -11, -8 }, { 11, -8 });
 
 		fsxComponents["floor"] = b2world.CreateBody(&floorDef);
 		fsxComponents["floor"]->CreateFixture(&floorShape, 1)
 			->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 
-		floorShape.Set({ 10, +8 }, { 10, -8 });
+		floorShape.Set({ 11, +10 }, { 11, -8 });
 
-		fsxComponents["wall"] = b2world.CreateBody(&floorDef);
-		fsxComponents["wall"]->CreateFixture(&floorShape, 1)
+		fsxComponents["wallR"] = b2world.CreateBody(&floorDef);
+		fsxComponents["wallR"]->CreateFixture(&floorShape, 1)
+			->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
+
+		floorShape.Set({ -11, +10 }, { -11, -8 });
+
+		fsxComponents["wallL"] = b2world.CreateBody(&floorDef);
+		fsxComponents["wallL"]->CreateFixture(&floorShape, 1)
 			->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 
 		//load common events and play music
@@ -149,7 +166,7 @@ public:
 		//b2Fixture* pFixt = body.GetFixtureList();
 
 		if (mngr.wasKeyPressed(SDLK_UP)) {
-			vel.y = 11;
+			vel.y = 12;
 		}
 
 		if (mngr.wasKeyReleased(SDLK_UP) && vel.y > 0) {
@@ -169,7 +186,7 @@ public:
 
 		// Handle Jump input on button A
 		if (mngr.gamepads.wasButtonPressed(PLAYER, SDL_CONTROLLER_BUTTON_A))
-			vel.y = 11;
+			vel.y = 12;
 
 		if (mngr.gamepads.wasButtonReleased(PLAYER, SDL_CONTROLLER_BUTTON_A) && vel.y > 0)
 			vel.y *= 0.6f;
