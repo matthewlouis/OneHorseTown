@@ -52,7 +52,6 @@ public:
 	EntityView makePlayer(
 		LevelScene*	scene,
 		EntityId    eid,
-        int         pindex,
 		Vec2	    size = { 1, 2 }
 	);
 	

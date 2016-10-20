@@ -36,7 +36,7 @@ public:
     EntityMap< PhysicalComponent >  fsxComponents;
 
     InputManager                    inputManager;
-    EntityMap< InputListener >      listeners;
+    std::vector< InputListener >    listeners;
 
 
     std::string audioBankName;
@@ -97,10 +97,8 @@ public:
         Scene::update( ticks );
 
         inputManager.pollEvents();
-        for ( auto x : listeners )
-        {
-            x.value( inputManager, x.key );
-        }
+        for ( auto& lstn : listeners )
+            lstn( inputManager );
 
         //audioEngine.update();
 
@@ -169,9 +167,9 @@ public:
         fsxComponents.add( eid, std::move( fsx ) );
     }
 
-    void add( EntityId eid, InputListener lstn )
+    void add( InputListener lstn )
     {
-        listeners.add( eid, std::move( lstn ) );
+        listeners.push_back( std::move( lstn ) );
     }
 
     void player_input( const InputManager& mngr, EntityId eid, int pindex );
@@ -202,11 +200,6 @@ struct EntityView
         pScene->fsxComponents[ eid ] = std::move( fsx );
     }
 
-    void attach( InputListener lstn )
-    {
-        pScene->listeners[ eid ] = std::move( lstn );
-    }
-
     void detach( ComponentType type )
     {
         switch ( type )
@@ -216,9 +209,6 @@ struct EntityView
             break;
         case ComponentType::Physical:
             pScene->fsxComponents.remove( eid );
-            break;
-        case ComponentType::Input:
-            pScene->listeners.remove( eid );
             break;
         }
     }
@@ -235,11 +225,6 @@ struct EntityView
         return itr ? (PhysicalComponent*) itr : nullptr;
     }
 
-    InputListener* inputListener()
-    {
-        auto itr = pScene->listeners.search( eid );
-        return itr ? (InputListener*) itr : nullptr;
-    }
 };
 
 inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, int pindex )
@@ -254,29 +239,27 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     float actionLeft = mngr.isKeyDown(SDLK_LEFT) ? 1.f : 0.f;
     float actionRight = mngr.isKeyDown(SDLK_RIGHT) ? 1.f : 0.f;
 
-    int actionDir = 0;
-    Vec2 aimDir(0, 0);
-
     //adjust facing direction
     if (actionLeft)
         gfx.direction = odin::LEFT;
     if (actionRight)
         gfx.direction = odin::RIGHT;
 
-    // Handle directions from left joystick axis
-    actionDir = mngr.gamepads.joystickAxisX(pindex);
-    aimDir.x = mngr.gamepads.joystickDir(pindex).x; //50 is currently bullet fire velocity. 
-    aimDir.y = -mngr.gamepads.joystickDir(pindex).y;
+    Vec2 aimDir = mngr.gamepads.joystickDir( pindex );
+    aimDir.y = -aimDir.y;
+
+    if ( glm::length( aimDir.glmvec2 ) < 0.25f )
+        aimDir = {0, 0};
 
     //adjust facing direction for joystick
-    if (actionDir == -1)
+    if (aimDir.x < 0)
         gfx.direction = odin::LEFT;
-    if (actionDir == 1)
+    if (aimDir.x > 0)
         gfx.direction = odin::RIGHT;
 
     //b2Fixture* pFixt = body.GetFixtureList();
 
-    if ( actionLeft == 0 && actionRight == 0 && actionDir == 0 )
+    if ( actionLeft == 0 && actionRight == 0 && aimDir.x == 0 )
     {
         //pFixt->SetFriction( 2 );
         vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0f));
@@ -285,7 +268,8 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     else
     {
         //pFixt->SetFriction( 0 );
-        vel.x += (float)actionDir * (20 + 1) * (1 / 60.0); // for use w/gamepad
+        vel.x += aimDir.x * (20 + 1) * (1 / 60.0); // for use w/gamepad
+
         vel.x -= actionLeft * (20 + 1) * (1 / 60.0f);
         vel.x += actionRight * (20 + 1) * (1 / 60.0f);
         vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);

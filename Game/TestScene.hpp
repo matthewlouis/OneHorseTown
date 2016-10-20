@@ -37,12 +37,30 @@ public:
 			EntityId(0), GraphicalComponent::makeRect( width / _scale, height / _scale));
 		background->texture = BACKGROUND;
 
-        listeners.add( "quit", [this]( const InputManager& inmn, EntityId eid ) {
+        listeners.push_back( [this]( const InputManager& inmn ) {
             if ( inmn.wasKeyPressed( SDLK_BACKSPACE ) )
                 this->expired = true;
         } );
 
-		factory->makePlayer(this, "player", 0);
+        factory->makePlayer( this, {"player", 0} );
+        listeners.push_back( [this]( const InputManager& inmn ) {
+            return player_input( inmn, {"player", 0}, 0 );
+        } );
+
+        /*factory->makePlayer( this, {"player", 1} );
+        listeners.push_back( [this]( const InputManager& inmn ) {
+            return player_input( inmn, {"player", 1}, 1 );
+        } );
+
+        factory->makePlayer( this, {"player", 2} );
+        listeners.push_back( [this]( const InputManager& inmn ) {
+            return player_input( inmn, {"player", 2}, 2 );
+        } );
+
+        factory->makePlayer( this, {"player", 3} );
+        listeners.push_back( [this]( const InputManager& inmn ) {
+            return player_input( inmn, {"player", 3}, 3 );
+        } );*/
 
 		factory->makeHorse(this, "horse");
 

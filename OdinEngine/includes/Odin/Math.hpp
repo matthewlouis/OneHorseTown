@@ -48,6 +48,16 @@ union Vec2
     {
         return b2vec2;
     }
+
+    float& operator []( size_t i )
+    {
+        return *(&x + i);
+    }
+
+    const float& operator []( size_t i ) const
+    {
+        return *(&x + i);
+    }
 };
 
 

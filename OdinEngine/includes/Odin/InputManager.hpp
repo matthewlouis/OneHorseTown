@@ -27,14 +27,14 @@ namespace odin
         using PlayerList = std::array< SDL_JoystickID, MAX_PLAYERS >;
 
         using ButtonStates = std::array< std::bitset< SDL_CONTROLLER_BUTTON_MAX >, MAX_PLAYERS >;
-		using AxisStates = std::array < Vec2, MAX_PLAYERS > ;
+		using AxisStates = std::array< Vec2, MAX_PLAYERS >;
 		
 		ControllerMap controllers; // Maps joystick ids to game controllers.
         PlayerList    players;     // Stores the joystick id of each player.
 
         ButtonStates  currButtons; // Represents the current down state of each button on each controller.
         ButtonStates  prevButtons; // Represents the previous down state of each button on each controller.
-		AxisStates	  currAxis; // Represents the current axis state possition for each controller		
+		AxisStates	  currAxis;    // Represents the current axis state possition for each controller		
 
         ControllerManager()
             : controllers( { {-1, nullptr} }, MAX_PLAYERS )
@@ -118,16 +118,14 @@ namespace odin
         // changed from being unpressed to pressed.
         bool wasButtonPressed( PlayerIndex idx, SDL_GameControllerButton button ) const
         {
-            return currButtons[ idx ][ button ]
-                && !prevButtons[ idx ][ button ];
+            return currButtons[ idx ][ button ] && !prevButtons[ idx ][ button ];
         }
 
         // Returns true if a specific button on a specific controller just
         // changed from being pressed to unpressed.
         bool wasButtonReleased( PlayerIndex idx, SDL_GameControllerButton button ) const
         {
-            return !currButtons[ idx ][ button ]
-                && prevButtons[ idx ][ button ];
+            return !currButtons[ idx ][ button ] && prevButtons[ idx ][ button ];
         }
 
         // Returns true if a specific button on a specific controller is pressed.
@@ -137,27 +135,27 @@ namespace odin
         }
 
 		// Returns the x axis for the current controller based on the player index
-		int joystickAxisX(PlayerIndex idx) const
+		float joystickAxisX( PlayerIndex idx ) const
 		{
-			return currAxis[idx].x;
+			return currAxis[ idx ].x;
 		}
 
 		// Returns the y axis for the current controller based on the player index
-		int joystickAxisY(PlayerIndex idx) const
+		float joystickAxisY( PlayerIndex idx ) const
 		{
-			return currAxis[idx].y;
+			return currAxis[ idx ].y;
 		}
 
-		Vec2 joystickDir(PlayerIndex idx) const
+		Vec2 joystickDir( PlayerIndex idx ) const
 		{
-			return currAxis[idx];
+			return currAxis[ idx ];
 		}
 
     };
 
     class InputManager;
 
-    using InputListener = std::function< void( const InputManager&, EntityId ) >;
+    using InputListener = std::function< void( const InputManager& ) >;
 
     // Sorted array of SDL_Keycode mappings KEYS[ n ] -> SDL_Keycode
     constexpr SDL_Keycode KEYS[] = {
@@ -343,30 +341,13 @@ namespace odin
                 case SDL_CONTROLLERAXISMOTION:
 				{
 					SDL_ControllerAxisEvent& caxis = event.caxis;
-					int playerNo = gamepads.findPlayerIndex(caxis.which);
-					SDL_Joystick* joyStick = SDL_JoystickFromInstanceID(caxis.which);
-					//handle controller joystick movement
-					// x axis
-					if (event.jaxis.axis == 0)
-					{
-						if (event.jaxis.value > JOYSTICK_DEAD_ZONE)
-							gamepads.currAxis[playerNo].x = 1;
-						else if (event.jaxis.value < -JOYSTICK_DEAD_ZONE)
-							gamepads.currAxis[playerNo].x = -1;
-						else
-							gamepads.currAxis[playerNo].x = 0;
-					}
+                    SDL_JoyAxisEvent& jaxis = event.jaxis;
 
-					// y axis
-					if (event.jaxis.axis == 1)
-					{
-						if (event.jaxis.value > JOYSTICK_DEAD_ZONE)
-							gamepads.currAxis[playerNo].y = 1;
-						else if (event.jaxis.value < -JOYSTICK_DEAD_ZONE)
-							gamepads.currAxis[playerNo].y = -1;
-						else
-							gamepads.currAxis[playerNo].y = 0;
-					}
+                    if ( jaxis.axis < 2 )
+                    {
+					    int playerNo = gamepads.findPlayerIndex( caxis.which );
+                        gamepads.currAxis[ playerNo ][ jaxis.axis ] = jaxis.value / 32767.f;
+                    }
 					break;
 				}
                 case SDL_CONTROLLERBUTTONDOWN:
@@ -375,7 +356,7 @@ namespace odin
                     SDL_ControllerButtonEvent& cbutton = event.cbutton;
                     int playerNo = gamepads.findPlayerIndex( cbutton.which );
 
-                    gamepads.currButtons[ playerNo ][ cbutton.button ] = cbutton.state == SDL_PRESSED;
+                    gamepads.currButtons[ playerNo ][ cbutton.button ] = (cbutton.state == SDL_PRESSED);
                     #ifdef _DEBUG
                     /*printf( "P%i button %s: %i\n",
                             playerNo,
@@ -408,16 +389,14 @@ namespace odin
         // being unpressed to pressed.
         bool wasKeyPressed( SDL_Keycode key ) const
         {
-            return _currKeys[ key_index( key ) ]
-                && !_prevKeys[ key_index( key ) ];
+            return _currKeys[ key_index( key ) ] && !_prevKeys[ key_index( key ) ];
         }
 
         // Returns true if a specific key just changed from 
         // being pressed to unpressed.
         bool wasKeyReleased( SDL_Keycode key ) const
         {
-            return !_currKeys[ key_index( key ) ]
-                && _prevKeys[ key_index( key ) ];
+            return !_currKeys[ key_index( key ) ] && _prevKeys[ key_index( key ) ];
         }
 
         // Returns true if a specific key is pressed.

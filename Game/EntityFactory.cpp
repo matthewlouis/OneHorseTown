@@ -4,7 +4,6 @@
 EntityView EntityFactory::makePlayer(
     LevelScene*	scene,
 	EntityId    eid,
-    int         pindex,
 	Vec2	    size)
 {
 	int pAnimInfo[3] = { 1, 10, 3 }; //idle 1 frame, run 10 frame, jump 3 frame
@@ -18,11 +17,6 @@ EntityView EntityFactory::makePlayer(
 	playerDef.gravityScale = 2;
 
 	auto pFsx = scene->fsxComponents.add(eid, PhysicalComponent::makeRect(size.x-0.5, size.y-0.5, scene->b2world, playerDef));
-
-
-	scene->listeners.add(eid, [scene, pindex](const InputManager& inmn, EntityId eid) {
-		return scene->player_input(inmn, eid, pindex);
-	});
 	
 	return EntityView(eid, scene);
 }

@@ -11,7 +11,7 @@ namespace odin {
 
 	enum class ComponentType
 	{
-		Graphical, Physical, Input
+		Graphical, Physical,
 	};
 
 	// Base entity object of the entity-component system. Contains 
