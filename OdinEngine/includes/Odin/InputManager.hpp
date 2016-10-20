@@ -386,6 +386,7 @@ namespace odin
                 }
                 case SDL_MOUSEMOTION:
                     //mouse movement - probably not needed
+					//std::cout << event.motion.x << " " << event.motion.y << '\n';
                     break;
                 case SDL_KEYDOWN:
                     _currKeys[ key_index( event.key.keysym.sym ) ] = true;

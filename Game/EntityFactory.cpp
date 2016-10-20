@@ -143,11 +143,11 @@ void EntityFactory::makePlatform(
 		break;
 	}
 
-	Vec2 pos = start;
+	Vec2 pos = start + offset;
 
 	for (uint16 i = 0; i < length; i++)
 	{
-		makeRect(scene, { id, i }, { 1, 1 }, pos, 0, { 1,1,1 });
+		makeRect(scene, { id, i }, { 1, 1 }, pos, 0, { 1,1,1 }, GROUND1);
 		pos.x++;
 	}
 }
