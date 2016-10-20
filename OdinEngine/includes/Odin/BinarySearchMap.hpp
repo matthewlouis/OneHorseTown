@@ -39,8 +39,11 @@ namespace odin
         static constexpr size_t KEY_SIZE   = sizeof( KeyType );
         static constexpr size_t VALUE_SIZE = sizeof( ValueType );
 
-        struct Iterator;
-        struct ConstIterator;
+        template< typename T >
+        struct _iterator;
+
+        using Iterator = _iterator< ValueType >;
+        using ConstIterator = _iterator< const ValueType >;
 
         using EntryType           = MapEntry< KeyType, ValueType >;
         using InitializerListType = std::initializer_list< EntryType >;
@@ -111,17 +114,21 @@ namespace odin
 
         // Allocates memory for the table of keys and values.
         // Default capacity is 12; capacity must be greater than 0.
-        explicit BinarySearchMap( long long capacity = 12 )
-            : _pData( capacity > 0 ? _allocate( capacity ) : throw "capacity must be positive" )
+        explicit BinarySearchMap( size_t capacity = 12 )
+            : _pData( _allocate( capacity ) )
             , _capacity( capacity )
             , _count( 0 )
         {
         }
 
         // Allocates memory for the supplied table, plus an optional amount of padding.
-        BinarySearchMap( InitializerListType list, long long padding = 0 )
-            : BinarySearchMap( padding >= 0 ? list.size() + padding : throw "extra capacity must be positive" )
+        // The provided initializer_list does not need to be in any order, however,
+        // supplying duplicate keys will result in undefined behaviour.
+        BinarySearchMap( InitializerListType list, size_t padding = 0 )
+            : BinarySearchMap( list.size() + padding )
         {
+            _count = list.size();
+
             // if the supplied table is already sorted we can skip sorting it later
             bool sorted = true;
             const EntryType* prev = nullptr;
@@ -133,8 +140,6 @@ namespace odin
                 prev = &entry;
             }
 
-            _count = list.size();
-
             if ( sorted )
             {   // slot the values into place
                 for ( const EntryType& entry : list )
@@ -144,15 +149,15 @@ namespace odin
             {   // sort then search for the correct spot for each value
                 std::sort( _pKeys, _pKeys + _count );
                 for ( const EntryType& entry : list )
-                    new( &*search( entry.key ) ) ValueType( std::move( entry.value ) );
+                    new( search( entry.key ) ) ValueType( std::move( entry.value ) );
             }
         }
 
         // Copies the contents of a map into the constructed map.
         BinarySearchMap( const BinarySearchMap& copy )
             : BinarySearchMap( copy._capacity )
-            , _count( copy._count )
         {
+            _count = copy._count;
             for ( size_t i = 0; i < copy._count; ++i )
                 _construct( i, copy._pKeys[ i ], copy._pValues[ i ] );
         }
@@ -164,8 +169,8 @@ namespace odin
             , _count( move._count )
         {
             move._pData = nullptr;
-            move._count = 0;
             move._capacity = 0;
+            move._count = 0;
         }
 
         // Copies the contents of one map into another map.
@@ -175,7 +180,7 @@ namespace odin
             {
                 clear();
                 _deallocate( _pData );
-                _pData    = _allocate( copy._capacity );
+                _pData = _allocate( copy._capacity );
                 _capacity = copy._capacity;
 
                 for ( size_t i = 0; i < copy._count; ++i )
@@ -309,7 +314,7 @@ namespace odin
             if ( itr )
                 return nullptr;
 
-            return (ValueType*) _insert( itr._index( this ), key, std::move( value ) );
+            return _insert( itr._index( this ), key, std::move( value ) );
         }
 
         // Removes an entry from the map. Returns true if an entry was found, otherwise false.
@@ -374,137 +379,33 @@ namespace odin
 
         #pragma region Iterators
 
-        struct Iterator
+        template< typename T >
+        struct _iterator
         {
+            using ValueType = T;
+
+            struct EntryProxy
+            {
+                const KeyType& key;
+                ValueType&     value;
+
+                operator ValueType&()
+                {
+                    return value;
+                }
+            };
+
             const KeyType* pKey;
 
             BinarySearchMap* const _pMap;
 
-            Iterator( BinarySearchMap* this_map, const KeyType* pKey )
+            _iterator( BinarySearchMap* this_map, const KeyType* pKey )
                 : pKey( pKey )
                 , _pMap( this_map )
             {
             }
 
-            size_t index() const
-            {
-                return _index( _pMap );
-            }
-
-            size_t _index( const BinarySearchMap* pMap ) const
-            {
-                ptrdiff_t diff = pKey - pMap->_pKeys;
-                #ifdef _DEBUG
-                if ( diff < 0 || size_t( diff ) > pMap->_capacity )
-                    throw "key does not belong to map";
-                #endif
-                return diff;
-            }
-
-            const KeyType& key()
-            {
-                return *pKey;
-            }
-
-            const ValueType& value() const
-            {
-                return _pMap->_pValues + index();
-            }
-
-            #pragma region Operators
-
-            operator bool() const
-            {
-                return _pMap != nullptr;
-            }
-
-            bool isValid() const
-            {
-                return _pMap != nullptr;
-            }
-
-            explicit operator const ValueType*() const
-            {
-                return _pMap->_pValues + index();
-            }
-
-            const ValueType& operator *() const
-            {
-                return _pMap->_pValues[ index() ];
-            }
-
-            const ValueType* operator ->() const
-            {
-                return _pMap->_pValues + index();
-            }
-
-            explicit operator ValueType*()
-            {
-                return _pMap->_pValues + index();
-            }
-
-            ValueType& operator *()
-            {
-                return _pMap->_pValues[ index() ];
-            }
-
-            ValueType* operator ->()
-            {
-                return _pMap->_pValues + index();
-            }
-
-            auto operator ++()
-            {
-                ++pKey;
-                return *this;
-            }
-
-            auto operator --()
-            {
-                --pKey;
-                return *this;
-            }
-
-            auto operator ++(int)
-            {
-                auto tmp = *this;
-                ++*this;
-                return tmp;
-            }
-
-            auto operator --(int)
-            {
-                auto tmp = *this;
-                --*this;
-                return tmp;
-            }
-
-            bool operator ==( const Iterator& itr )
-            {
-                return pKey == itr.pKey;
-            }
-
-            bool operator !=( const Iterator& itr )
-            {
-                return pKey != itr.pKey;
-            }
-
-            #pragma endregion
-        };
-
-        struct ConstIterator
-        {
-            const KeyType* pKey;
-
-            const BinarySearchMap* const _pMap;
-
-            ConstIterator( const BinarySearchMap* this_map, const KeyType* pKey )
-                : pKey( pKey )
-                , _pMap( this_map )
-            {
-            }
-
-            ConstIterator( Iterator itr )
+            _iterator( const _iterator< std::remove_const_t< ValueType > >& itr )
                 : pKey( itr.pKey )
                 , _pMap( itr._pMap )
             {
@@ -525,34 +426,20 @@ namespace odin
                 return diff;
             }
 
-            const KeyType& key()
-            {
-                return *pKey;
-            }
-
-            const ValueType& value() const
-            {
-                return _pMap->_pValues + index();
-            }
-
             #pragma region Operators
 
-            operator bool() const
+            // Also handles conversion to bool.
+            operator ValueType*() const
             {
-                return _pMap != nullptr;
+                return _pMap ? _pMap->_pValues + index() : nullptr;
             }
 
-            explicit operator const ValueType*() const
+            EntryProxy operator *() const
             {
-                return _pMap->_pValues + index();
+                return { *pKey, _pMap->_pValues[ index() ] };
             }
 
-            const ValueType& operator *() const
-            {
-                return _pMap->_pValues[ index() ];
-            }
-
-            const ValueType* operator ->() const
+            ValueType* operator ->() const
             {
                 return _pMap->_pValues + index();
             }
@@ -583,12 +470,12 @@ namespace odin
                 return tmp;
             }
 
-            bool operator ==( const ConstIterator& itr )
+            bool operator ==( const _iterator& itr )
             {
                 return pKey == itr.pKey;
             }
 
-            bool operator !=( const ConstIterator& itr )
+            bool operator !=( const _iterator& itr )
             {
                 return pKey != itr.pKey;
             }

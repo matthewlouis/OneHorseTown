@@ -35,7 +35,7 @@ namespace odin
     {
         b2Body* pBody = nullptr;
 
-        static constexpr float DEFAULT_FRICTION = 0.2;
+        static constexpr float DEFAULT_FRICTION = 0.2f;
 
         PhysicalComponent() = default;
 

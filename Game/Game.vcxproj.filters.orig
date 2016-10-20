@@ -14,7 +14,10 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TestScene.hpp" />
+<<<<<<< HEAD
+=======
     <ClInclude Include="EntityFactory.h" />
+>>>>>>> nav
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Game.rc" />

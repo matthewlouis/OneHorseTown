@@ -1,7 +1,7 @@
 #include "AudioEngine.h"
 #include "Errors.h"
 
-namespace OdinEngine {
+namespace odin {
 
 	Implementation::Implementation() {
 		mpStudioSystem = NULL;
@@ -77,8 +77,22 @@ namespace OdinEngine {
 		}
 	}
 
+
+	//unload a bank and free memory
+	void AudioEngine::unloadBank(const std::string& strBankName)
+	{
+		//if sound is not in memory
+		auto tFoundIt = _sgpImplementation->mBanks.find(strBankName);
+		if (tFoundIt == _sgpImplementation->mBanks.end())
+			return; //do nothing
+
+		//release memory and remove from map
+		fmodErrorCheck(tFoundIt->second->unload());
+		_sgpImplementation->mBanks.erase(tFoundIt);
+	}
+
 	//Unload a sound and free the memory
-	void AudioEngine::unLoadSound(const std::string& strSoundName)
+	void AudioEngine::unloadSound(const std::string& strSoundName)
 	{
 		//if sound is not in memory
 		auto tFoundIt = _sgpImplementation->mSounds.find(strSoundName);

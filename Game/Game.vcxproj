@@ -71,11 +71,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(SolutionDir)OdinEngine/includes/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)OdinEngine/lib/;$(SolutionDir)Debug/;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)OdinEngine/$(Configuration)/;$(SolutionDir)OdinEngine/lib/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(SolutionDir)OdinEngine/includes/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)OdinEngine/lib/;$(SolutionDir)Release/;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)OdinEngine/$(Configuration)/;$(SolutionDir)OdinEngine/lib/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -129,10 +129,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="EntityFactory.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Constants.h" />
+    <ClInclude Include="EntityFactory.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="TestScene.hpp" />
   </ItemGroup>
@@ -142,9 +144,11 @@
   <ItemGroup>
     <None Include="fragmentShader.glsl" />
     <None Include="Game.aps" />
+    <None Include="Shaders\vertexAnim.glsl" />
     <None Include="vertexShader.glsl" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="Textures\CowboySS.png" />
     <Image Include="Textures\crate.png" />
     <Image Include="Textures\crate2.png" />
     <Image Include="Textures\pixel_cowboy.png" />

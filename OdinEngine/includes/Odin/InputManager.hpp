@@ -27,12 +27,14 @@ namespace odin
         using PlayerList = std::array< SDL_JoystickID, MAX_PLAYERS >;
 
         using ButtonStates = std::array< std::bitset< SDL_CONTROLLER_BUTTON_MAX >, MAX_PLAYERS >;
-
-        ControllerMap controllers; // Maps joystick ids to game controllers.
+		using AxisStates = std::array < Vec2, MAX_PLAYERS > ;
+		
+		ControllerMap controllers; // Maps joystick ids to game controllers.
         PlayerList    players;     // Stores the joystick id of each player.
 
         ButtonStates  currButtons; // Represents the current down state of each button on each controller.
         ButtonStates  prevButtons; // Represents the previous down state of each button on each controller.
+		AxisStates	  currAxis; // Represents the current axis state possition for each controller		
 
         ControllerManager()
             : controllers( { {-1, nullptr} }, MAX_PLAYERS )
@@ -133,6 +135,23 @@ namespace odin
         {
             return currButtons[ idx ][ button ];
         }
+
+		// Returns the x axis for the current controller based on the player index
+		int joystickAxisX(PlayerIndex idx) const
+		{
+			return currAxis[idx].x;
+		}
+
+		// Returns the y axis for the current controller based on the player index
+		int joystickAxisY(PlayerIndex idx) const
+		{
+			return currAxis[idx].y;
+		}
+
+		Vec2 joystickDir(PlayerIndex idx) const
+		{
+			return currAxis[idx];
+		}
 
     };
 
@@ -248,6 +267,7 @@ namespace odin
         SDLK_RGUI,
     };
 
+	static constexpr int JOYSTICK_DEAD_ZONE = 10200;
     // Manages input events. Call pollEvents to update the stored state 
     // of the connected input devices (keyboard, controllers, etc.).
     class InputManager
@@ -320,27 +340,53 @@ namespace odin
                     //#endif
                     break;
                 }
-                //case SDL_CONTROLLERAXISMOTION:
-                //    //handle controller joystick movement
-                //    printf( "SDL_CONTROLLERAXISMOTION\n" );
-                //    break;
+                case SDL_CONTROLLERAXISMOTION:
+				{
+					SDL_ControllerAxisEvent& caxis = event.caxis;
+					int playerNo = gamepads.findPlayerIndex(caxis.which);
+					SDL_Joystick* joyStick = SDL_JoystickFromInstanceID(caxis.which);
+					//handle controller joystick movement
+					// x axis
+					if (event.jaxis.axis == 0)
+					{
+						if (event.jaxis.value > JOYSTICK_DEAD_ZONE)
+							gamepads.currAxis[playerNo].x = 1;
+						else if (event.jaxis.value < -JOYSTICK_DEAD_ZONE)
+							gamepads.currAxis[playerNo].x = -1;
+						else
+							gamepads.currAxis[playerNo].x = 0;
+					}
+
+					// y axis
+					if (event.jaxis.axis == 1)
+					{
+						if (event.jaxis.value > JOYSTICK_DEAD_ZONE)
+							gamepads.currAxis[playerNo].y = 1;
+						else if (event.jaxis.value < -JOYSTICK_DEAD_ZONE)
+							gamepads.currAxis[playerNo].y = -1;
+						else
+							gamepads.currAxis[playerNo].y = 0;
+					}
+					break;
+				}
                 case SDL_CONTROLLERBUTTONDOWN:
                 case SDL_CONTROLLERBUTTONUP:
                 {
                     SDL_ControllerButtonEvent& cbutton = event.cbutton;
                     int playerNo = gamepads.findPlayerIndex( cbutton.which );
 
-                    gamepads.currButtons[ playerNo ][ cbutton.button ] = cbutton.state;
+                    gamepads.currButtons[ playerNo ][ cbutton.button ] = cbutton.state == SDL_PRESSED;
                     #ifdef _DEBUG
-                    printf( "P%i button %s: %i\n",
+                    /*printf( "P%i button %s: %i\n",
                             playerNo,
                             cbutton.state ? "down" : "up",
-                            event.cbutton.button );
+                            event.cbutton.button );*/
                     #endif
                     break;
                 }
                 case SDL_MOUSEMOTION:
                     //mouse movement - probably not needed
+					//std::cout << event.motion.x << " " << event.motion.y << '\n';
                     break;
                 case SDL_KEYDOWN:
                     _currKeys[ key_index( event.key.keysym.sym ) ] = true;
@@ -349,7 +395,10 @@ namespace odin
                     _currKeys[ key_index( event.key.keysym.sym ) ] = false;
                     break;
                 case SDL_QUIT:
-                    std::invoke( callback );
+					//Matt: Allows us to close the program easily
+					SDL_Quit();
+					//exit(1); //Leaving this out so we can read the console before closing 
+                    //std::invoke( callback );
                     break;
                 }
             }

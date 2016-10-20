@@ -5,6 +5,7 @@
 #include "Constants.h"
 #include <Odin/SceneManager.hpp>
 #include "TestScene.hpp"
+#include <Odin\AudioEngine.h>
 
 using odin::Entity;
 using odin::EntityId;
@@ -14,6 +15,7 @@ using odin::InputManager;
 using odin::InputListener;
 using odin::ComponentType;
 using odin::SceneManager;
+using odin::AudioEngine;
 
 enum Scenes {
 	TEST
@@ -23,7 +25,9 @@ class Game
 {
 public:
 	SceneManager sceneManager;
+	AudioEngine audioEngine;
 
+	SDL_Renderer* renderer;
 	
 	GLuint                          program;
     int _width;
@@ -32,24 +36,29 @@ public:
 	bool running = false;
 
 	const double tgtFrameTime = 1 / 60.0;
-	const int tgtFrameTime_ms = tgtFrameTime * 1000;
+	const int tgtFrameTime_ms = int( tgtFrameTime * 1000 );
 	int tFrameStart = 0;
 
-	Game(int width, int height)
-		: program(load_shaders("vertexShader.glsl", "fragmentShader.glsl"))
+	Game(int width, int height, SDL_Window *window)
+		: program(load_shaders("Shaders/vertexAnim.glsl", "Shaders/fragmentShader.glsl"))
 		, _width(width)
 		, _height(height)
 		, sceneManager()
-    {
-		sceneManager.addScene(TEST, new TestScene(_width, _height, SCALE, program));
-		sceneManager.changeScene(TEST);
-    }
+	{
+		//audio engine setup
+		//this must come before sceneManager, as scenes rely on the engine
+		audioEngine.init();
 
-    
-	void handleInput();
-    void update();
-	void draw();
-   
+		//set up renderer for drawing through SDL
+		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+		sceneManager.addScene(TEST, new TestScene(_width, _height, SCALE, program, renderer));
+		sceneManager.changeScene(TEST);
+	}
+
+		void handleInput();
+		void update();
+		void draw();  
 };
 
 void Game::handleInput() {
@@ -58,7 +67,9 @@ void Game::handleInput() {
 }
 
 void Game::update() {
-	sceneManager.update(tgtFrameTime);
+	sceneManager.update( (float) tgtFrameTime );
+
+	audioEngine.update(); 
 }
 
 void Game::draw() {
@@ -69,7 +80,7 @@ void Game::draw() {
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	float zoom = 1.0 / SCALE;
+	float zoom = 1.0f / SCALE;
 	float aspect = _width / (float)_height;
 
 	sceneManager.draw(zoom, aspect, program);

@@ -2,6 +2,7 @@
 
 #include <Odin/SceneManager.hpp>
 #include <Odin/TextureManager.hpp>
+#include "EntityFactory.h"
 
 using odin::GraphicalComponent;
 using odin::PhysicalComponent;
@@ -14,102 +15,116 @@ using odin::Scene;
 class TestScene : public Scene{
 public:
 
+	EntityFactory* factory;
+
 	int _height, _width;
 	float _scale;
 
-	TestScene(int height, int width, float scale, GLuint program)
-		:Scene(program)
+	TestScene(int height, int width, float scale, GLuint program, SDL_Renderer *renderer)
+		:Scene(program, renderer, "Audio/Banks/MasterBank")
 		, _height(height)
 		, _width(width)
 		, _scale(scale)
-	{}
+	{
+		factory = EntityFactory::instance();
+	}
 
 	unsigned short _bulletCount = 0;
 
 	virtual void setup_scene() {
 
+		/*
 		auto background = gfxComponents.add(
 			EntityId(0), GraphicalComponent::makeRect(_width / _scale, _height / _scale));
-		background->texture = 4;
+		background->texture = BACKGROUND;
+		
+		float h = _height / _scale;
+		float w = _width / _scale;
+		*/
 
-		auto pGfx = gfxComponents.add("player", GraphicalComponent::makeRect(1, 2.33));
-		pGfx->texture = 3;
+		auto bg = gfxComponents.add(EntityId(0), GraphicalComponent::makeRect(25, 16.5));
+		bg->texture = BACKGROUND;
 
-		b2BodyDef playerDef;
-		playerDef.position = { -7, -4 };
-		playerDef.fixedRotation = true;
-		playerDef.type = b2_dynamicBody;
-		playerDef.gravityScale = 2;
+		factory->makePlayer(this, "player");
 
-		auto pFsx = fsxComponents.add("player", PhysicalComponent::makeRect(1, 2.33, b2world, playerDef));
+		factory->makeHorse(this, "horse");
 
-		listeners.add("player", [&](const InputManager& inmn, EntityId eid) {
-			return player_input(inmn, EntityView(eid, this));
-		});
+		factory->makePlatform(this, "plat1", 3, {0, -3}); // Lower Middle
+		factory->makePlatform(this, "plat2", 6, { 0.5, 3 }); // Upper middle
+		
+		factory->makePlatform(this, "plat3", 4, { -9, 5 }); // Top Left
+		factory->makePlatform(this, "plat4", 4, { 10, 5 }); // Top Right
+		
+		factory->makePlatform(this, "plat5", 5, { -6, 0 }); // Middle Left
+		factory->makePlatform(this, "plat6", 5, { 6, 0 }); // Middle Right
+		
+		factory->makePlatform(this, "plat7", 2, { -3, -5.5 }); // Lower Left
+		factory->makePlatform(this, "plat8", 2, { 3, -5.5 }); // Lower Right
+		
 
-		addEqTri({ "tri", 0 }, 2, { 5, -3 }, 0, { 1, 0, 0 }, b2_kinematicBody);
-		auto whttri = addEqTri({ "tri", 1 }, 2, { 0, 0 }, 0, { 1, 1, 1 }, b2_dynamicBody);
-		addEqTri({ "tri", 2 }, 2, { 0.5, 2.5 }, 0, { 0, 0, 1 }, b2_dynamicBody);
-		addEqTri({ "tri", 3 }, 2, { 7, -1 }, 0, { 0, 1, 0 }, b2_kinematicBody);
+		//factory->makeRect(this, "box", { 1,1 }, { 1,1 }, 0, { 1,1,1 });
 
-		fsxComponents[{"tri", 0}]->SetAngularVelocity(-1);
-		fsxComponents[{"tri", 3}]->SetAngularVelocity(2);
-
-		b2RevoluteJointDef rjd;
-		b2BodyDef bodyDef;
-		auto ground = b2world.CreateBody(&bodyDef);
-		rjd.Initialize(ground, fsxComponents[{"tri", 1}].pBody, { 0, 0 });
-		b2world.CreateJoint(&rjd);
-
-		//             eid    dimens   pos   rot   color       body_type
-		addRect("rect", { 1, 2 }, { 0, 7 }, 0, { 1, 1, 0 }, b2_dynamicBody);
-		addRect({ "box", 0 }, { 1, 1 }, { -.5, 4 }, 0, { 1, 0, 1 }, b2_dynamicBody);
-		auto pnkcrate = addRect({ "box", 1 }, { 1, 1 }, { -.5, 5 }, 0, { 1, 0, 1 }, b2_dynamicBody);
-		addRect({ "box", 2 }, { 1, 1 }, { -.5, 6 }, 0, { 1, 0, 1 }, b2_dynamicBody);
-		addRect({ "box", 3 }, { 1, 1 }, { -.5, 7 }, 0, { 1, 0, 1 }, b2_dynamicBody);
-		addRect({ "box", 4 }, { 1, 1 }, { -.5, 8 }, 0, { 1, 0, 1 }, b2_dynamicBody);
-		auto blucrate = addRect({ "box", 5 }, { 1, 1 }, { .1f, 90 }, 0, { 0, 1, 1 }, b2_dynamicBody);
-		addRightTri({ "rtri", 0 }, { -2, 2 }, { 0, -3 }, 0, { 0, 1, 1 }, b2_dynamicBody);
-		auto ylwramp = addRightTri({ "rtri", 1 }, { 3, 1 }, { -2, -3 }, 0, { 1, 1, 0 });
-
-		fireBullet({ -170, 5.5f }, { 100, 0 });
+		//fireBullet({ -170, 5.5f }, { 100, 0 });
 
 		//GLuint nul = load_texture( "null.png", 0 );
-		GLuint nul = odin::load_texture< GLubyte[4] >(0, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF });
-		GLuint tex = odin::load_texture(1, "Textures/crate.png");
-		GLuint tex2 = odin::load_texture(2, "Textures/crate2.png");
-		GLuint tex3 = odin::load_texture(3, "Textures/pixel_cowboy.png");
-		GLuint tex4 = odin::load_texture(4, "Textures/background.png");
-
-		blucrate.gfxComponent()->texture = 2;
-		pnkcrate.gfxComponent()->texture = 1;
-		ylwramp.gfxComponent()->texture = 1;
-		whttri.gfxComponent()->texture = 1;
 
 		b2BodyDef floorDef;
 		b2EdgeShape floorShape;
-		floorShape.Set({ -10, -8 }, { 10, -8 });
+		floorShape.Set({ -11, -8 }, { 11, -8 });
 
 		fsxComponents["floor"] = b2world.CreateBody(&floorDef);
 		fsxComponents["floor"]->CreateFixture(&floorShape, 1)
 			->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 
-		floorShape.Set({ 10, +8 }, { 10, -8 });
+		floorShape.Set({ 11, +10 }, { 11, -8 });
 
-		fsxComponents["wall"] = b2world.CreateBody(&floorDef);
-		fsxComponents["wall"]->CreateFixture(&floorShape, 1)
+		fsxComponents["wallR"] = b2world.CreateBody(&floorDef);
+		fsxComponents["wallR"]->CreateFixture(&floorShape, 1)
 			->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 
+		floorShape.Set({ -11, +10 }, { -11, -8 });
+
+		fsxComponents["wallL"] = b2world.CreateBody(&floorDef);
+		fsxComponents["wallL"]->CreateFixture(&floorShape, 1)
+			->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
+
+		//load common events and play music
+		audioEngine.loadEvent("event:/Music/EnergeticTheme");
+		audioEngine.loadEvent("event:/Desperado/Shoot");
+
+		audioEngine.playEvent("event:/Music/EnergeticTheme");
 	}
 
-	EntityView fireBullet(Vec2 position, Vec2 velocity)
+	// Using bullet start position, the velocity  direction, and default facing direction.
+	EntityView fireBullet(Vec2 position, Vec2 velocity, odin::FacingDirection direction)
 	{
+		double bulletOffset = 0.5;
+		float bulletVelocity = 100;
+
+		// first set facing direction offset for bullet, eventually bullet should have a odin::FacingDirection
+		// correct bullet firing from left side using offset
+		if (direction == odin::LEFT)
+			position.x -= bulletOffset;
+
+		// ensure a default case for 0 velocity incase joystick is neither held left or right.
+		if (velocity.x == 0 && velocity.y == 0 && direction == odin::LEFT)
+			velocity.x = -1;
+
+		if (velocity.x == 0 && velocity.y == 0 && direction == odin::RIGHT)
+		{
+			velocity.x = 1;
+		}
+
+		// get new velocity based on direction and bullet velocity
+		velocity.x *= bulletVelocity;
+		velocity.y *= bulletVelocity;
+
 		EntityId eid("bullet", _bulletCount++);
 
 		if (!entities.add(eid, Entity(position, 0)))
 			std::cout << "Entity " << eid << " already exists.\n";
 
-		if (!gfxComponents.add(eid, GraphicalComponent::makeRect(3.f, .1f)))
+		if (!gfxComponents.add(eid, GraphicalComponent::makeRect(.5f, .1f)))
 			std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
 
 		b2BodyDef bodyDef;
@@ -118,47 +133,113 @@ public:
 		bodyDef.type = b2_dynamicBody;
 		bodyDef.bullet = true;
 
-		if (!fsxComponents.add(eid, PhysicalComponent::makeCircle(.05f, b2world, bodyDef, 0.01)))
+		if (!fsxComponents.add(eid, PhysicalComponent::makeCircle(.05f, b2world, bodyDef, 0.01f)))
 			std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
 
 		return EntityView(eid, this);
 	}
 
-	void player_input(const InputManager& mngr, EntityView ntt)
+	//template< int PLAYER = 0 >
+	virtual void player_input(const InputManager& mngr, EntityView ntt)
 	{
+		constexpr int PLAYER = 0;
+		static_assert(PLAYER >= 0 && PLAYER < odin::ControllerManager::MAX_PLAYERS, "");
+
+
 		b2Body& body = *ntt.fsxComponent()->pBody;
+		GraphicalComponent& gfx = *ntt.gfxComponent();
 
 		Vec2 vel = body.GetLinearVelocity();
 		float maxSpeed = 5.5f;
 		float actionLeft = mngr.isKeyDown(SDLK_LEFT) ? 1 : 0;
 		float actionRight = mngr.isKeyDown(SDLK_RIGHT) ? 1 : 0;
+		int actionDir = 0;
+		Vec2 aimDir(0, 0);
+
+
+		//adjust facing direction
+		if (actionLeft)
+			gfx.direction = odin::LEFT;
+		if (actionRight)
+			gfx.direction = odin::RIGHT;
 
 		//b2Fixture* pFixt = body.GetFixtureList();
 
-		if (actionLeft == 0 && actionRight == 0)
+		if (mngr.wasKeyPressed(SDLK_UP)) {
+			vel.y = 12;
+		}
+
+		if (mngr.wasKeyReleased(SDLK_UP) && vel.y > 0) {
+			vel.y *= 0.6f;
+		}
+
+		// Handle directions from left joystick axis
+		actionDir = mngr.gamepads.joystickAxisX(PLAYER);
+		aimDir.x = mngr.gamepads.joystickDir(PLAYER).x; //50 is currently bullet fire velocity. 
+		aimDir.y = -mngr.gamepads.joystickDir(PLAYER).y;
+
+		//adjust facing direction for joystick
+		if (actionDir == -1)
+			gfx.direction = odin::LEFT;
+		if (actionDir == 1)
+			gfx.direction = odin::RIGHT;
+
+		// Handle Jump input on button A
+		if (mngr.gamepads.wasButtonPressed(PLAYER, SDL_CONTROLLER_BUTTON_A))
+			vel.y = 12;
+
+		if (mngr.gamepads.wasButtonReleased(PLAYER, SDL_CONTROLLER_BUTTON_A) && vel.y > 0)
+			vel.y *= 0.6f;
+
+		// Handle Duck input on button X
+		if (mngr.gamepads.wasButtonPressed(PLAYER, SDL_CONTROLLER_BUTTON_X))
+		{
+
+		}
+		if (mngr.gamepads.wasButtonReleased(PLAYER, SDL_CONTROLLER_BUTTON_X))
+		{
+
+		}
+
+		// Handle Shoot input on button B
+		if (mngr.gamepads.wasButtonPressed(PLAYER, SDL_CONTROLLER_BUTTON_B))
+		{
+			fireBullet({body.GetPosition().x,body.GetPosition().y}, aimDir, gfx.direction);
+		}
+		if (mngr.gamepads.wasButtonReleased(PLAYER, SDL_CONTROLLER_BUTTON_B))
+		{
+
+		}
+
+		// some funtionality to bring up menu or exit scene/game
+		if (mngr.wasKeyPressed(SDLK_ESCAPE) || mngr.gamepads.wasButtonPressed(PLAYER, SDL_CONTROLLER_BUTTON_START))
+		{
+			
+		}
+
+		if (actionLeft == 0 && actionRight == 0 && actionDir == 0)
 		{
 			//pFixt->SetFriction( 2 );
 			vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0));
+			gfx.switchAnimState(0); //idle state
 		}
 		else
 		{
 			//pFixt->SetFriction( 0 );
-			vel.x -= actionLeft * (20 + 1) * (1 / 60.0);
-			vel.x += actionRight * (20 + 1) * (1 / 60.0);
+			vel.x += (float)actionDir * (20 + 1) * (1 / 60.0); // for use w/gamepad
+			vel.x -= actionLeft * (20 + 1) * (1 / 60.0); // for use w/keyboard
+			vel.x += actionRight * (20 + 1) * (1 / 60.0); // for use w/keyboard
 			vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
+			gfx.switchAnimState(1); //running
 		}
 
-		if (mngr.wasKeyPressed(SDLK_UP))
-			vel.y = 11;
-
-		if (mngr.wasKeyReleased(SDLK_UP) && vel.y > 0)
-			vel.y *= 0.6f;
-
-		if (mngr.gamepads.wasButtonPressed(0, SDL_CONTROLLER_BUTTON_A))
-			vel.y = 11;
-
-		if (mngr.gamepads.wasButtonReleased(0, SDL_CONTROLLER_BUTTON_A) && vel.y > 0)
-			vel.y *= 0.6f;
+		//for testing audio
+		if (mngr.wasKeyPressed(SDLK_SPACE))
+			audioEngine.playEvent("event:/Desperado/Shoot"); //simulate audio shoot
+		if (mngr.wasKeyPressed(SDLK_1))
+			audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0); //low energy test
+		if (mngr.wasKeyPressed(SDLK_2))
+			audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", 1.0); //high energy test
 
 		body.SetLinearVelocity(vel);
 	}

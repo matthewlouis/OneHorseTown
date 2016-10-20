@@ -8,6 +8,7 @@
 
 namespace odin
 {
+	enum FacingDirection { RIGHT = 1, LEFT = -1 };
 
     struct VertexAttribute
     {
@@ -50,16 +51,30 @@ namespace odin
         GLuint     vertexBuffer = 0;
         GLuint     programId = 0;
 
+		bool       animated = false;
+		int*	   animLengths = nullptr; //array of length values - index == anim loop, val == length of loop in frames if 0, not animated
+		int        animState = 0;
+		int        currentFrame = 0;
+		int        maxFrames = 1; //the length of the longest animation on sprite sheet
+		int        totalAnim = 1; //the total number of anim states
+		FacingDirection  direction = RIGHT;
+
         GraphicalComponent() = default;
 
         template< typename Vertex, typename... Attrs >
-        GraphicalComponent( const Vertex* pVertices,
-                            int           count,
-                            glm::vec4     color = { 1, 1, 1, 1 },
+		GraphicalComponent(const Vertex* pVertices,
+							int           count,
+							glm::vec4     color = { 1, 1, 1, 1 },
+							bool          animated = false,
+							int           totalAnim = 0,
+							int*          animLength = 0,
                             Attrs&&...    attrs )
             : pData( new char[ sizeof( Vertex ) * count ] )
             , count( count )
             , color( color )
+			, animated ( animated )
+			, totalAnim( totalAnim )
+			, animLengths ( animLength )
         {
             size_t size = sizeof( Vertex ) * count;
             std::memcpy( pData, pVertices, size );
@@ -79,6 +94,21 @@ namespace odin
                     GL_FALSE, sizeof( Vertex ), (void*) offset );
                 offset += attr.width;
             }
+
+			if (!animated) //all code below is for animated sprites only
+				return;
+
+			animLengths = new int[totalAnim];
+
+			//calculate longest animation while copying values
+			for (int i = 0; i < totalAnim; i++) 
+			{
+				animLengths[i] = animLength[i];
+				if (*(animLength + i) > maxFrames)
+				{
+					maxFrames = *(animLength + i);
+				}
+			}
         }
 
         ~GraphicalComponent()
@@ -86,6 +116,7 @@ namespace odin
             glDeleteVertexArrays( 1, &vertexArray );
             glDeleteBuffers( 1, &vertexBuffer );
             delete[] pData;
+			delete[] animLengths;
         }
 
         GraphicalComponent( GraphicalComponent&& move )
@@ -96,6 +127,13 @@ namespace odin
             , vertexArray( move.vertexArray )
             , vertexBuffer( move.vertexBuffer )
             , programId( move.programId )
+			, animated (move.animated)
+			, animLengths (move.animLengths)
+			, animState (move.animState)
+			, currentFrame (move.currentFrame)
+			, maxFrames (move.maxFrames)
+			, totalAnim (move.totalAnim)
+			, direction (move.direction)
         {
             move.pData = nullptr;
             move.count = 0;
@@ -103,6 +141,13 @@ namespace odin
             move.vertexArray = 0;
             move.vertexBuffer = 0;
             move.programId = 0;
+			move.animated = false;
+			move.animLengths = nullptr;
+			move.animState = 0;
+			move.currentFrame = 0;
+			move.maxFrames = 1;
+			move.totalAnim = 1;
+			move.direction = RIGHT;
         }
 
         GraphicalComponent& operator =( GraphicalComponent&& move )
@@ -115,15 +160,44 @@ namespace odin
             swap( vertexArray, move.vertexArray );
             swap( vertexBuffer, move.vertexBuffer );
             swap( programId, move.programId );
+			swap(animated, move.animated);
+			swap(animLengths, move.animLengths);
+			swap(animState, move.animState);
+			swap(currentFrame, move.currentFrame);
+			swap(maxFrames, move.maxFrames);
+			swap(totalAnim, move.totalAnim);
+			swap(direction, move.direction);
             return *this;
         }
 
+		//increment current frame to draw
+		void incrementFrame() 
+		{
+			if (!animated) //not animated
+				return;
 
-        static GraphicalComponent makeRect(
-            float     width,
-            float     height,
-            glm::vec3 color = { 1, 1, 1 },
-            float     alpha = 1 )
+			static int frameDelay = 0; //how many draws before changing animation frame
+			if (frameDelay++ < 3)
+				return;
+			else {
+				if (currentFrame < *(animLengths + animState) - 1)
+					++currentFrame;
+				else
+					currentFrame = 0;
+
+				frameDelay = 0;
+			}
+		}
+
+
+		static GraphicalComponent makeRect(
+			float     width,
+			float     height,
+			glm::vec3 color = { 1, 1, 1 },
+			float     alpha = 1,
+			bool      animated = false,
+			int       totalAnim = 1,
+			int*      animLength = nullptr)
         {
             float vertices[][5] = {
                 { -width / 2, -height / 2, 0, 0, 1 },
@@ -134,17 +208,22 @@ namespace odin
                 { +width / 2, -height / 2, 0, 1, 1 },
                 { -width / 2, -height / 2, 0, 0, 1 },
             };
-            ;
-            return GraphicalComponent( vertices, 6, glm::vec4{ color, alpha },
-                        make_vert_attr< glm::vec3 >( 0 ),
-                        make_vert_attr< glm::vec2 >( 1 ) );
+            
+
+			return GraphicalComponent(vertices, 6, glm::vec4{ color, alpha },
+				animated, totalAnim, animLength,
+				make_vert_attr< glm::vec3 >(0),
+				make_vert_attr< glm::vec2 >(1));
         }
 
         static GraphicalComponent makeRightTri(
             float     width,
             float     height,
             glm::vec3 color = { 1, 1, 1 },
-            float     alpha = 1 )
+            float     alpha = 1,
+			bool      animated = false,
+			int       totalAnim = 1,
+			int*      animLength = nullptr)
         {
             float vertices[][5] = {
                 { -width / 2, -height / 2, 0, 0, 1 },
@@ -153,6 +232,7 @@ namespace odin
             };
 
             return GraphicalComponent( vertices, 3, glm::vec4{ color, alpha },
+						animated, totalAnim, animLength,
                         make_vert_attr< glm::vec3 >( 0 ),
                         make_vert_attr< glm::vec2 >( 1 ) );
         }
@@ -160,9 +240,12 @@ namespace odin
         static GraphicalComponent makeEqTri(
             float     length,
             glm::vec3 color = { 1, 1, 1 },
-            float     alpha = 1 )
+            float     alpha = 1,
+			bool      animated = false,
+			int       totalAnim = 1,
+			int*      animLength = nullptr)
         {
-            const float h = 0.86602540378 * length; // ?3/2 * a
+            const float h = float( 0.86602540378 * length ); // ?3/2 * a
 
             float vertices[][5] = {
                 { 0, 2 * h / 3,        0, 0.5, 0 },
@@ -170,10 +253,20 @@ namespace odin
                 { -length / 2, -h / 3, 0, 0, 1 },
             };
 
-            return GraphicalComponent( vertices, 3, glm::vec4{ color, alpha },
-                       make_vert_attr< glm::vec3 >( 0 ),
-                       make_vert_attr< glm::vec2 >( 1 ) );
+			return GraphicalComponent(vertices, 3, glm::vec4{ color, alpha }, 
+				animated, totalAnim, animLength,
+				make_vert_attr< glm::vec3 >(0),
+				make_vert_attr< glm::vec2 >(1));
         }
+
+		void switchAnimState(int state)
+		{
+			if (animState == state) //if we are already on this state
+				return;
+
+			animState = state;
+			currentFrame = 0; //start from first frame
+		}
 
     };
 
