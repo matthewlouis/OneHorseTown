@@ -27,6 +27,27 @@ EntityView EntityFactory::makePlayer(
 }
 
 
+EntityView EntityFactory::makeHorse(
+	Scene*	   scene,
+	EntityId   eid,
+	Vec2	   size)
+{
+	auto hGfx = scene->gfxComponents.add(eid, GraphicalComponent::makeRect(2, 2, glm::vec3(1, 1, 1)));
+	hGfx->texture = HORSE;
+
+	b2BodyDef horseDef;
+	horseDef.position = { 0, 5 };
+	horseDef.fixedRotation = true;
+	horseDef.type = b2_dynamicBody;
+	horseDef.gravityScale = 2;
+
+	auto hFsx = scene->fsxComponents.add(eid, PhysicalComponent::makeRect(size.x, size.y, scene->b2world, horseDef));
+
+
+	return EntityView(eid, scene);
+}
+
+
 EntityView EntityFactory::makeRightTri(
 	Scene*	   scene,
 	EntityId   eid, 

@@ -47,14 +47,19 @@ public:
 
 		factory->makePlayer(this, "player");
 
-		factory->makePlatform(this, "plat1", 3, {0, -3});
-		factory->makePlatform(this, "plat2", 4, { -9, 5 });
-		factory->makePlatform(this, "plat3", 4, { 10, 5 });
-		factory->makePlatform(this, "plat4", 6, { 0.5, 3 });
-		factory->makePlatform(this, "plat5", 5, { -6, 0 });
-		factory->makePlatform(this, "plat6", 5, { 6, 0 });
-		factory->makePlatform(this, "plat7", 2, { -3, -5.5 });
-		factory->makePlatform(this, "plat8", 2, { 3, -5.5 });
+		factory->makeHorse(this, "horse");
+
+		factory->makePlatform(this, "plat1", 3, {0, -3}); // Lower Middle
+		factory->makePlatform(this, "plat2", 6, { 0.5, 3 }); // Upper middle
+		
+		factory->makePlatform(this, "plat3", 4, { -9, 5 }); // Top Left
+		factory->makePlatform(this, "plat4", 4, { 10, 5 }); // Top Right
+		
+		factory->makePlatform(this, "plat5", 5, { -6, 0 }); // Middle Left
+		factory->makePlatform(this, "plat6", 5, { 6, 0 }); // Middle Right
+		
+		factory->makePlatform(this, "plat7", 2, { -3, -5.5 }); // Lower Left
+		factory->makePlatform(this, "plat8", 2, { 3, -5.5 }); // Lower Right
 		
 
 		//factory->makeRect(this, "box", { 1,1 }, { 1,1 }, 0, { 1,1,1 });

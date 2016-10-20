@@ -10,6 +10,7 @@ enum Textures {
 	CRATE2,
 	GROUND1,
 	GROUND2,
+	HORSE,
 	BACKGROUND
 };
 
@@ -88,6 +89,12 @@ public:
 		b2BodyType bodyType = b2_staticBody
 	);
 
+	EntityView makeHorse(
+		Scene*	   scene,
+		EntityId   eid,
+		Vec2	   size = { 2, 2 }
+	);
+
 	void makePlatform(
 		Scene*		scene,
 		const char	(&id)[6],
@@ -107,5 +114,6 @@ private:
 		odin::load_texture(GROUND2, "Textures/ground2.png");
 		odin::load_texture(PLAYER, "Textures/CowboySS.png");
 		odin::load_texture(BACKGROUND, "Textures/background.png");
+		odin::load_texture(HORSE, "Textures/horse.png");
 	}
 };
