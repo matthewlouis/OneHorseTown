@@ -11,12 +11,12 @@ EntityView EntityFactory::makePlayer(
 	pGfx->texture = PLAYER;
 
 	b2BodyDef playerDef;
-	playerDef.position = { -7, -4 };
+	playerDef.position = { -9, -4 };
 	playerDef.fixedRotation = true;
 	playerDef.type = b2_dynamicBody;
 	playerDef.gravityScale = 2;
 
-	auto pFsx = scene->fsxComponents.add(eid, PhysicalComponent::makeRect(size.x, size.y, scene->b2world, playerDef));
+	auto pFsx = scene->fsxComponents.add(eid, PhysicalComponent::makeRect(size.x-0.5, size.y-0.5, scene->b2world, playerDef));
 
 
 	scene->listeners.add(eid, [scene](const InputManager& inmn, EntityId eid) {
@@ -145,9 +145,32 @@ void EntityFactory::makePlatform(
 
 	Vec2 pos = start + offset;
 
-	for (uint16 i = 0; i < length; i++)
+	EntityId eid;
+	uint16 i;
+	for (i = 0; i < length; i++)
 	{
-		makeRect(scene, { id, i }, { 1, 1 }, pos, 0, { 1,1,1 }, GROUND1);
+		eid = { id, i };
+		if (!scene->entities.add(eid, Entity(pos, 0)))
+			std::cout << "Entity " << eid << " already exists.\n";
+
+		if (!scene->gfxComponents.add(eid,
+			GraphicalComponent::makeRect(1, 1, { 1,1,1 })))
+			std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
+
+		EntityView ntt = EntityView(eid, scene);
+		ntt.gfxComponent()->texture = GROUND1;
+
+		//makeRect(scene, { id, i }, { 1, 1 }, pos, 0, { 1,1,1 }, GROUND1);
 		pos.x++;
 	}
+	float colliderPos = length / 2.0;
+	offset.x += colliderPos - 0.5;
+	b2BodyDef bodyDef;
+	bodyDef.position = start + offset;
+	bodyDef.angle = 0;
+	bodyDef.type = b2_staticBody;
+
+	if (!scene->fsxComponents.add({ id, i },
+		PhysicalComponent::makeRect(length, 1, scene->b2world, bodyDef)))
+		std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
 }
