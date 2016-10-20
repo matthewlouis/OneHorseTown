@@ -19,6 +19,9 @@ public:
 
 	int _height, _width;
 	float _scale;
+	
+	//for simulating energy - alpha presentation
+	float energyLevel = 0;
 
 	TestScene(int height, int width, float scale, GLuint program, SDL_Renderer *renderer)
 		:Scene(program, renderer, "Audio/Banks/MasterBank")
@@ -98,6 +101,17 @@ public:
 	// Using bullet start position, the velocity  direction, and default facing direction.
 	EntityView fireBullet(Vec2 position, Vec2 velocity, odin::FacingDirection direction)
 	{
+		//for alpha presentation, to simulate energy levels
+		//more shots fired == more energy!
+		if (energyLevel >= 1.0) {
+			energyLevel = 1.0f;
+		}
+		else {
+			energyLevel += 0.2f;
+		}
+		audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", energyLevel);
+		audioEngine.playEvent("event:/Desperado/Shoot");
+
 		double bulletOffset = 0.5;
 		float bulletVelocity = 100;
 
@@ -234,12 +248,10 @@ public:
 		}
 
 		//for testing audio
-		if (mngr.wasKeyPressed(SDLK_SPACE))
-			audioEngine.playEvent("event:/Desperado/Shoot"); //simulate audio shoot
-		if (mngr.wasKeyPressed(SDLK_1))
-			audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0); //low energy test
-		if (mngr.wasKeyPressed(SDLK_2))
-			audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", 1.0); //high energy test
+		if (mngr.wasKeyPressed(SDLK_1)) { //reset energy level
+			energyLevel = 0;
+			audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", energyLevel); //low energy test
+		}
 
 		body.SetLinearVelocity(vel);
 	}
