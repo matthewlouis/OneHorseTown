@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EntityFactory.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TestScene.hpp" />
+<<<<<<< HEAD
+=======
+    <ClInclude Include="EntityFactory.h" />
+>>>>>>> nav
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Game.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Textures\crate.png" />
+    <Image Include="Textures\crate2.png" />
+    <Image Include="Textures\pixel_cowboy.png" />
+    <Image Include="Textures\pixel_horse.png" />
+    <Image Include="Textures\CowboySS.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Game.aps" />
+    <None Include="fragmentShader.glsl">
+      <Filter>Resources\Shaders</Filter>
+    </None>
+    <None Include="vertexShader.glsl">
+      <Filter>Resources\Shaders</Filter>
+    </None>
+    <None Include="Shaders\vertexAnim.glsl">
+      <Filter>Resources\Shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{69f2d0dd-5895-4b2b-9b7f-bc9dfd43217d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{0bb1db38-a0c6-4131-a2a7-b3ecdc652b7f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{01dd39f8-a06d-402b-b0c3-0a5eaff23cc3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources\Textures">
+      <UniqueIdentifier>{3bb45820-5f42-40ce-bf54-7730346f296c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources\Shaders">
+      <UniqueIdentifier>{47a2912a-61d4-4bc7-961e-7b25fb33d576}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
