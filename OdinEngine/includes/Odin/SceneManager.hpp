@@ -3,50 +3,111 @@
 #include "Scene.h"
 #include "AudioEngine.h"
 
-namespace odin {
-	class SceneManager {
+namespace odin
+{
+	class SceneManager
+    {
 	public:
-		size_t currentScene = -1;
-		std::vector<Scene*> scenes;
 
-		~SceneManager() {
-			for (auto itr = scenes.begin();
-			itr != scenes.end(); ++itr)
-			{
-				delete *itr;
-			}
+		std::vector< Scene* > scenes;
+        std::vector< Scene* > pendingScenes;
+
+        Scene* topScene()
+        {
+            return scenes.empty() ? nullptr : scenes.back();
+        }
+
+        size_t count() const
+        {
+            return scenes.size();
+        }
+
+        void pushScene( Scene* scene )
+        {
+            pendingScenes.push_back( scene );
+        }
+
+        void _pushScene( Scene* scene, unsigned ticks )
+        {
+            if ( Scene* top = topScene() )
+                top->pause( ticks );
+
+            scene->init( ticks );
+            scenes.push_back( scene );
+            scene->resume( ticks );
+        }
+
+        void popScene()
+        {
+            pendingScenes.push_back( nullptr );
+        }
+
+        void _popScene( unsigned ticks )
+        {
+            Scene* top = scenes.back();
+            top->exit( ticks );
+            scenes.pop_back();
+            delete top;
+
+            if ( top = topScene() )
+                top->resume( ticks );
+        }
+
+        void popScenes( size_t n )
+        {
+            while ( n-- > 0 )
+                popScene();
+        }
+
+        void clearScenes()
+        {
+            int count = this->count();
+            for ( Scene* scene : pendingScenes )
+                count += scene ? 1 : -1;
+
+            for ( int i = 0; i < count; ++i )
+                popScene();
+        }
+
+        void update( unsigned ticks )
+        {
+            //for ( auto itr = scenes.rbegin(); itr != scenes.rend(); ++itr )
+            //    if ( (*itr)->expired )
+            //        popScene();
+            //    else
+            //        break;
+
+            std::vector< Scene* > tmpPendingScenes = pendingScenes;
+            pendingScenes.clear();
+
+            for ( Scene* scene : tmpPendingScenes )
+                if ( scene == nullptr )
+                    _popScene( ticks );
+                else
+                    _pushScene( scene, ticks );
+
+            Scene* top;
+            while ( (top = topScene()) && top->expired )
+                _popScene( ticks );
+
+            if ( Scene* top = topScene() )
+                top->update( ticks );
+        }
+
+        void draw()
+        {
+            if ( Scene* top = topScene() )
+                top->draw();
+        }
+
+		~SceneManager()
+        {
+            /*for ( Scene* s : pendingScenes )
+                delete s;
+            for ( Scene* s : scenes )
+                delete s;*/
 		}
 
-		void changeScene(size_t newScene) {
-			if (newScene < scenes.size()) {
-				currentScene = newScene;
-			}
-		}
-
-		void addScene(size_t idx, Scene* scene) {
-			if (idx >= scenes.size())
-				scenes.push_back(scene);
-			else {
-				scenes[idx] = scene;
-			}
-
-			scene->setup_scene();
-		}
-
-		void draw(float zoom, float aspect, GLuint program) {
-			if(currentScene != -1 && currentScene < scenes.size())
-				scenes[currentScene]->draw(zoom, aspect, program);
-		}
-
-		void handleInput() {
-			if (currentScene != -1 && currentScene < scenes.size())
-				scenes[currentScene]->handleInput();
-		}
-
-		void update(float tgtFrameTime) {
-			if (currentScene != -1 && currentScene < scenes.size())
-				scenes[currentScene]->update(tgtFrameTime);
-		}
 	};
 
 }

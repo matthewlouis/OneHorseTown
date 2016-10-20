@@ -2,6 +2,7 @@
 
 #include <Odin/Scene.h>
 #include <Odin/TextureManager.hpp>
+#include "Scenes.hpp"
 
 enum Textures {
 	NULL_TEXTURE,
@@ -28,7 +29,6 @@ enum Anchors {
 
 using odin::Entity;
 using odin::EntityId;
-using odin::EntityView;
 using odin::GraphicalComponent;
 using odin::PhysicalComponent;
 using odin::InputManager;
@@ -50,53 +50,54 @@ public:
 	}
 
 	EntityView makePlayer(
-		Scene*	   scene,
-		EntityId   eid, 
-		Vec2	   size = { 1, 2 }
+		LevelScene*	scene,
+		EntityId    eid,
+        int         pindex,
+		Vec2	    size = { 1, 2 }
 	);
 	
 	EntityView makeRightTri(
-		Scene*	   scene,
-		EntityId   eid, 
-		Vec2       dimen,
-		Vec2       pos,
-		float      rot,
-		glm::vec3  color,
-		Textures   text = CRATE1,
-		b2BodyType bodyType = b2_dynamicBody
+        LevelScene*	scene,
+		EntityId    eid, 
+		Vec2        dimen,
+		Vec2        pos,
+		float       rot,
+		glm::vec3   color,
+		Textures    text = CRATE1,
+		b2BodyType  bodyType = b2_dynamicBody
 	);
 	
 
 	EntityView makeEqTri(
-		Scene*	   scene,
-		EntityId   eid,
-		float      length,
-		Vec2       pos,
-		float      rot,
-		glm::vec3  color,
-		Textures   text = CRATE1,
-		b2BodyType bodyType = b2_dynamicBody
+        LevelScene*	scene,
+		EntityId    eid,
+		float       length,
+		Vec2        pos,
+		float       rot,
+		glm::vec3   color,
+		Textures    text = CRATE1,
+		b2BodyType  bodyType = b2_dynamicBody
 	);
 
 	EntityView makeRect(
-		Scene*	   scene,
-		EntityId   eid,
-		Vec2       dimen,
-		Vec2       pos,
-		float      rot,
-		glm::vec3  color,
-		Textures   text = CRATE1,
-		b2BodyType bodyType = b2_staticBody
+        LevelScene*	scene,
+		EntityId    eid,
+		Vec2        dimen,
+		Vec2        pos,
+		float       rot,
+		glm::vec3   color,
+		Textures    text = CRATE1,
+		b2BodyType  bodyType = b2_staticBody
 	);
 
 	EntityView makeHorse(
-		Scene*	   scene,
-		EntityId   eid,
-		Vec2	   size = { 2, 2 }
+        LevelScene*	scene,
+		EntityId    eid,
+		Vec2	    size = { 2, 2 }
 	);
 
 	void makePlatform(
-		Scene*		scene,
+        LevelScene* scene,
 		const char	(&id)[6],
 		uint16		length,
 		Vec2		offset = { 0, 0 },

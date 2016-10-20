@@ -15,6 +15,7 @@
     </ClInclude>
     <ClInclude Include="TestScene.hpp" />
     <ClInclude Include="EntityFactory.h" />
+    <ClInclude Include="Scenes.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Game.rc" />

@@ -2,9 +2,10 @@
 
 
 EntityView EntityFactory::makePlayer(
-	Scene*	   scene,
-	EntityId   eid,
-	Vec2	   size)
+    LevelScene*	scene,
+	EntityId    eid,
+    int         pindex,
+	Vec2	    size)
 {
 	int pAnimInfo[3] = { 1, 10, 3 }; //idle 1 frame, run 10 frame, jump 3 frame
 	auto pGfx = scene->gfxComponents.add(eid, GraphicalComponent::makeRect(2, 2, glm::vec3(1, 1, 1), 1.0, true, 3, pAnimInfo));
@@ -19,8 +20,8 @@ EntityView EntityFactory::makePlayer(
 	auto pFsx = scene->fsxComponents.add(eid, PhysicalComponent::makeRect(size.x-0.5, size.y-0.5, scene->b2world, playerDef));
 
 
-	scene->listeners.add(eid, [scene](const InputManager& inmn, EntityId eid) {
-		return scene->player_input(inmn, odin::EntityView(eid, scene));
+	scene->listeners.add(eid, [scene, pindex](const InputManager& inmn, EntityId eid) {
+		return scene->player_input(inmn, eid, pindex);
 	});
 	
 	return EntityView(eid, scene);
@@ -28,9 +29,9 @@ EntityView EntityFactory::makePlayer(
 
 
 EntityView EntityFactory::makeHorse(
-	Scene*	   scene,
-	EntityId   eid,
-	Vec2	   size)
+    LevelScene* scene,
+	EntityId    eid,
+	Vec2	    size)
 {
 	auto hGfx = scene->gfxComponents.add(eid, GraphicalComponent::makeRect(2, 2, glm::vec3(1, 1, 1)));
 	hGfx->texture = HORSE;
@@ -49,14 +50,14 @@ EntityView EntityFactory::makeHorse(
 
 
 EntityView EntityFactory::makeRightTri(
-	Scene*	   scene,
-	EntityId   eid, 
-	Vec2       dimen,
-	Vec2       pos,
-	float      rot,
-	glm::vec3  color,
-	Textures   text,
-	b2BodyType bodyType)
+    LevelScene*	scene,
+	EntityId    eid, 
+	Vec2        dimen,
+	Vec2        pos,
+	float       rot,
+	glm::vec3   color,
+	Textures    text,
+	b2BodyType  bodyType)
 {
 	if (!scene->entities.add(eid, Entity(pos, rot)))
 		std::cout << "Entity " << eid << " already exists.\n";
@@ -82,14 +83,14 @@ EntityView EntityFactory::makeRightTri(
 }
 
 EntityView EntityFactory::makeEqTri(
-	Scene*	   scene,
-	EntityId   eid, 
-	float      length,
-	Vec2       pos,
-	float      rot,
-	glm::vec3  color,
-	Textures   text,
-	b2BodyType bodyType)
+    LevelScene*	scene,
+	EntityId    eid, 
+	float       length,
+	Vec2        pos,
+	float       rot,
+	glm::vec3   color,
+	Textures    text,
+	b2BodyType  bodyType)
 {
 	if (!scene->entities.add(eid, Entity(pos, rot)))
 		std::cout << "Entity " << eid << " already exists.\n";
@@ -112,14 +113,14 @@ EntityView EntityFactory::makeEqTri(
 }
 
 EntityView EntityFactory::makeRect(
-	Scene*	   scene,
-	EntityId   eid,
-	Vec2       dimen,
-	Vec2       pos,
-	float      rot,
-	glm::vec3  color,
-	Textures   text,
-	b2BodyType bodyType)
+    LevelScene*	scene,
+	EntityId    eid,
+	Vec2        dimen,
+	Vec2        pos,
+	float       rot,
+	glm::vec3   color,
+	Textures    text,
+	b2BodyType  bodyType)
 {
 	if (!scene->entities.add(eid, Entity(pos, rot)))
 		std::cout << "Entity " << eid << " already exists.\n";
@@ -144,8 +145,8 @@ EntityView EntityFactory::makeRect(
 }
 
 void EntityFactory::makePlatform(
-	Scene*		scene,
-	const char (&id)[6],
+    LevelScene* scene,
+	const char  (&id)[6],
 	uint16		length,
 	Vec2		offset,
 	Anchors		anchor) 

@@ -17,19 +17,12 @@ using odin::ComponentType;
 using odin::SceneManager;
 using odin::AudioEngine;
 
-enum Scenes {
-	TEST
-};
-
 class Game
 {
 public:
 	SceneManager sceneManager;
 	AudioEngine audioEngine;
 
-	SDL_Renderer* renderer;
-	
-	GLuint                          program;
     int _width;
     int _height;
 
@@ -39,9 +32,8 @@ public:
 	const int tgtFrameTime_ms = int( tgtFrameTime * 1000 );
 	int tFrameStart = 0;
 
-	Game(int width, int height, SDL_Window *window)
-		: program(load_shaders("Shaders/vertexAnim.glsl", "Shaders/fragmentShader.glsl"))
-		, _width(width)
+	Game( int width, int height, SDL_Window* window )
+		: _width(width)
 		, _height(height)
 		, sceneManager()
 	{
@@ -50,56 +42,43 @@ public:
 		audioEngine.init();
 
 		//set up renderer for drawing through SDL
-		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+		//renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-		sceneManager.addScene(TEST, new TestScene(_width, _height, SCALE, program, renderer));
-		sceneManager.changeScene(TEST);
+        sceneManager.pushScene( new TestScene( _width / PIXEL_SIZE, _height / PIXEL_SIZE, SCALE ) );
+        //sceneManager.pushScene( new TestScene( _width, _height, SCALE * PIXEL_SIZE ) );
 	}
 
-		void handleInput();
-		void update();
-		void draw();  
+    void tick()
+    {
+        unsigned frameStart = SDL_GetTicks();
+
+        sceneManager.update( frameStart );
+        audioEngine.update();
+
+        sceneManager.draw();
+
+        if ( Scene* top = sceneManager.topScene() )
+        {
+            glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+            glViewport( 0, 0, _width, _height );
+            glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+            glBlitNamedFramebuffer(
+                sceneManager.topScene()->framebuffer.frame, 0,
+                0, 0, top->width, top->height,
+                0, 0, _width, _height,
+                GL_COLOR_BUFFER_BIT,// | GL_DEPTH_BUFFER_BIT,
+                GL_NEAREST );
+        }
+
+        // Cap framerate at 60fps
+        int frameEnd = SDL_GetTicks();
+        int frameTime_ms = (frameEnd - frameStart);
+
+        if ( frameTime_ms <= tgtFrameTime_ms )
+            SDL_Delay( tgtFrameTime_ms - frameTime_ms );
+        else
+            printf( "Frame %ims slow\n", frameTime_ms - tgtFrameTime_ms );
+    }
+ 
 };
-
-void Game::handleInput() {
-
-	sceneManager.handleInput();
-}
-
-void Game::update() {
-	sceneManager.update( (float) tgtFrameTime );
-
-	audioEngine.update(); 
-}
-
-void Game::draw() {
-
-	tFrameStart = SDL_GetTicks();
-
-	glViewport(0, 0, LOW_WIDTH, LOW_HEIGHT);
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-	float zoom = 1.0f / SCALE;
-	float aspect = _width / (float)_height;
-
-	sceneManager.draw(zoom, aspect, program);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(0, 0, WIDTH, HEIGHT);
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-
-
-	// Cap framerate at 60fps
-	int tFrameEnd = SDL_GetTicks();
-	int frameTime_ms = (tFrameEnd - tFrameStart);
-
-	if (frameTime_ms <= tgtFrameTime_ms)
-		SDL_Delay(tgtFrameTime_ms - frameTime_ms);
-	else
-		printf("Frame %ims slow\n", frameTime_ms - tgtFrameTime_ms);
-}
-
-
