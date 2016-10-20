@@ -384,10 +384,12 @@ namespace odin
         {
             using ValueType = T;
 
+            // Holds references to the key and value associated
+            // with the same entry in a map.
             struct EntryProxy
             {
-                const KeyType& key;
-                ValueType&     value;
+                const KeyType& key;   // Const reference to the key pointed to by the iterator.
+                ValueType&     value; // Reference to the value pointed to by the iterator.
 
                 operator ValueType&()
                 {

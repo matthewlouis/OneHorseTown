@@ -4,38 +4,45 @@
 #include <Odin/TextureManager.hpp>
 #include "EntityFactory.h"
 
+#include "Scenes.hpp"
+
 using odin::GraphicalComponent;
 using odin::PhysicalComponent;
 using odin::InputManager;
 using odin::Entity;
 using odin::EntityId;
-using odin::EntityView;
 using odin::Scene;
 
-class TestScene : public Scene{
+class TestScene
+    : public LevelScene
+{
 public:
 
 	EntityFactory* factory;
 
-	int _height, _width;
 	float _scale;
 
-	TestScene(int height, int width, float scale, GLuint program, SDL_Renderer *renderer)
-		:Scene(program, renderer, "Audio/Banks/MasterBank")
-		, _height(height)
-		, _width(width)
-		, _scale(scale)
+	TestScene( int width, int height, float scale )
+		: LevelScene( width, height, "Audio/Banks/MasterBank" )
+        , factory( EntityFactory::instance() )
+		, _scale( scale )
 	{
-		factory = EntityFactory::instance();
 	}
 
 	unsigned short _bulletCount = 0;
 
-	virtual void setup_scene() {
+	void init( unsigned ticks )
+    {
+        LevelScene::init( ticks );
 
 		auto background = gfxComponents.add(
-			EntityId(0), GraphicalComponent::makeRect(_width / _scale, _height / _scale));
+			EntityId(0), GraphicalComponent::makeRect( width / _scale, height / _scale));
 		background->texture = 4;
+
+        listeners.add( "quit", [this]( const InputManager& inmn, EntityId eid ) {
+            if ( inmn.wasKeyPressed( SDLK_BACKSPACE ) )
+                this->expired = true;
+        } );
 
 		factory->makePlayer(this, "player");
 
@@ -88,65 +95,5 @@ public:
 			std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
 
 		return EntityView(eid, this);
-	}
-
-	virtual void player_input(const InputManager& mngr, EntityId eid)
-	{
-		EntityView ntt = EntityView(eid, this);
-		
-		b2Body& body = *ntt.fsxComponent()->pBody;
-		GraphicalComponent& gfx = *ntt.gfxComponent();
-
-		Vec2 vel = body.GetLinearVelocity();
-		float maxSpeed = 5.5f;
-		float actionLeft = mngr.isKeyDown(SDLK_LEFT) ? 1.f : 0.f;
-		float actionRight = mngr.isKeyDown(SDLK_RIGHT) ? 1.f : 0.f;
-
-		//adjust facing direction
-		if (actionLeft)
-			gfx.direction = odin::LEFT;
-		if (actionRight)
-			gfx.direction = odin::RIGHT;
-
-		//b2Fixture* pFixt = body.GetFixtureList();
-
-		if (actionLeft == 0 && actionRight == 0)
-		{
-			//pFixt->SetFriction( 2 );
-			vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0f));
-			gfx.switchAnimState(0); //idle state
-		}
-		else
-		{
-			//pFixt->SetFriction( 0 );
-			vel.x -= actionLeft * (20 + 1) * (1 / 60.0f);
-			vel.x += actionRight * (20 + 1) * (1 / 60.0f);
-			vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
-			gfx.switchAnimState(1); //running
-		}
-
-		if (mngr.wasKeyPressed(SDLK_UP)) {
-			vel.y = 11;
-		}
-
-		if (mngr.wasKeyReleased(SDLK_UP) && vel.y > 0) {
-			vel.y *= 0.6f;
-		}
-
-		if (mngr.gamepads.wasButtonPressed(0, SDL_CONTROLLER_BUTTON_A))
-			vel.y = 11;
-
-		if (mngr.gamepads.wasButtonReleased(0, SDL_CONTROLLER_BUTTON_A) && vel.y > 0)
-			vel.y *= 0.6f;
-
-		//for testing audio
-		if (mngr.wasKeyPressed(SDLK_SPACE))
-			audioEngine.playEvent("event:/Desperado/Shoot"); //simulate audio shoot
-		if (mngr.wasKeyPressed(SDLK_1))
-			audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0); //low energy test
-		if (mngr.wasKeyPressed(SDLK_2))
-			audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", 1.0); //high energy test
-
-		body.SetLinearVelocity(vel);
 	}
 };

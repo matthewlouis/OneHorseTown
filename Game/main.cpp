@@ -55,31 +55,19 @@ SDL_Window* create_window( const char* title, int width, int height )
     return _sdlWindow;
 }
 
+template< typename K, typename V >
+using Dict = odin::BinarySearchMap< K, V >;
 
 int main( int argc, char** argv )
 {
     SDL_Window* sdl_window = create_window( "One Horse Town", WIDTH, HEIGHT );
-
-    auto frameBuffer = odin::make_framebuffer( LOW_WIDTH, LOW_HEIGHT,
-                                               odin::Framebuffer::COLOR );
 
     Game game( WIDTH, HEIGHT, sdl_window );
 
     // main loop
     for ( game.running = true; game.running; SDL_GL_SwapWindow( sdl_window ) )
     {
-		game.handleInput();
-		game.update();
-
-		glBindFramebuffer( GL_FRAMEBUFFER, frameBuffer.frame );
-
-		game.draw();
-
-		glBlitNamedFramebuffer( frameBuffer.frame, 0,
-			0, 0, LOW_WIDTH, LOW_HEIGHT,
-			0, 0, WIDTH, HEIGHT,
-			GL_COLOR_BUFFER_BIT,// | GL_DEPTH_BUFFER_BIT,
-			GL_NEAREST );
+        game.tick();
     }
     // exit main loop
 

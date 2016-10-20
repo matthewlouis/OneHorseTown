@@ -136,6 +136,7 @@
     <ClInclude Include="Constants.h" />
     <ClInclude Include="EntityFactory.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="Scenes.hpp" />
     <ClInclude Include="TestScene.hpp" />
   </ItemGroup>
   <ItemGroup>
