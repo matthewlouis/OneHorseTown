@@ -285,25 +285,7 @@ namespace odin
         // Allocates memory, moves entries, then deallocates memory.
         void reallocate( size_t size )
         {
-            if ( size == _capacity )
-                return;
-
-            BinarySearchMap tmp( size );
-            tmp._count = std::min( _count, size );
-
-            std::swap( *this, tmp );
-            // pay careful attention when trying to understand the meaning
-            // of the code after the swap
-
-            for ( size_t i = 0; i < _count; ++i )
-                _construct( i,
-                    std::move( tmp._pKeys[ i ] ),
-                    std::move( tmp._pValues[ i ] ) );
-
-            for ( size_t i = _count; i < tmp._count; i++ )
-                tmp._destroy( i );
-
-            tmp._count = 0;
+            _reallocateSplit( size, 0, 0 );
         }
 
         // Adds an entry to the map, unless the key is already contained in the map.
@@ -330,27 +312,64 @@ namespace odin
 
     private:
 
+        // Allocates memory, moves entries, then deallocates memory.
+        // The new allocation will have splitSize number of unconstructed entries
+        // inserted after splitPos. The user of this function is respoinsible for 
+        // constructing valid entries into the 'gap' left in the reallocated memory.
+        void _reallocateSplit( size_t size, size_t splitPos, size_t splitSize = 1 )
+        {
+            // Avoid reallocating if possible.
+            if ( size == _capacity )
+                return;
+
+            BinarySearchMap tmp( size ); // Holder for old map data.
+            tmp._count = std::min( _count, size );
+
+            std::swap( *this, tmp );
+            // Pay careful attention when trying to understand the meaning
+            // of the code after the swap.
+
+            // Move old map data back into the current map.
+            for ( size_t i = 0; i < _count; ++i )
+                _construct( i < splitPos ? i : i + splitSize,
+                            std::move( tmp._pKeys[ i ] ),
+                            std::move( tmp._pValues[ i ] ) );
+
+            // Destroy untouched elements.
+            for ( size_t i = _count; i < tmp._count; ++i )
+                tmp._destroy( i );
+
+            tmp._count = 0; // tmp contains no valid entries.
+            // tmp's dtor cleans up old memory allocation.
+        }
+
         // Inserts a key and a value at a specific index in the map.
         // Reallocates memory if necessary. Returns an iterator to the
         // newly inserted entry.
         Iterator _insert( size_t pos, KeyType key, ValueType value )
         {
+            using std::move;
+
             if ( pos > _count )
                 throw "index out of bounds";
 
-            // TODO: Improve efficiency when reallocating 
-            // AND inserting before the end.
             if ( _count == _capacity )
-                reallocate( _capacity * 2 );
-
-            // Shift chunk of data right when not appending
-            for ( size_t i = _count; i > pos; --i )
             {
-                _pKeys[ i ]   = std::move( _pKeys[ i - 1 ] );
-                _pValues[ i ] = std::move( _pValues[ i - 1 ] );
+                if ( pos == _count ) // Appending
+                    reallocate( _capacity * 2 );
+                else
+                    _reallocateSplit( _capacity * 2, pos );
+            }
+            else // Shift chunk of data right when not appending
+            {
+                for ( size_t i = _count; i > pos; --i )
+                {
+                    _pKeys[ i ]   = move( _pKeys[ i - 1 ] );
+                    _pValues[ i ] = move( _pValues[ i - 1 ] );
+                }
             }
 
-            _construct( pos, key, std::move( value ) );
+            _construct( pos, move( key ), move( value ) );
             ++_count;
 
             return Iterator( this, _pKeys + pos );
@@ -358,19 +377,22 @@ namespace odin
 
         // Removes an entry at a specific index from the map. Returns an 
         // iterator to the next entry.
-        Iterator _erase( size_t pos )
+        Iterator _erase( size_t pos, size_t count = 1 )
         {
             if ( pos >= _count )
                 throw "index out of bounds";
 
             // Shift chunk of data left when erasing from middle
-            for ( size_t i = pos; i < _count - 1; ++i )
+            for ( size_t i = pos; i < _count - count; ++i )
             {
-                _pKeys[ i ]   = std::move( _pKeys[ i + 1 ] );
-                _pValues[ i ] = std::move( _pValues[ i + 1 ] );
+                _pKeys[ i ]   = std::move( _pKeys[ i + count ] );
+                _pValues[ i ] = std::move( _pValues[ i + count ] );
             }
 
-            _destroy( --_count );
+            for ( size_t i = _count - count; i < _count; ++i )
+                _destroy( i );
+
+            _count -= count;
 
             return Iterator( pos < _count ? this : nullptr, _pKeys + pos );
         }
