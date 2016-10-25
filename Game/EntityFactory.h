@@ -4,14 +4,21 @@
 #include <Odin/TextureManager.hpp>
 #include "Scenes.hpp"
 
+using odin::Entity;
+using odin::EntityId;
+using odin::GraphicalComponent;
+using odin::PhysicalComponent;
+using odin::InputManager;
+using odin::Scene;
+
 enum Textures {
 	NULL_TEXTURE,
-	PLAYER,
+	PLAYER_TEXTURE,
 	CRATE1,
 	CRATE2,
 	GROUND1,
 	GROUND2,
-	HORSE,
+	HORSE_TEXTURE,
 	BACKGROUND
 };
 
@@ -24,15 +31,8 @@ enum Anchors {
 	//BOTTOMLEFT,
 	//BOTTOMRIGHT,
 	//BOTTOMMIDDLE,
-	
-};
 
-using odin::Entity;
-using odin::EntityId;
-using odin::GraphicalComponent;
-using odin::PhysicalComponent;
-using odin::InputManager;
-using odin::Scene;
+};
 
 // Singleton class for easily creating game objects
 class EntityFactory {
@@ -113,8 +113,19 @@ private:
 		odin::load_texture(CRATE2, "Textures/crate2.png");
 		odin::load_texture(GROUND1, "Textures/ground.png");
 		odin::load_texture(GROUND2, "Textures/ground2.png");
-		odin::load_texture(PLAYER, "Textures/CowboySS.png");
+		odin::load_texture(PLAYER_TEXTURE, "Textures/CowboySS.png");
 		odin::load_texture(BACKGROUND, "Textures/background.png");
-		odin::load_texture(HORSE, "Textures/horse.png");
+		odin::load_texture(HORSE_TEXTURE, "Textures/horse.png");
 	}
 };
+
+inline EntityTypes operator|(EntityTypes a, EntityTypes b)
+{
+	return static_cast<EntityTypes>(static_cast<int>(a) | static_cast<int>(b));
+}
+
+inline EntityTypes operator&(EntityTypes a, EntityTypes b)
+{
+	return static_cast<EntityTypes>(static_cast<int>(a) & static_cast<int>(b));
+}
+
