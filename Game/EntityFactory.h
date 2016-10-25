@@ -4,14 +4,21 @@
 #include <Odin/TextureManager.hpp>
 #include "Scenes.hpp"
 
+using odin::Entity;
+using odin::EntityId;
+using odin::GraphicalComponent;
+using odin::PhysicalComponent;
+using odin::InputManager;
+using odin::Scene;
+
 enum Textures {
 	NULL_TEXTURE,
-	PLAYER,
+	PLAYER_TEXTURE,
 	CRATE1,
 	CRATE2,
 	GROUND1,
 	GROUND2,
-	HORSE,
+	HORSE_TEXTURE,
 	BACKGROUND
 };
 
@@ -24,15 +31,55 @@ enum Anchors {
 	//BOTTOMLEFT,
 	//BOTTOMRIGHT,
 	//BOTTOMMIDDLE,
-	
+
 };
 
-using odin::Entity;
-using odin::EntityId;
-using odin::GraphicalComponent;
-using odin::PhysicalComponent;
-using odin::InputManager;
-using odin::Scene;
+
+namespace odin
+{
+inline namespace factory
+{
+    // "using namespace odin::factory;" to just use these functions.
+
+    template< typename T >
+    void make_player( T* pScene, EntityId eid, Vec2 pos )
+    {
+        int pAnimInfo[3] = { 1, 10, 3 }; //idle 1 frame, run 10 frame, jump 3 frame
+
+        auto pGfx = pScene->components< GraphicalComponent >().add( eid,
+            GraphicalComponent::makeRect( 2, 2, {1, 1, 1}, 1.0, true, 3, pAnimInfo ) );
+        pGfx->texture = PLAYER;
+
+        b2BodyDef playerDef;
+        playerDef.position = pos;
+        playerDef.fixedRotation = true;
+        playerDef.type = b2_dynamicBody;
+        playerDef.gravityScale = 2;
+
+        auto pFsx = pScene->components< PhysicalComponent >().add( eid,
+            PhysicalComponent::makeRect( 0.5, 1.5, pScene->b2world, playerDef ) );
+    }
+
+    template< typename T >
+    void make_horse( T* pScene, EntityId eid, Vec2 pos )
+    {
+        auto hGfx = pScene->components< GraphicalComponent >().add( eid,
+            GraphicalComponent::makeRect( 2, 2, {1, 1, 1} ) );
+        hGfx->texture = HORSE_TEXTURE;
+
+        b2BodyDef horseDef;
+        horseDef.position = pos;
+        horseDef.fixedRotation = true;
+        horseDef.type = b2_dynamicBody;
+        horseDef.gravityScale = 2;
+
+        auto hFsx = pScene->components< PhysicalComponent >().add( eid,
+            PhysicalComponent::makeRect( 2, 2, pScene->b2world, horseDef, 1.0, HORSE, PLATFORM ) );
+    }
+
+}
+}
+
 
 // Singleton class for easily creating game objects
 class EntityFactory {
@@ -112,8 +159,19 @@ private:
 		odin::load_texture(CRATE2, "Textures/crate2.png");
 		odin::load_texture(GROUND1, "Textures/ground.png");
 		odin::load_texture(GROUND2, "Textures/ground2.png");
-		odin::load_texture(PLAYER, "Textures/CowboySS.png");
+		odin::load_texture(PLAYER_TEXTURE, "Textures/CowboySS.png");
 		odin::load_texture(BACKGROUND, "Textures/background.png");
-		odin::load_texture(HORSE, "Textures/horse.png");
+		odin::load_texture(HORSE_TEXTURE, "Textures/horse.png");
 	}
 };
+
+inline EntityTypes operator|(EntityTypes a, EntityTypes b)
+{
+	return static_cast<EntityTypes>(static_cast<int>(a) | static_cast<int>(b));
+}
+
+inline EntityTypes operator&(EntityTypes a, EntityTypes b)
+{
+	return static_cast<EntityTypes>(static_cast<int>(a) & static_cast<int>(b));
+}
+

@@ -42,27 +42,14 @@ public:
                 this->expired = true;
         } );
 
-        factory->makePlayer( this, {"player", 0} );
+        //factory->makePlayer( this, {"player", 0} );
+        odin::make_player( this, {"player", 0}, {-9, -4} );
         listeners.push_back( [this]( const InputManager& inmn ) {
             return player_input( inmn, {"player", 0}, 0 );
         } );
 
-        /*factory->makePlayer( this, {"player", 1} );
-        listeners.push_back( [this]( const InputManager& inmn ) {
-            return player_input( inmn, {"player", 1}, 1 );
-        } );
-
-        factory->makePlayer( this, {"player", 2} );
-        listeners.push_back( [this]( const InputManager& inmn ) {
-            return player_input( inmn, {"player", 2}, 2 );
-        } );
-
-        factory->makePlayer( this, {"player", 3} );
-        listeners.push_back( [this]( const InputManager& inmn ) {
-            return player_input( inmn, {"player", 3}, 3 );
-        } );*/
-
-		factory->makeHorse(this, "horse");
+		//factory->makeHorse(this, "horse");
+        odin::make_horse( this, "horse", {0, 5} );
 
 		factory->makePlatform(this, "plat1", 3, {0, -3}); // Lower Middle
 		factory->makePlatform(this, "plat2", 6, { 0.5, 3 }); // Upper middle
@@ -85,23 +72,31 @@ public:
 
 		b2BodyDef floorDef;
 		b2EdgeShape floorShape;
+		b2Filter wallFilter;
+		
 		floorShape.Set({ -11, -8 }, { 11, -8 });
 
+		wallFilter.categoryBits = PLATFORM;
+		wallFilter.maskBits = PLAYER | HORSE;
+
 		fsxComponents["floor"] = b2world.CreateBody(&floorDef);
-		fsxComponents["floor"]->CreateFixture(&floorShape, 1)
-			->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
+		b2Fixture* fix = fsxComponents["floor"]->CreateFixture(&floorShape, 1);
+		fix->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
+		fix->SetFilterData(wallFilter);
 
 		floorShape.Set({ 11, +10 }, { 11, -8 });
 
 		fsxComponents["wallR"] = b2world.CreateBody(&floorDef);
-		fsxComponents["wallR"]->CreateFixture(&floorShape, 1)
-			->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
+		fix = fsxComponents["wallR"]->CreateFixture(&floorShape, 1);
+		fix->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
+		fix->SetFilterData(wallFilter);
 
 		floorShape.Set({ -11, +10 }, { -11, -8 });
 
 		fsxComponents["wallL"] = b2world.CreateBody(&floorDef);
-		fsxComponents["wallL"]->CreateFixture(&floorShape, 1)
-			->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
+		fix = fsxComponents["wallL"]->CreateFixture(&floorShape, 1);
+		fix->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
+		fix->SetFilterData(wallFilter);
 
 		//load common events and play music
 		audioEngine.loadEvent("event:/Music/EnergeticTheme");
@@ -109,5 +104,6 @@ public:
 
 		audioEngine.playEvent("event:/Music/EnergeticTheme");
 	}
+
 
 };

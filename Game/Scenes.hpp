@@ -8,6 +8,8 @@
 
 #include "Constants.h"
 
+#include <tuple>
+
 using odin::Entity;
 using odin::EntityId;
 using odin::GraphicalComponent;
@@ -18,6 +20,13 @@ using odin::ComponentType;
 using odin::AudioEngine;
 
 struct EntityView;
+
+enum EntityTypes {
+	PLAYER = 1 << 0,
+	HORSE = 1 << 1,
+	PLATFORM = 1 << 2,
+	BULLET = 1 << 3
+};
 
 class LevelScene
     : public odin::Scene
@@ -38,6 +47,13 @@ public:
     InputManager                    inputManager;
     std::vector< InputListener >    listeners;
 
+    // Returns the component map for the particular type of component.
+    template< typename T >
+    auto& components()
+    {
+        return std::get< EntityMap< T >& >(
+            std::tie( entities, gfxComponents, fsxComponents ) );
+    }
 
     std::string audioBankName;
     AudioEngine audioEngine;
@@ -309,7 +325,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     {
 
     }
-
+	
     //for testing audio
     if (mngr.wasKeyPressed(SDLK_SPACE))
         audioEngine.playEvent("event:/Desperado/Shoot"); //simulate audio shoot
@@ -317,6 +333,11 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
         audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0); //low energy test
     if (mngr.wasKeyPressed(SDLK_2))
         audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", 1.0); //high energy test
+
+	if (mngr.wasKeyPressed(SDLK_KP_8))
+		audioEngine.changeMasterVolume(0.1);
+	if (mngr.wasKeyPressed(SDLK_KP_2))
+		audioEngine.changeMasterVolume(-0.1);
 
     body.SetLinearVelocity(vel);
 }
@@ -369,7 +390,7 @@ inline EntityView LevelScene::fireBullet(Vec2 position, Vec2 velocity, odin::Fac
     bodyDef.type = b2_dynamicBody;
     bodyDef.bullet = true;
 
-    if (!fsxComponents.add(eid, PhysicalComponent::makeCircle(.05f, b2world, bodyDef, 0.01f)))
+    if (!fsxComponents.add(eid, PhysicalComponent::makeCircle(.05f, b2world, bodyDef, 0.01f, BULLET, PLAYER)))
         std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
 
     return EntityView(eid, this);

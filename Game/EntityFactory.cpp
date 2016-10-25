@@ -8,7 +8,7 @@ EntityView EntityFactory::makePlayer(
 {
 	int pAnimInfo[3] = { 1, 10, 3 }; //idle 1 frame, run 10 frame, jump 3 frame
 	auto pGfx = scene->gfxComponents.add(eid, GraphicalComponent::makeRect(2, 2, glm::vec3(1, 1, 1), 1.0, true, 3, pAnimInfo));
-	pGfx->texture = PLAYER;
+	pGfx->texture = PLAYER_TEXTURE;
 
 	b2BodyDef playerDef;
 	playerDef.position = { -9, -4 };
@@ -16,8 +16,8 @@ EntityView EntityFactory::makePlayer(
 	playerDef.type = b2_dynamicBody;
 	playerDef.gravityScale = 2;
 
-	auto pFsx = scene->fsxComponents.add(eid, PhysicalComponent::makeRect(size.x-0.5, size.y-0.5, scene->b2world, playerDef));
-	
+	auto pFsx = scene->fsxComponents.add(eid, PhysicalComponent::makeRect(size.x-0.5, size.y-0.5, scene->b2world, playerDef, 1.0, PLAYER, PLATFORM | BULLET));
+
 	return EntityView(eid, scene);
 }
 
@@ -28,7 +28,7 @@ EntityView EntityFactory::makeHorse(
 	Vec2	    size)
 {
 	auto hGfx = scene->gfxComponents.add(eid, GraphicalComponent::makeRect(2, 2, glm::vec3(1, 1, 1)));
-	hGfx->texture = HORSE;
+	hGfx->texture = HORSE_TEXTURE;
 
 	b2BodyDef horseDef;
 	horseDef.position = { 0, 5 };
@@ -36,7 +36,7 @@ EntityView EntityFactory::makeHorse(
 	horseDef.type = b2_dynamicBody;
 	horseDef.gravityScale = 2;
 
-	auto hFsx = scene->fsxComponents.add(eid, PhysicalComponent::makeRect(size.x, size.y, scene->b2world, horseDef));
+	auto hFsx = scene->fsxComponents.add(eid, PhysicalComponent::makeRect(size.x, size.y, scene->b2world, horseDef, 1.0, HORSE, PLATFORM));
 
 
 	return EntityView(eid, scene);
@@ -187,6 +187,6 @@ void EntityFactory::makePlatform(
 	bodyDef.type = b2_staticBody;
 
 	if (!scene->fsxComponents.add({ id, i },
-		PhysicalComponent::makeRect(length, 1, scene->b2world, bodyDef)))
+		PhysicalComponent::makeRect(length, 1, scene->b2world, bodyDef, 1.0, PLATFORM, HORSE | PLAYER)))
 		std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
 }

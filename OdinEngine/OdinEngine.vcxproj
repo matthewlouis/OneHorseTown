@@ -208,7 +208,6 @@
     <ClCompile Include="includes\Box2D\Rope\b2Rope.cpp" />
     <ClCompile Include="includes\lodepng.cpp" />
     <ClCompile Include="includes\Odin\EntityId.cpp" />
-    <ClCompile Include="includes\Odin\OdinGame.hpp" />
     <ClCompile Include="includes\Odin\Scene.cpp" />
     <ClCompile Include="includes\Odin\TextureManager.cpp" />
   </ItemGroup>
