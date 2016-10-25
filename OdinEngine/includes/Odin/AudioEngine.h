@@ -63,6 +63,8 @@ namespace odin {
 		void setChannelVolume(int nChannelId, float fVolumedB);
 		void set3dListenerPosition(const glm::vec3& vPos = glm::vec3(0, 0, 0));
 
+		void changeMasterVolume(float fVolumedB); // Nav: change the volume on all channels
+
 		bool isChannelPlaying(int nChannelId) const;
 		bool isEventPlaying(const std::string& strEventName) const;
 

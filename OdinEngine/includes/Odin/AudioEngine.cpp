@@ -260,6 +260,16 @@ namespace odin {
 		}
 	}
 
+	// Nav: change the volume on all channels
+	void AudioEngine::changeMasterVolume(float fVolumedB) {
+		float *currVolume = new float;
+		for (auto channelIt = _sgpImplementation->mChannels.begin(); channelIt != _sgpImplementation->mChannels.end(); channelIt++) {
+			fmodErrorCheck(channelIt->second->getVolume(currVolume));
+			float v = (*currVolume);
+			fmodErrorCheck(channelIt->second->setVolume((*currVolume) + fVolumedB));
+		}
+	}
+
 	//checks if a channel is currently playing a sound
 	bool AudioEngine::isChannelPlaying(int nChannelId) const {
 		auto tFoundIt = _sgpImplementation->mChannels.find(nChannelId);

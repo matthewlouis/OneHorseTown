@@ -82,7 +82,9 @@ namespace odin
             float     height,
             b2World&  world,
             b2BodyDef bodyDef = {},
-            float     density = 1 )
+            float     density = 1, 
+			uint16 type = 1,
+			uint16 collidesWith = 0xFFFF)
         {
             b2PolygonShape boxShape;
             boxShape.SetAsBox( width / 2, height / 2 );
@@ -91,6 +93,9 @@ namespace odin
             fxtDef.shape = &boxShape;
             fxtDef.friction = DEFAULT_FRICTION;
             fxtDef.density = density;
+
+			fxtDef.filter.categoryBits = type;
+			fxtDef.filter.maskBits = collidesWith;
 
             b2Body* pBody = world.CreateBody( &bodyDef );
             pBody->CreateFixture( &fxtDef );
@@ -102,7 +107,9 @@ namespace odin
             float     radius,
             b2World&  world,
             b2BodyDef bodyDef = {},
-            float     density = 1 )
+            float     density = 1,
+			uint16 type = 1,
+			uint16 collidesWith = 0xFFFF)
         {
             b2CircleShape circleShape;
             circleShape.m_radius = radius;
@@ -111,6 +118,9 @@ namespace odin
             fxtDef.shape = &circleShape;
             fxtDef.friction = DEFAULT_FRICTION;
             fxtDef.density = density;
+
+			fxtDef.filter.categoryBits = type;
+			fxtDef.filter.maskBits = collidesWith;
 
             b2Body* pBody = world.CreateBody( &bodyDef );
             pBody->CreateFixture( &fxtDef );
