@@ -102,7 +102,7 @@ public:
 		audioEngine.loadEvent("event:/Music/EnergeticTheme");
 		audioEngine.loadEvent("event:/Desperado/Shoot");
 
-		audioEngine.playEvent("event:/Music/EnergeticTheme");
+		//audioEngine.playEvent("event:/Music/EnergeticTheme");
 	}
 
 

@@ -3,6 +3,7 @@
 
 #include <Odin/Scene.h>
 #include <Odin/AudioEngine.h>
+#include <Odin/ThreadedAudio.h>
 #include <Odin/Entity.hpp>
 #include <Odin/TextureManager.hpp>
 
@@ -328,7 +329,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 	
     //for testing audio
     if (mngr.wasKeyPressed(SDLK_SPACE))
-        audioEngine.playEvent("event:/Desperado/Shoot"); //simulate audio shoot
+		playSound("Audio/FX/Shot.wav", 127);
     if (mngr.wasKeyPressed(SDLK_1))
         audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0); //low energy test
     if (mngr.wasKeyPressed(SDLK_2))
