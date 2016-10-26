@@ -53,7 +53,7 @@ GLuint odin::load_texture( int index, int width, int height, void* data )
                   0, GL_RGBA, GL_UNSIGNED_BYTE, data );
 
     // possibly don't need this.
-    glGenerateMipmap( GL_TEXTURE_2D );
+    //glGenerateMipmap( GL_TEXTURE_2D );
 
     return texture_units[ index ];
 }

@@ -34,7 +34,7 @@ public:
         LevelScene::init( ticks );
 
 		auto background = gfxComponents.add(
-			EntityId(0), GraphicalComponent::makeRect( width / _scale, height / _scale));
+			EntityId(0), GraphicalComponent::makeRect( width, height ));
 		background->texture = BACKGROUND;
 
         listeners.push_back( [this]( const InputManager& inmn ) {
@@ -43,13 +43,13 @@ public:
         } );
 
         //factory->makePlayer( this, {"player", 0} );
-        odin::make_player( this, {"player", 0}, {-9, -4} );
+        odin::make_player( this, {"player", 0}, {0, 5} );
         listeners.push_back( [this]( const InputManager& inmn ) {
             return player_input( inmn, {"player", 0}, 0 );
         } );
 
 		//factory->makeHorse(this, "horse");
-        odin::make_horse( this, "horse", {0, 5} );
+        odin::make_horse( this, "horse", {0.0f, 0.0f} );
 
 		factory->makePlatform(this, "plat1", 3, {0, -3}); // Lower Middle
 		factory->makePlatform(this, "plat2", 6, { 0.5, 3 }); // Upper middle
