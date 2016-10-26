@@ -255,6 +255,23 @@ namespace odin
         SDLK_LEFT,
         SDLK_DOWN,
         SDLK_UP,
+        SDLK_NUMLOCKCLEAR,
+        SDLK_KP_DIVIDE,
+        SDLK_KP_MULTIPLY,
+        SDLK_KP_MINUS,
+        SDLK_KP_PLUS,
+        SDLK_KP_ENTER, 
+        SDLK_KP_1,
+        SDLK_KP_2,
+        SDLK_KP_3,
+        SDLK_KP_4,
+        SDLK_KP_5,
+        SDLK_KP_6,
+        SDLK_KP_7,
+        SDLK_KP_8,
+        SDLK_KP_9,
+        SDLK_KP_0,
+        SDLK_KP_PERIOD,
         SDLK_LCTRL,
         SDLK_LSHIFT,
         SDLK_LALT,
@@ -264,6 +281,7 @@ namespace odin
         SDLK_RALT,
         SDLK_RGUI,
     };
+
 
 	static constexpr int JOYSTICK_DEAD_ZONE = 10200;
     // Manages input events. Call pollEvents to update the stored state 

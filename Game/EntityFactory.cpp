@@ -7,8 +7,10 @@ EntityView EntityFactory::makePlayer(
 	Vec2	    size)
 {
 	int pAnimInfo[3] = { 1, 10, 3 }; //idle 1 frame, run 10 frame, jump 3 frame
-	auto pGfx = scene->gfxComponents.add(eid, GraphicalComponent::makeRect(2, 2, glm::vec3(1, 1, 1), 1.0, true, 3, pAnimInfo));
+	auto pGfx = scene->gfxComponents.add(eid, GraphicalComponent::makeRect(2, 2, glm::vec3(1, 1, 1), 1.0 ));
 	pGfx->texture = PLAYER_TEXTURE;
+
+    scene->animComponents.add( eid, { 1, 10, 3 } );
 
 	b2BodyDef playerDef;
 	playerDef.position = { -9, -4 };

@@ -65,22 +65,22 @@ constexpr GLenum gl_type_constant< GLdouble >( GLdouble )
 }
 
 
-inline void glUniform( GLint location, glm::mat4 mat )
+inline void glUniform( GLint location, const glm::mat4& mat )
 {
     glUniformMatrix4fv( location, 1, GL_FALSE, (float*) &mat );
 }
 
-inline void glUniform( GLint location, glm::vec4 vec )
+inline void glUniform( GLint location, const glm::vec4& vec )
 {
     glUniform4fv( location, 1, (float*) &vec );
 }
 
-inline void glUniform( GLint location, glm::vec3 vec )
+inline void glUniform( GLint location, const glm::vec3& vec )
 {
     glUniform3fv( location, 1, (float*) &vec );
 }
 
-inline void glUniform( GLint location, glm::vec2 vec )
+inline void glUniform( GLint location, const glm::vec2& vec )
 {
     glUniform2fv( location, 1, (float*) &vec );
 }

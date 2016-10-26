@@ -212,6 +212,7 @@
     <ClCompile Include="includes\Odin\TextureManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="includes\Odin\AnimatorComponent.hpp" />
     <ClInclude Include="includes\Odin\AudioEngine.h" />
     <ClInclude Include="includes\Odin\Errors.h" />
     <ClInclude Include="includes\Box2D\Box2D.h" />

@@ -47,8 +47,10 @@ inline namespace factory
         int pAnimInfo[3] = { 1, 10, 3 }; //idle 1 frame, run 10 frame, jump 3 frame
 
         auto pGfx = get_components< GraphicalComponent >( pScene ).add( eid,
-            GraphicalComponent::makeRect( 32, 32, {1, 1, 1}, 1.0, true, 3, pAnimInfo ) );
+            GraphicalComponent::makeRect( 32, 32 ) );
         pGfx->texture = PLAYER;
+
+        get_components< AnimatorComponent >( pScene ).add( eid, { 1, 10, 3 } );
 
         b2BodyDef playerDef;
         playerDef.position = pos;
@@ -64,7 +66,7 @@ inline namespace factory
     void make_horse( T* pScene, EntityId eid, Vec2 pos )
     {
         auto hGfx = get_components< GraphicalComponent >( pScene ).add( eid,
-            GraphicalComponent::makeRect( 44, 36, {1, 1, 1} ) );
+            GraphicalComponent::makeRect( 44, 36 ) );
         hGfx->texture = HORSE_TEXTURE;
 
         b2BodyDef horseDef;

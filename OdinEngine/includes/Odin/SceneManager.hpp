@@ -94,7 +94,7 @@ namespace odin
                 top->update( ticks );
         }
 
-        void draw()
+        void render()
         {
             if ( Scene* top = topScene() )
                 top->draw();

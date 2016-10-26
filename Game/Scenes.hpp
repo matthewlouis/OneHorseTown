@@ -14,6 +14,7 @@ using odin::Entity;
 using odin::EntityId;
 using odin::GraphicalComponent;
 using odin::PhysicalComponent;
+using odin::AnimatorComponent;
 using odin::InputManager;
 using odin::InputListener;
 using odin::ComponentType;
@@ -56,20 +57,19 @@ public:
     EntityMap< Entity >             entities;
 
     EntityMap< GraphicalComponent > gfxComponents;
+    EntityMap< AnimatorComponent >  animComponents;
 
     b2ThreadPool                    b2thd;
     b2World                         b2world = { { 0.f, -9.81f }, &b2thd };
     EntityMap< PhysicalComponent >  fsxComponents;
 
-    InputManager                    inputManager;
+    OHT_DEFINE_COMPONENTS( entities, gfxComponents, animComponents, fsxComponents );
+
+    InputManager*                   pInputManager;
     std::vector< InputListener >    listeners;
 
-    OHT_DEFINE_COMPONENTS( entities, gfxComponents, fsxComponents );
-
-    std::string audioBankName;
-    AudioEngine audioEngine;
-
-    //SDL_Renderer* renderer;
+    std::string                     audioBankName;
+    AudioEngine*                    pAudioEngine;
 
     GLuint program;
     GLint uMatrix, uColor, uTexture, uFacingDirection,
@@ -101,9 +101,9 @@ public:
 
         if ( audioBankName != "" )
         {
-            audioEngine.loadBank( audioBankName + ".bank",
+            pAudioEngine->loadBank( audioBankName + ".bank",
                                   FMOD_STUDIO_LOAD_BANK_NORMAL );
-            audioEngine.loadBank( audioBankName + ".strings.bank",
+            pAudioEngine->loadBank( audioBankName + ".strings.bank",
                                   FMOD_STUDIO_LOAD_BANK_NORMAL );
         }
     }
@@ -114,8 +114,8 @@ public:
 
         if ( audioBankName != "" )
         {
-            audioEngine.unloadBank( audioBankName + ".bank" );
-            audioEngine.unloadBank( audioBankName + ".strings.bank" );
+            pAudioEngine->unloadBank( audioBankName + ".bank" );
+            pAudioEngine->unloadBank( audioBankName + ".strings.bank" );
         }
     }
 
@@ -123,11 +123,8 @@ public:
     {
         Scene::update( ticks );
 
-        inputManager.pollEvents();
         for ( auto& lstn : listeners )
-            lstn( inputManager );
-
-        //audioEngine.update();
+            lstn( *pInputManager );
 
         float timeStep = Scene::ticksDiff / 1000.f;
         b2world.Step( timeStep, 8, 3 );
@@ -150,6 +147,17 @@ public:
 
             ntt.rotation = fsx.rotation();
         }
+
+        for ( auto x : animComponents )
+        {
+            x.value.incrementFrame();
+            auto& texAdjust = entities[ x.key ].texAdjust;
+
+            texAdjust[ 0 ] = x.value.animState;
+            texAdjust[ 1 ] = x.value.currentFrame;
+            texAdjust[ 2 ] = x.value.maxFrames;
+            texAdjust[ 3 ] = x.value.totalAnim;
+        }
     }
 
     void draw()
@@ -159,7 +167,7 @@ public:
 
         float zoom = 1.0f / SCALE;
         float aspect = width / (float) height;
-        const mat4 base = scale( {}, vec3( zoom, zoom * aspect, 1 ) );
+        const mat4 camera = scale( {}, vec3( zoom, zoom * aspect, 1 ) );
 
         glUseProgram( program );
         for ( auto x : gfxComponents )
@@ -167,19 +175,18 @@ public:
             Entity& ntt = entities[ x.key ];
             auto& gfx = x.value;
 
-            mat4 mtx = translate( base, vec3( ntt.position.glmvec2, 0 ) );
+            mat4 mtx = translate( camera, vec3( ntt.position.glmvec2, 0 ) );
             mtx = rotate( mtx, ntt.rotation, vec3( 0, 0, 1 ) );
-
-            gfx.incrementFrame();
 
             glUniform( uMatrix, mtx );
             glUniform( uColor, gfx.color );
             glUniform( uTexture, gfx.texture );
             glUniform( uFacingDirection, gfx.direction );
-            glUniform( uCurrentFrame, gfx.currentFrame );
-            glUniform( uCurrentAnim, gfx.animState );
-            glUniform( uMaxFrame, gfx.maxFrames );
-            glUniform( uMaxAnim, gfx.totalAnim );
+
+            glUniform( uCurrentAnim, ntt.texAdjust[ 0 ] );
+            glUniform( uCurrentFrame, ntt.texAdjust[ 1 ] );
+            glUniform( uMaxFrame, ntt.texAdjust[ 2 ] );
+            glUniform( uMaxAnim, ntt.texAdjust[ 3 ] );
 
             glBindVertexArray( gfx.vertexArray );
             glDrawArrays( GL_TRIANGLES, 0, gfx.count );
@@ -229,6 +236,11 @@ struct EntityView
         pScene->fsxComponents[ eid ] = std::move( fsx );
     }
 
+    void attach( AnimatorComponent fsx )
+    {
+        pScene->animComponents[ eid ] = std::move( fsx );
+    }
+
     void detach( ComponentType type )
     {
         switch ( type )
@@ -238,6 +250,9 @@ struct EntityView
             break;
         case ComponentType::Physical:
             pScene->fsxComponents.remove( eid );
+            break;
+        case ComponentType::Animator:
+            pScene->animComponents.remove( eid );
             break;
         }
     }
@@ -254,6 +269,12 @@ struct EntityView
         return itr ? (PhysicalComponent*) itr : nullptr;
     }
 
+    AnimatorComponent* animComponent()
+    {
+        auto itr = pScene->animComponents.search( eid );
+        return itr ? (AnimatorComponent*) itr : nullptr;
+    }
+
 };
 
 inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, int pindex )
@@ -262,6 +283,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 
     b2Body& body = *ntt.fsxComponent()->pBody;
     GraphicalComponent& gfx = *ntt.gfxComponent();
+    AnimatorComponent& anim = *ntt.animComponent();
 
     Vec2 vel = body.GetLinearVelocity();
     float maxSpeed = 5.5f;
@@ -292,7 +314,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     {
         //pFixt->SetFriction( 2 );
         vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0f));
-        gfx.switchAnimState(0); //idle state
+        anim.switchAnimState(0); //idle state
     }
     else
     {
@@ -302,7 +324,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
         vel.x -= actionLeft * (20 + 1) * (1 / 60.0f);
         vel.x += actionRight * (20 + 1) * (1 / 60.0f);
         vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
-        gfx.switchAnimState(1); //running
+        anim.switchAnimState(1); //running
     }
 
     if (mngr.wasKeyPressed(SDLK_UP)) {
@@ -341,16 +363,16 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 	
     //for testing audio
     if (mngr.wasKeyPressed(SDLK_SPACE))
-        audioEngine.playEvent("event:/Desperado/Shoot"); //simulate audio shoot
+        fireBullet({body.GetPosition().x,body.GetPosition().y}, aimDir, gfx.direction);
     if (mngr.wasKeyPressed(SDLK_1))
-        audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0); //low energy test
+        pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0); //low energy test
     if (mngr.wasKeyPressed(SDLK_2))
-        audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", 1.0); //high energy test
+        pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", 1.0); //high energy test
 
 	if (mngr.wasKeyPressed(SDLK_KP_8))
-		audioEngine.changeMasterVolume(0.1);
+		pAudioEngine->changeMasterVolume(0.1);
 	if (mngr.wasKeyPressed(SDLK_KP_2))
-		audioEngine.changeMasterVolume(-0.1);
+		pAudioEngine->changeMasterVolume(-0.1);
 
     body.SetLinearVelocity(vel);
 }
@@ -365,8 +387,8 @@ inline EntityView LevelScene::fireBullet(Vec2 position, Vec2 velocity, odin::Fac
     else {
         energyLevel += 0.2f;
     }
-    audioEngine.setEventParameter("event:/Music/EnergeticTheme", "Energy", energyLevel);
-    audioEngine.playEvent("event:/Desperado/Shoot");
+    pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", energyLevel);
+    pAudioEngine->playEvent("event:/Desperado/Shoot");
 
     double bulletOffset = 0.5;
     float bulletVelocity = 100;

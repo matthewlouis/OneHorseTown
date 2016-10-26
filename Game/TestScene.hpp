@@ -99,10 +99,10 @@ public:
 		fix->SetFilterData(wallFilter);
 
 		//load common events and play music
-		audioEngine.loadEvent("event:/Music/EnergeticTheme");
-		audioEngine.loadEvent("event:/Desperado/Shoot");
+		pAudioEngine->loadEvent("event:/Music/EnergeticTheme");
+		pAudioEngine->loadEvent("event:/Desperado/Shoot");
 
-		audioEngine.playEvent("event:/Music/EnergeticTheme");
+		pAudioEngine->playEvent("event:/Music/EnergeticTheme");
 	}
 
 
