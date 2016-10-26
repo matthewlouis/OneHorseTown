@@ -138,7 +138,7 @@ public:
 
             //ntt.position = fsx.position();
             // Round to remove blur/shimmer.
-            ntt.position = glm::round( glm::vec2( fsx.position() ) );
+            ntt.position = glm::round( glm::vec2( fsx.position() ) * 10.f );
 
             if ( fsx.pBody->IsBullet() )
             {
