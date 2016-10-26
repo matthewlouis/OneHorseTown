@@ -81,6 +81,8 @@
 	 */
 	static int playThread(void *);
 
+	static SDL_mutex * sgpMutex;
+
 	/*
 	 * Definition for the game global sound device
 	 *
@@ -203,6 +205,8 @@
 			/* Unpause active audio stream */
 			SDL_PauseAudioDevice(gDevice->device, 0);
 		}
+
+		sgpMutex = SDL_CreateMutex();
 	}
 
 	void endAudio(void)
@@ -218,6 +222,7 @@
 		}
 
 		free(gDevice);
+		SDL_DestroyMutex(sgpMutex);
 	}
 
 	static Sound * createSound(const char * filename, int volume)
@@ -250,13 +255,23 @@
 
 	static inline void audioCallback(void * userdata, uint8_t * stream, int len)
 	{
+		/* Silence the main buffer */
+		SDL_memset(stream, 0, len);
+
+		Sound * s = userdata;
+
+		//try to lock mutex, if not don't block just return because an audio thread is currently running
+		if (SDL_TryLockMutex(sgpMutex) != 0 || s->next == NULL) {
+
+			return; //in use
+		}
+
 		ThreadData * tData = calloc(1, sizeof(ThreadData));
 		tData->userdata = userdata;
 		tData->stream = stream;
 		tData->len = len;
 
 		SDL_Thread * thread = SDL_CreateThread(playThread, "playThread", tData);
-		SDL_WaitThread(thread, NULL);
 	}
 
 	static void addSound(Sound * root, Sound * new)
@@ -296,9 +311,6 @@
 		Sound * previous = sound;
 		int tempLength;
 
-		/* Silence the main buffer */
-		SDL_memset(tData->stream, 0, tData->len);
-
 		/* First one is place holder */
 		sound = sound->next;
 
@@ -326,4 +338,6 @@
 				sound = previous->next;
 			}
 		}
+		printf("\nThread finished");
+		SDL_UnlockMutex(sgpMutex);
 	}
