@@ -29,6 +29,23 @@ enum EntityTypes {
 	BULLET = 1 << 3
 };
 
+
+// Defines a function which returns the component map for the 
+// particular type of component. (This is a 'variadic macro')
+#define OHT_DEFINE_COMPONENTS( ... )                            \
+template< typename T >                                          \
+auto& components()                                              \
+{                                                               \
+    return std::get< odin::BinarySearchMap< EntityId, T >& >(   \
+        std::tie( __VA_ARGS__ ) );                              \
+}
+
+template< typename T, typename Sc >
+auto& get_components( Sc* pScene )
+{
+    return pScene->components< T >();
+}
+
 class LevelScene
     : public odin::Scene
 {
@@ -48,13 +65,7 @@ public:
     InputManager                    inputManager;
     std::vector< InputListener >    listeners;
 
-    // Returns the component map for the particular type of component.
-    template< typename T >
-    auto& components()
-    {
-        return std::get< EntityMap< T >& >(
-            std::tie( entities, gfxComponents, fsxComponents ) );
-    }
+    OHT_DEFINE_COMPONENTS( entities, gfxComponents, fsxComponents );
 
     std::string audioBankName;
     AudioEngine audioEngine;
@@ -126,7 +137,9 @@ public:
             Entity& ntt = entities[ x.key ];
             auto& fsx = x.value;
 
-            ntt.position = fsx.position();
+            //ntt.position = fsx.position();
+            // Round to remove blur/shimmer.
+            ntt.position = glm::round( glm::vec2( fsx.position() ) * 10.f );
 
             if ( fsx.pBody->IsBullet() )
             {

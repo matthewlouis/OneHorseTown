@@ -46,8 +46,8 @@ inline namespace factory
     {
         int pAnimInfo[3] = { 1, 10, 3 }; //idle 1 frame, run 10 frame, jump 3 frame
 
-        auto pGfx = pScene->components< GraphicalComponent >().add( eid,
-            GraphicalComponent::makeRect( 2, 2, {1, 1, 1}, 1.0, true, 3, pAnimInfo ) );
+        auto pGfx = get_components< GraphicalComponent >( pScene ).add( eid,
+            GraphicalComponent::makeRect( 32, 32, {1, 1, 1}, 1.0, true, 3, pAnimInfo ) );
         pGfx->texture = PLAYER;
 
         b2BodyDef playerDef;
@@ -56,15 +56,15 @@ inline namespace factory
         playerDef.type = b2_dynamicBody;
         playerDef.gravityScale = 2;
 
-        auto pFsx = pScene->components< PhysicalComponent >().add( eid,
-            PhysicalComponent::makeRect( 0.5, 1.5, pScene->b2world, playerDef ) );
+        auto pFsx = get_components< PhysicalComponent >( pScene ).add( eid,
+            PhysicalComponent::makeRect( 1.6, 3.2, pScene->b2world, playerDef ) );
     }
 
     template< typename T >
     void make_horse( T* pScene, EntityId eid, Vec2 pos )
     {
-        auto hGfx = pScene->components< GraphicalComponent >().add( eid,
-            GraphicalComponent::makeRect( 2, 2, {1, 1, 1} ) );
+        auto hGfx = get_components< GraphicalComponent >( pScene ).add( eid,
+            GraphicalComponent::makeRect( 44, 36, {1, 1, 1} ) );
         hGfx->texture = HORSE_TEXTURE;
 
         b2BodyDef horseDef;
@@ -73,8 +73,8 @@ inline namespace factory
         horseDef.type = b2_dynamicBody;
         horseDef.gravityScale = 2;
 
-        auto hFsx = pScene->components< PhysicalComponent >().add( eid,
-            PhysicalComponent::makeRect( 2, 2, pScene->b2world, horseDef, 1.0, HORSE, PLATFORM ) );
+        auto hFsx = get_components< PhysicalComponent >( pScene ).add( eid,
+            PhysicalComponent::makeRect( 4.4, 3.6, pScene->b2world, horseDef, 1.0, HORSE, PLATFORM ) );
     }
 
 }
@@ -161,7 +161,7 @@ private:
 		odin::load_texture(GROUND2, "Textures/ground2.png");
 		odin::load_texture(PLAYER_TEXTURE, "Textures/CowboySS.png");
 		odin::load_texture(BACKGROUND, "Textures/background.png");
-		odin::load_texture(HORSE_TEXTURE, "Textures/horse.png");
+		odin::load_texture(HORSE_TEXTURE, "Textures/horse_dense.png");
 	}
 };
 

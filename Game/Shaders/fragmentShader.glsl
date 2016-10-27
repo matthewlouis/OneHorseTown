@@ -9,5 +9,8 @@ out vec4 out_Color;
 
 void main()
 {
-    out_Color = uColor * texture( uTexture, vTexCoord );
+    //vec2 texCoord = round( vTexCoord * 127 ) / 127;
+    //vec2 texCoord = round( vTexCoord * 50 ) / 50;
+    vec2 texCoord = vTexCoord;
+    out_Color = uColor * texture( uTexture, texCoord );
 }
