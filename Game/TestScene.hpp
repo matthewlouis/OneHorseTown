@@ -42,6 +42,11 @@ public:
                 this->expired = true;
         } );
 
+		listeners.push_back([this](const InputManager& inmn) {
+			if (inmn.wasKeyPressed(SDLK_m))
+				audioEngine.toggleMute();
+		});
+
         //factory->makePlayer( this, {"player", 0} );
         odin::make_player( this, {"player", 0}, {0, 5} );
         listeners.push_back( [this]( const InputManager& inmn ) {
@@ -102,7 +107,8 @@ public:
 		audioEngine.loadEvent("event:/Music/EnergeticTheme");
 		audioEngine.loadEvent("event:/Desperado/Shoot");
 
-		//audioEngine.playEvent("event:/Music/EnergeticTheme");
+		audioEngine.playEvent("event:/Music/EnergeticTheme");
+		audioEngine.toggleMute(); //mute audio
 	}
 
 

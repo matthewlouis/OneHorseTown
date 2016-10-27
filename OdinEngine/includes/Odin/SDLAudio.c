@@ -225,6 +225,8 @@
 		SDL_DestroyMutex(sgpMutex);
 	}
 
+	//loads the sound into the sound queue (done on main thread),
+	//playback handled in separate thread
 	static Sound * createSound(const char * filename, int volume)
 	{
 		Sound * new = calloc(1, sizeof(Sound));
@@ -266,6 +268,7 @@
 			return; //in use
 		}
 
+		//package data for thread
 		ThreadData * tData = calloc(1, sizeof(ThreadData));
 		tData->userdata = userdata;
 		tData->stream = stream;
@@ -274,6 +277,7 @@
 		SDL_Thread * thread = SDL_CreateThread(playThread, "playThread", tData);
 	}
 
+	//adds a sound to the queue
 	static void addSound(Sound * root, Sound * new)
 	{
 		if (root == NULL)
@@ -289,6 +293,7 @@
 		root->next = new;
 	}
 
+	//cleanup sound
 	static void freeSound(Sound * sound)
 	{
 		Sound * temp;
@@ -304,6 +309,8 @@
 		}
 	}
 
+
+	//thread function called during audioCallback if there is a sound needed to be played
 	static int playThread(void * data) {
 		ThreadData * tData = data;
 		
@@ -321,6 +328,7 @@
 
 				tempLength = ((uint32_t)tData->len > sound->length) ? sound->length : (uint32_t)tData->len;
 
+				//write data to the output stream
 				SDL_MixAudioFormat(tData->stream, sound->buffer, AUDIO_FORMAT, tempLength, sound->volume);
 
 				sound->buffer += tempLength;
@@ -338,6 +346,5 @@
 				sound = previous->next;
 			}
 		}
-		printf("\nThread finished");
-		SDL_UnlockMutex(sgpMutex);
+		SDL_UnlockMutex(sgpMutex); //no longer accessing sound
 	}
