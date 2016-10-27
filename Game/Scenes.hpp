@@ -6,6 +6,8 @@
 #include <Odin/ThreadedAudio.h>
 #include <Odin/Entity.hpp>
 #include <Odin/TextureManager.hpp>
+#include <Odin/Camera.h>
+
 
 #include "Constants.h"
 
@@ -70,6 +72,8 @@ public:
     std::string audioBankName;
     AudioEngine audioEngine;
 
+	odin::Camera camera;
+
     //SDL_Renderer* renderer;
 
     GLuint program;
@@ -99,6 +103,8 @@ public:
     void init( unsigned ticks )
     {
         Scene::init( ticks );
+
+		camera.init(width, height);
 
         if ( audioBankName != "" )
         {
@@ -158,9 +164,14 @@ public:
         using namespace glm;
         Scene::draw();
 
-        float zoom = 1.0f / SCALE;
-        float aspect = width / (float) height;
-        const mat4 base = scale( {}, vec3( zoom, zoom * aspect, 1 ) );
+        //float zoom = 1.0f / SCALE;
+        //float aspect = width / (float) height;
+        //const mat4 base = scale( {}, vec3( zoom, zoom * aspect, 1 ) );
+		const mat4 base = mat4();
+
+		//update camera matrix
+		camera.update();
+		glm::mat4 cameraMatrix = camera.getCameraMatrix();
 
         glUseProgram( program );
         for ( auto x : gfxComponents )
@@ -168,7 +179,7 @@ public:
             Entity& ntt = entities[ x.key ];
             auto& gfx = x.value;
 
-            mat4 mtx = translate( base, vec3( ntt.position.glmvec2, 0 ) );
+            mat4 mtx = cameraMatrix * translate( base, vec3( ntt.position.glmvec2, 0 ) );
             mtx = rotate( mtx, ntt.rotation, vec3( 0, 0, 1 ) );
 
             gfx.incrementFrame();

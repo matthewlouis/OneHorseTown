@@ -157,6 +157,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="includes\Odin\Camera.cpp" />
     <ClCompile Include="includes\Odin\SDLAudio.c" />
     <ClCompile Include="includes\Odin\AudioEngine.cpp" />
     <ClCompile Include="includes\Odin\Errors.cpp" />
@@ -213,6 +214,7 @@
     <ClCompile Include="includes\Odin\TextureManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="includes\Odin\Camera.h" />
     <ClInclude Include="includes\Odin\SDLAudio.h" />
     <ClInclude Include="includes\Odin\AudioEngine.h" />
     <ClInclude Include="includes\Odin\Errors.h" />

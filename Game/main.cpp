@@ -56,6 +56,9 @@ SDL_Window* create_window( const char* title, int width, int height )
     glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
     printf( "OpenGL %s\n\n", glGetString( GL_VERSION ) );
 
+
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+
     return _sdlWindow;
 }
 

@@ -47,6 +47,23 @@ public:
 				audioEngine.toggleMute();
 		});
 
+		listeners.push_back([this](const InputManager& inmn) {
+			const float CAMERA_SPEED = 2.0f;
+			const float SCALE_SPEED = 0.25f;
+			if (inmn.wasKeyPressed(SDLK_e))
+				camera.setScale(camera.getScale() + SCALE_SPEED);
+			if (inmn.wasKeyPressed(SDLK_q))
+				camera.setScale(camera.getScale() - SCALE_SPEED);
+			if (inmn.wasKeyPressed(SDLK_w))
+				camera.setPosition(camera.getPosition() + glm::vec2(0.0, CAMERA_SPEED));
+			if (inmn.wasKeyPressed(SDLK_a))
+				camera.setPosition(camera.getPosition() + glm::vec2(-CAMERA_SPEED, 0.0f));
+			if (inmn.wasKeyPressed(SDLK_s))
+				camera.setPosition(camera.getPosition() + glm::vec2(0.0, -CAMERA_SPEED));
+			if (inmn.wasKeyPressed(SDLK_d))
+				camera.setPosition(camera.getPosition() + glm::vec2(CAMERA_SPEED, 0.0f));
+		});
+
         //factory->makePlayer( this, {"player", 0} );
         odin::make_player( this, {"player", 0}, {0, 5} );
         listeners.push_back( [this]( const InputManager& inmn ) {
