@@ -2,8 +2,8 @@
 
 #include <Odin/SceneManager.hpp>
 #include <Odin/TextureManager.hpp>
-#include "EntityFactory.h"
 
+#include "EntityFactory.h"
 #include "Scenes.hpp"
 
 using odin::GraphicalComponent;

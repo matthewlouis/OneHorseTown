@@ -19,7 +19,8 @@ enum Textures {
 	GROUND1,
 	GROUND2,
 	HORSE_TEXTURE,
-	BACKGROUND
+	BACKGROUND,
+	TITLE
 };
 
 enum Anchors {
@@ -48,7 +49,7 @@ inline namespace factory
 
         auto pGfx = get_components< GraphicalComponent >( pScene ).add( eid,
             GraphicalComponent::makeRect( 32, 32, {1, 1, 1}, 1.0, true, 3, pAnimInfo ) );
-        pGfx->texture = PLAYER;
+        pGfx->texture = PLAYER_TEXTURE;
 
         b2BodyDef playerDef;
         playerDef.position = pos;
@@ -57,7 +58,7 @@ inline namespace factory
         playerDef.gravityScale = 2;
 
         auto pFsx = get_components< PhysicalComponent >( pScene ).add( eid,
-            PhysicalComponent::makeRect( 1.6, 3.2, pScene->b2world, playerDef ) );
+            PhysicalComponent::makeRect( 1.6, 3.2, pScene->b2world, playerDef, 1.0, PLAYER, PLATFORM | PLAYER ) );
     }
 
     template< typename T >
@@ -161,6 +162,7 @@ private:
 		odin::load_texture(GROUND2, "Textures/ground2.png");
 		odin::load_texture(PLAYER_TEXTURE, "Textures/CowboySS.png");
 		odin::load_texture(BACKGROUND, "Textures/background.png");
+		odin::load_texture(TITLE, "Textures/title.png");
 		odin::load_texture(HORSE_TEXTURE, "Textures/horse_dense.png");
 	}
 };

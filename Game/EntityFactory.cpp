@@ -170,7 +170,7 @@ void EntityFactory::makePlatform(
 			std::cout << "Entity " << eid << " already exists.\n";
 
 		if (!scene->gfxComponents.add(eid,
-			GraphicalComponent::makeRect(1, 1, { 1,1,1 })))
+			GraphicalComponent::makeRect(32, 32, { 1,1,1 })))
 			std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
 
 		EntityView ntt = EntityView(eid, scene);

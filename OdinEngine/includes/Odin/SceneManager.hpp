@@ -24,6 +24,7 @@ namespace odin
 
         void pushScene( Scene* scene )
         {
+			scene->sceneManager = this;
             pendingScenes.push_back( scene );
         }
 

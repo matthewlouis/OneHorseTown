@@ -408,3 +408,134 @@ inline EntityView LevelScene::fireBullet(Vec2 position, Vec2 velocity, odin::Fac
 
     return EntityView(eid, this);
 }
+
+class TitleScene
+	: public odin::Scene
+{
+public:
+
+	template< typename ValueType >
+	using EntityMap = odin::BinarySearchMap< EntityId, ValueType >;
+
+	EntityMap< Entity >             entities;
+
+	EntityMap< GraphicalComponent > gfxComponents;
+
+	InputManager                    inputManager;
+	std::vector< InputListener >    listeners;
+
+	OHT_DEFINE_COMPONENTS(entities, gfxComponents);
+
+	std::string audioBankName;
+	AudioEngine audioEngine;
+
+	//SDL_Renderer* renderer;
+
+	GLuint program;
+	GLint uMatrix, uColor, uTexture, uFacingDirection,
+		uCurrentFrame, uCurrentAnim, uMaxFrame, uMaxAnim;
+
+	float _scale;
+
+	TitleScene(int width, int height, float scale, std::string audioBank = "")
+		: Scene(width, height)
+		, audioBankName(std::move(audioBank))
+		, _scale(scale)
+		, program(load_shaders("Shaders/vertexAnim.glsl", "Shaders/fragmentShader.glsl"))
+		, uMatrix(glGetUniformLocation(program, "uMatrix"))
+		, uColor(glGetUniformLocation(program, "uColor"))
+		, uTexture(glGetUniformLocation(program, "uTexture"))
+		, uFacingDirection(glGetUniformLocation(program, "uFacingDirection"))
+		, uCurrentFrame(glGetUniformLocation(program, "uCurrentFrame"))
+		, uCurrentAnim(glGetUniformLocation(program, "uCurrentAnim"))
+		, uMaxFrame(glGetUniformLocation(program, "uMaxFrames"))
+		, uMaxAnim(glGetUniformLocation(program, "uTotalAnim"))
+	{
+	}
+
+	void init(unsigned ticks)
+	{
+		Scene::init(ticks);
+
+		auto background = gfxComponents.add(
+			EntityId(0), GraphicalComponent::makeRect(width, height));
+		background->texture = 8;
+
+		if (audioBankName != "")
+		{
+			audioEngine.loadBank(audioBankName + ".bank",
+				FMOD_STUDIO_LOAD_BANK_NORMAL);
+			audioEngine.loadBank(audioBankName + ".strings.bank",
+				FMOD_STUDIO_LOAD_BANK_NORMAL);
+		}
+	}
+
+	void exit(unsigned ticks)
+	{
+		Scene::exit(ticks);
+
+		if (audioBankName != "")
+		{
+			audioEngine.unloadBank(audioBankName + ".bank");
+			audioEngine.unloadBank(audioBankName + ".strings.bank");
+		}
+	}
+
+	void update(unsigned ticks)
+	{
+		Scene::update(ticks);
+
+		inputManager.pollEvents();
+		for (auto& lstn : listeners)
+			lstn(inputManager);
+
+		//audioEngine.update();
+
+		float timeStep = Scene::ticksDiff / 1000.f;
+
+	}
+
+	void draw()
+	{
+		using namespace glm;
+		Scene::draw();
+
+		float zoom = 1.0f / SCALE;
+		float aspect = width / (float)height;
+		const mat4 base = scale({}, vec3(zoom, zoom * aspect, 1));
+
+		glUseProgram(program);
+		for (auto x : gfxComponents)
+		{
+			Entity& ntt = entities[x.key];
+			auto& gfx = x.value;
+
+			mat4 mtx = translate(base, vec3(ntt.position.glmvec2, 0));
+			mtx = rotate(mtx, ntt.rotation, vec3(0, 0, 1));
+
+			gfx.incrementFrame();
+
+			glUniform(uMatrix, mtx);
+			glUniform(uColor, gfx.color);
+			glUniform(uTexture, gfx.texture);
+			glUniform(uFacingDirection, gfx.direction);
+			glUniform(uCurrentFrame, gfx.currentFrame);
+			glUniform(uCurrentAnim, gfx.animState);
+			glUniform(uMaxFrame, gfx.maxFrames);
+			glUniform(uMaxAnim, gfx.totalAnim);
+
+			glBindVertexArray(gfx.vertexArray);
+			glDrawArrays(GL_TRIANGLES, 0, gfx.count);
+		}
+	}
+
+	void add(EntityId eid, GraphicalComponent gfx)
+	{
+		gfxComponents.add(eid, std::move(gfx));
+	}
+
+	void add(InputListener lstn)
+	{
+		listeners.push_back(std::move(lstn));
+	}
+};
