@@ -3,10 +3,10 @@
 
 #include <Odin/Scene.h>
 #include <Odin/AudioEngine.h>
-#include <Odin/Entity.hpp>
 #include <Odin/TextureManager.hpp>
 
 #include "Constants.h"
+#include "EntityFactory.h"
 
 #include <tuple>
 
@@ -20,13 +20,6 @@ using odin::ComponentType;
 using odin::AudioEngine;
 
 struct EntityView;
-
-enum EntityTypes {
-	PLAYER = 1 << 0,
-	HORSE = 1 << 1,
-	PLATFORM = 1 << 2,
-	BULLET = 1 << 3
-};
 
 
 // Defines a function which returns the component map for the 
@@ -421,10 +414,14 @@ public:
 
 	EntityMap< GraphicalComponent > gfxComponents;
 
+	b2ThreadPool                    b2thd;
+	b2World                         b2world = { { 0.f, -9.81f }, &b2thd };
+	EntityMap< PhysicalComponent >  fsxComponents;
+
 	InputManager                    inputManager;
 	std::vector< InputListener >    listeners;
 
-	OHT_DEFINE_COMPONENTS(entities, gfxComponents);
+	OHT_DEFINE_COMPONENTS(entities, gfxComponents, fsxComponents);
 
 	std::string audioBankName;
 	AudioEngine audioEngine;
@@ -435,12 +432,9 @@ public:
 	GLint uMatrix, uColor, uTexture, uFacingDirection,
 		uCurrentFrame, uCurrentAnim, uMaxFrame, uMaxAnim;
 
-	float _scale;
-
-	TitleScene(int width, int height, float scale, std::string audioBank = "")
+	TitleScene(int width, int height, std::string audioBank = "")
 		: Scene(width, height)
 		, audioBankName(std::move(audioBank))
-		, _scale(scale)
 		, program(load_shaders("Shaders/vertexAnim.glsl", "Shaders/fragmentShader.glsl"))
 		, uMatrix(glGetUniformLocation(program, "uMatrix"))
 		, uColor(glGetUniformLocation(program, "uColor"))
@@ -457,9 +451,21 @@ public:
 	{
 		Scene::init(ticks);
 
+		odin::load_texture(TITLE, "Textures/title.png");
+		odin::load_texture(PRESS_BUTTON, "Textures/pressbutton.png");
+
 		auto background = gfxComponents.add(
 			EntityId(0), GraphicalComponent::makeRect(width, height));
-		background->texture = 8;
+		background->texture = TITLE;
+		
+		EntityId pEid = EntityId(1);
+		auto prompt = gfxComponents.add(pEid, GraphicalComponent::makeRect(75, 10));
+		prompt->texture = PRESS_BUTTON;
+
+		listeners.push_back([this](const InputManager& inmn) {
+			if (inmn.wasKeyPressed(SDL_CONTROLLER_BUTTON_START) || inmn.wasKeyPressed(SDLK_RETURN))
+				this->expired = true;
+		});
 
 		if (audioBankName != "")
 		{
@@ -490,8 +496,6 @@ public:
 			lstn(inputManager);
 
 		//audioEngine.update();
-
-		float timeStep = Scene::ticksDiff / 1000.f;
 
 	}
 
@@ -532,6 +536,11 @@ public:
 	void add(EntityId eid, GraphicalComponent gfx)
 	{
 		gfxComponents.add(eid, std::move(gfx));
+	}
+
+	void add(EntityId eid, PhysicalComponent fsx)
+	{
+		fsxComponents.add(eid, std::move(fsx));
 	}
 
 	void add(InputListener lstn)

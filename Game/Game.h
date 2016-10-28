@@ -44,8 +44,8 @@ public:
 		//set up renderer for drawing through SDL
 		//renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-        //sceneManager.pushScene( new TestScene( _width / PIXEL_SIZE, _height / PIXEL_SIZE, SCALE ) );
-		sceneManager.pushScene(new TitleScene(_width / PIXEL_SIZE, _height / PIXEL_SIZE, SCALE));
+        sceneManager.pushScene( new TestScene( _width / PIXEL_SIZE, _height / PIXEL_SIZE, SCALE ) );
+		sceneManager.pushScene(new TitleScene(_width / PIXEL_SIZE, _height / PIXEL_SIZE ));
         //sceneManager.pushScene( new TestScene( _width, _height, SCALE * PIXEL_SIZE ) );
 	}
 

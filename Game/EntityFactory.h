@@ -2,7 +2,7 @@
 
 #include <Odin/Scene.h>
 #include <Odin/TextureManager.hpp>
-#include "Scenes.hpp"
+#include <Odin/Entity.hpp>
 
 using odin::Entity;
 using odin::EntityId;
@@ -20,7 +20,8 @@ enum Textures {
 	GROUND2,
 	HORSE_TEXTURE,
 	BACKGROUND,
-	TITLE
+	TITLE,
+	PRESS_BUTTON
 };
 
 enum Anchors {
@@ -35,6 +36,13 @@ enum Anchors {
 
 };
 
+
+enum EntityTypes {
+	PLAYER = 1 << 0,
+	HORSE = 1 << 1,
+	PLATFORM = 1 << 2,
+	BULLET = 1 << 3
+};
 
 namespace odin
 {
@@ -78,6 +86,56 @@ inline namespace factory
             PhysicalComponent::makeRect( 4.4, 3.6, pScene->b2world, horseDef, 1.0, HORSE, PLATFORM ) );
     }
 
+	template< typename T >
+	void make_platform(T* pScene, const char(&id)[7], int length, Vec2 offset = { 0, 0 }, Textures text = GROUND1, Anchors anchor = CENTRE)
+	{
+		Vec2 start;
+
+		float x = 0, y = 0;
+
+		switch (anchor)
+		{
+		case CENTRE:
+			x -= length / 2.0;
+			start = { x, 0 };
+			break;
+		default:
+			break;
+		}
+
+		Vec2 pos = start + offset;
+
+		EntityId eid;
+		uint16 i;
+		for (i = 0; i < length; i++)
+		{
+			eid = { id, i };
+			if (!pScene->entities.add(eid, Entity(pos, 0)))
+				std::cout << "Entity " << eid << " already exists.\n";
+
+			if (!pScene->gfxComponents.add(eid,
+				GraphicalComponent::makeRect(16, 16, { 1,1,1 })))
+				std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
+
+			EntityView ntt = EntityView(eid, pScene);
+			ntt.gfxComponent()->texture = GROUND1;
+
+			//makeRect(scene, { id, i }, { 1, 1 }, pos, 0, { 1,1,1 }, GROUND1);
+			pos.x++;
+		}
+		float colliderPos = length / 2.0;
+		offset.x += colliderPos;
+		b2BodyDef bodyDef;
+		bodyDef.position = start + offset;
+		bodyDef.angle = 0;
+		bodyDef.type = b2_staticBody;
+
+		
+		if (!pScene->fsxComponents.add({ id, i },
+		PhysicalComponent::makeRect(length, 1, pScene->b2world, bodyDef, 1.0, PLATFORM, HORSE | PLAYER)))
+		std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
+		
+	}
 }
 }
 
@@ -97,6 +155,7 @@ public:
 		return &instance;
 	}
 
+	/*
 	EntityView makePlayer(
 		LevelScene*	scene,
 		EntityId    eid,
@@ -150,20 +209,12 @@ public:
 		Vec2		offset = { 0, 0 },
 		Anchors		anchor = CENTRE
 	);
-	
+	*/
 private:
 
 	// Load all of the textures
 	EntityFactory() {
 		odin::load_texture< GLubyte[4] >(NULL_TEXTURE, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF });
-		odin::load_texture(CRATE1, "Textures/crate.png");
-		odin::load_texture(CRATE2, "Textures/crate2.png");
-		odin::load_texture(GROUND1, "Textures/ground.png");
-		odin::load_texture(GROUND2, "Textures/ground2.png");
-		odin::load_texture(PLAYER_TEXTURE, "Textures/CowboySS.png");
-		odin::load_texture(BACKGROUND, "Textures/background.png");
-		odin::load_texture(TITLE, "Textures/title.png");
-		odin::load_texture(HORSE_TEXTURE, "Textures/horse_dense.png");
 	}
 };
 
