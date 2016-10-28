@@ -157,6 +157,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="includes\Odin\Camera.cpp" />
+    <ClCompile Include="includes\Odin\SDLAudio.c" />
     <ClCompile Include="includes\Odin\AudioEngine.cpp" />
     <ClCompile Include="includes\Odin\Errors.cpp" />
     <ClCompile Include="includes\Box2D\Collision\b2BroadPhase.cpp" />
@@ -212,6 +214,8 @@
     <ClCompile Include="includes\Odin\TextureManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="includes\Odin\Camera.h" />
+    <ClInclude Include="includes\Odin\SDLAudio.h" />
     <ClInclude Include="includes\Odin\AudioEngine.h" />
     <ClInclude Include="includes\Odin\Errors.h" />
     <ClInclude Include="includes\Box2D\Box2D.h" />
@@ -277,6 +281,7 @@
     <ClInclude Include="includes\Odin\SceneManager.hpp" />
     <ClInclude Include="includes\Odin\template_helper.hpp" />
     <ClInclude Include="includes\Odin\TextureManager.hpp" />
+    <ClInclude Include="includes\Odin\ThreadedAudio.h" />
     <ClInclude Include="includes\Odin\Util.h" />
     <ClInclude Include="includes\SDL\begin_code.h" />
     <ClInclude Include="includes\SDL\close_code.h" />

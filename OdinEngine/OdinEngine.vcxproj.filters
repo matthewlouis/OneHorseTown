@@ -54,6 +54,8 @@
     <ClCompile Include="includes\Odin\Errors.cpp" />
     <ClCompile Include="includes\Odin\Scene.cpp" />
     <ClCompile Include="includes\Odin\TextureManager.cpp" />
+    <ClCompile Include="includes\Odin\SDLAudio.c" />
+    <ClCompile Include="includes\Odin\Camera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes\Box2D\Box2D.h" />
@@ -193,6 +195,9 @@
     <ClInclude Include="includes\Odin\Scene.h" />
     <ClInclude Include="includes\Odin\TextureManager.hpp" />
     <ClInclude Include="includes\SDL\SDL_image.h" />
+    <ClInclude Include="includes\Odin\SDLAudio.h" />
+    <ClInclude Include="includes\Odin\ThreadedAudio.h" />
+    <ClInclude Include="includes\Odin\Camera.h" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="OdinEngine.natvis" />
