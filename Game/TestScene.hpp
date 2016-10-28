@@ -2,8 +2,8 @@
 
 #include <Odin/SceneManager.hpp>
 #include <Odin/TextureManager.hpp>
-#include "EntityFactory.h"
 
+#include "EntityFactory.h"
 #include "Scenes.hpp"
 
 using odin::GraphicalComponent;
@@ -32,6 +32,12 @@ public:
 	void init( unsigned ticks )
     {
         LevelScene::init( ticks );
+
+		odin::load_texture(GROUND1, "Textures/ground.png");
+		odin::load_texture(GROUND2, "Textures/ground2.png");
+		odin::load_texture(PLAYER_TEXTURE, "Textures/CowboySS.png");
+		odin::load_texture(BACKGROUND, "Textures/background.png");
+		odin::load_texture(HORSE_TEXTURE, "Textures/horse_dense.png");
 
 		auto background = gfxComponents.add(
 			EntityId(0), GraphicalComponent::makeRect( width, height ));
@@ -73,6 +79,9 @@ public:
 		//factory->makeHorse(this, "horse");
         odin::make_horse( this, "horse", {0.0f, 0.0f} );
 
+		odin::make_platform(this, "plat01", 1, { 0,0 });
+
+		/*
 		factory->makePlatform(this, "plat1", 3, {0, -3}); // Lower Middle
 		factory->makePlatform(this, "plat2", 6, { 0.5, 3 }); // Upper middle
 		
@@ -84,7 +93,7 @@ public:
 		
 		factory->makePlatform(this, "plat7", 2, { -3, -5.5 }); // Lower Left
 		factory->makePlatform(this, "plat8", 2, { 3, -5.5 }); // Lower Right
-		
+		*/
 
 		//factory->makeRect(this, "box", { 1,1 }, { 1,1 }, 0, { 1,1,1 });
 
