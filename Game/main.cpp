@@ -5,6 +5,9 @@
 
 #include "Game.h"
 
+//#include "Allocators.hpp"
+//#include "ContextAllocator.hpp"
+
 SDL_Window* create_window( const char* title, int width, int height )
 {
 	//previously we were not initting all of the subsystems.
@@ -58,8 +61,59 @@ SDL_Window* create_window( const char* title, int width, int height )
 template< typename K, typename V >
 using Dict = odin::BinarySearchMap< K, V >;
 
+//VirtualAllocator<
+//    ThresholdAllocator< 4,
+//        BitsetAllocator< 1024 * 2, 4 >,
+//        ThresholdAllocator< 128,
+//            BitsetAllocator< 1024 * 32, 8 >,
+//            Mallocator
+//        >
+//    >
+//> pool;
+
+//constexpr size_t POOL_SIZE = sizeof( pool );
+
 int main( int argc, char** argv )
 {
+    //BitsetAllocator< 64 > pool;
+
+    /*pool.allocate( 1 );
+    Blk p1 = pool.allocate( 2 );
+    Blk p11 = pool.allocate( 3 );
+    pool.allocate( 1 );
+
+    auto aa = context_alloc( double )( -0 );
+
+    context_allocator::push( pool );
+
+    auto bb = context_alloc( int )( 3 );
+    auto cc = context_alloc_n( char, 7 ){ "abcd" };
+
+    context_dealloc( cc );
+    context_dealloc( bb );
+
+    context_allocator::pop();
+
+    context_dealloc( aa );
+
+    context_allocator::push( nullptr );
+
+    context_allocator::pop();
+
+    pool.deallocate( p1 );
+
+    Blk p2 = pool.allocate( sizeof( float ) );
+    Blk p3 = pool.allocate( 3 );
+
+    int* p4 = new( p2.ptr ) int( 1 );
+
+    auto p5 = ALLOC( pool, long long )( ~0 );
+    auto p6 = ALLOC_N( pool, short, 55 ){ 1, 2, 3 };
+
+    pool.deallocate( p6 );
+    pool.deallocate( p4 );
+    pool.allocate( 3 );*/
+
     SDL_Window* sdl_window = create_window( "One Horse Town", WIDTH, HEIGHT );
 
     Game game( WIDTH, HEIGHT, sdl_window );

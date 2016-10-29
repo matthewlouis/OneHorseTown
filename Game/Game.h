@@ -68,12 +68,18 @@ public:
         glClear( GL_COLOR_BUFFER_BIT );// | GL_DEPTH_BUFFER_BIT );
 
         if ( Scene* top = sceneManager.topScene() )
+        {
+            //glReadBuffer( top->framebuffer.frame );
+            //glDrawBuffer( 0 );
+
+            //glBlitFramebuffer(
             glBlitNamedFramebuffer(
                 top->framebuffer.frame, 0,
                 0, 0, top->width, top->height,
                 0, 0, _width, _height,
                 GL_COLOR_BUFFER_BIT,// | GL_DEPTH_BUFFER_BIT,
                 GL_NEAREST );
+        }
 
         // Cap framerate at 60fps
         unsigned frameEnd = SDL_GetTicks();

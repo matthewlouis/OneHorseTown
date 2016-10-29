@@ -5,6 +5,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EntityFactory.cpp" />
+    <ClCompile Include="ContextAllocator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Constants.h">
@@ -16,6 +17,8 @@
     <ClInclude Include="TestScene.hpp" />
     <ClInclude Include="EntityFactory.h" />
     <ClInclude Include="Scenes.hpp" />
+    <ClInclude Include="ContextAllocator.hpp" />
+    <ClInclude Include="Allocators.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Game.rc" />

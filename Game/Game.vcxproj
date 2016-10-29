@@ -129,11 +129,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ContextAllocator.cpp" />
     <ClCompile Include="EntityFactory.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Allocators.hpp" />
     <ClInclude Include="Constants.h" />
+    <ClInclude Include="ContextAllocator.hpp" />
     <ClInclude Include="EntityFactory.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Scenes.hpp" />
