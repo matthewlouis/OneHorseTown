@@ -47,6 +47,9 @@ namespace odin {
 	//Audio Engine implementation (static global pointer)
 	Implementation* _sgpImplementation = nullptr;
 
+	//simple boolean value to mute audio
+	bool AudioEngine::_mute = false;
+
 	void AudioEngine::init() {
 		_sgpImplementation = new Implementation;
 	}
@@ -294,6 +297,22 @@ namespace odin {
 			return true;
 		}
 		return false;
+	}
+
+	void AudioEngine::toggleMute()
+	{
+		_mute = !_mute;
+
+		//get reference to master bus
+		FMOD::Studio::Bus * masterBus;
+		_sgpImplementation->mpStudioSystem->getBus("bus:/", &masterBus);
+
+		masterBus->setMute(_mute);
+	}
+
+	bool AudioEngine::getMute() 
+	{
+		return _mute;
 	}
 
 	//The following handles FMOD event parameters

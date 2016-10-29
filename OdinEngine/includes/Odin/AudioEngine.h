@@ -68,9 +68,16 @@ namespace odin {
 		bool isChannelPlaying(int nChannelId) const;
 		bool isEventPlaying(const std::string& strEventName) const;
 
+		//prevent future audio from being played
+		void toggleMute();
+		static bool getMute();
+
 		//Utility methods
 		float dbToVolume(float db); //db to volume conversion
 		float volumeTodB(float volume); //volume to db conversion
 		FMOD_VECTOR vectorToFmod(const glm::vec3& vPosition); //convert glm vector to FMOD vector
+
+	private:
+		static bool _mute;
 	};
 }

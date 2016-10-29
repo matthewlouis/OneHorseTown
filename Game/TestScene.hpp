@@ -2,8 +2,8 @@
 
 #include <Odin/SceneManager.hpp>
 #include <Odin/TextureManager.hpp>
-#include "EntityFactory.h"
 
+#include "EntityFactory.h"
 #include "Scenes.hpp"
 
 using odin::GraphicalComponent;
@@ -33,6 +33,12 @@ public:
     {
         LevelScene::init( ticks );
 
+		odin::load_texture(GROUND1, "Textures/ground.png");
+		odin::load_texture(GROUND2, "Textures/ground2.png");
+		odin::load_texture(PLAYER_TEXTURE, "Textures/CowboySS.png");
+		odin::load_texture(BACKGROUND, "Textures/background.png");
+		odin::load_texture(HORSE_TEXTURE, "Textures/horse_dense.png");
+
 		auto background = gfxComponents.add(
 			EntityId(0), GraphicalComponent::makeRect( width, height ));
 		background->texture = BACKGROUND;
@@ -41,6 +47,28 @@ public:
             if ( inmn.wasKeyPressed( SDLK_BACKSPACE ) )
                 this->expired = true;
         } );
+
+		listeners.push_back([this](const InputManager& inmn) {
+			if (inmn.wasKeyPressed(SDLK_m))
+				audioEngine.toggleMute();
+		});
+
+		listeners.push_back([this](const InputManager& inmn) {
+			const float CAMERA_SPEED = 2.0f;
+			const float SCALE_SPEED = 0.25f;
+			if (inmn.wasKeyPressed(SDLK_e))
+				camera.setScale(camera.getScale() + SCALE_SPEED);
+			if (inmn.wasKeyPressed(SDLK_q))
+				camera.setScale(camera.getScale() - SCALE_SPEED);
+			if (inmn.wasKeyPressed(SDLK_w))
+				camera.setPosition(camera.getPosition() + glm::vec2(0.0, CAMERA_SPEED));
+			if (inmn.wasKeyPressed(SDLK_a))
+				camera.setPosition(camera.getPosition() + glm::vec2(-CAMERA_SPEED, 0.0f));
+			if (inmn.wasKeyPressed(SDLK_s))
+				camera.setPosition(camera.getPosition() + glm::vec2(0.0, -CAMERA_SPEED));
+			if (inmn.wasKeyPressed(SDLK_d))
+				camera.setPosition(camera.getPosition() + glm::vec2(CAMERA_SPEED, 0.0f));
+		});
 
         //factory->makePlayer( this, {"player", 0} );
         odin::make_player( this, {"player", 0}, {0, 5} );
@@ -51,6 +79,9 @@ public:
 		//factory->makeHorse(this, "horse");
         odin::make_horse( this, "horse", {0.0f, 0.0f} );
 
+		odin::make_platform(this, "plat01", 1, { 0,0 });
+
+		/*
 		factory->makePlatform(this, "plat1", 3, {0, -3}); // Lower Middle
 		factory->makePlatform(this, "plat2", 6, { 0.5, 3 }); // Upper middle
 		
@@ -62,7 +93,7 @@ public:
 		
 		factory->makePlatform(this, "plat7", 2, { -3, -5.5 }); // Lower Left
 		factory->makePlatform(this, "plat8", 2, { 3, -5.5 }); // Lower Right
-		
+		*/
 
 		//factory->makeRect(this, "box", { 1,1 }, { 1,1 }, 0, { 1,1,1 });
 
@@ -103,6 +134,7 @@ public:
 		pAudioEngine->loadEvent("event:/Desperado/Shoot");
 
 		pAudioEngine->playEvent("event:/Music/EnergeticTheme");
+        pAudioEngine->toggleMute(); //mute audio
 	}
 
 
