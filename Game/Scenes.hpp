@@ -440,6 +440,13 @@ public:
 
 	//SDL_Renderer* renderer;
 
+	EntityId promptID;
+
+	// Variables for blinking animation
+	unsigned OFF_TIME = 40, ON_TIME = 55;
+	unsigned onFrame = 0, offFrame = 0;
+	bool promptOn = true;
+
 	GLuint program;
 	GLint uMatrix, uColor, uTexture, uFacingDirection,
 		uCurrentFrame, uCurrentAnim, uMaxFrame, uMaxAnim;
@@ -470,9 +477,13 @@ public:
 			EntityId(0), GraphicalComponent::makeRect(width, height));
 		background->texture = TITLE;
 		
-		EntityId pEid = EntityId(1);
-		auto prompt = gfxComponents.add(pEid, GraphicalComponent::makeRect(75, 10));
+		promptID = EntityId(1);
+		auto prompt = gfxComponents.add(promptID, GraphicalComponent::makeRect(75, 10));
 		prompt->texture = PRESS_BUTTON;
+
+		Vec2 pos = { 87, -30 };
+		if (!entities.add(promptID, Entity(pos, 0)))
+		   std::cout << "Entity " << promptID << " already exists.\n";
 
 		listeners.push_back([this](const InputManager& inmn) {
 			if (inmn.wasKeyPressed(SDL_CONTROLLER_BUTTON_START) || inmn.wasKeyPressed(SDLK_RETURN))
@@ -519,6 +530,22 @@ public:
 		float zoom = 1.0f / SCALE;
 		float aspect = width / (float)height;
 		const mat4 base = scale({}, vec3(zoom, zoom * aspect, 1));
+
+		if (promptOn) {
+			++onFrame;
+			if (onFrame > ON_TIME) {
+				gfxComponents[promptID].color.w = 0;
+				promptOn = false;
+				onFrame = 0;
+			}
+		}else {
+			++offFrame;
+			if (offFrame > OFF_TIME) {
+				gfxComponents[promptID].color.w = 1;
+				promptOn = true;
+				offFrame = 0;
+			}
+		}
 
 		glUseProgram(program);
 		for (auto x : gfxComponents)
