@@ -67,8 +67,6 @@ public:
     std::string                     audioBankName;
     AudioEngine*                    pAudioEngine;
 
-    std::string audioBankName;
-
 	odin::Camera camera;
 
     //SDL_Renderer* renderer;
@@ -541,11 +539,8 @@ public:
 		Scene::update(ticks);
 
 		inputManager.pollEvents();
-		for (auto& lstn : listeners)
-			lstn(inputManager);
-
-		//audioEngine.update();
-
+		for ( auto& lstn : listeners )
+			lstn( inputManager );
 	}
 
 	void draw()
@@ -582,16 +577,15 @@ public:
 			mat4 mtx = translate(base, vec3(ntt.position.glmvec2, 0));
 			mtx = rotate(mtx, ntt.rotation, vec3(0, 0, 1));
 
-			gfx.incrementFrame();
-
 			glUniform(uMatrix, mtx);
 			glUniform(uColor, gfx.color);
 			glUniform(uTexture, gfx.texture);
 			glUniform(uFacingDirection, gfx.direction);
-			glUniform(uCurrentFrame, gfx.currentFrame);
-			glUniform(uCurrentAnim, gfx.animState);
-			glUniform(uMaxFrame, gfx.maxFrames);
-			glUniform(uMaxAnim, gfx.totalAnim);
+
+            glUniform( uCurrentAnim, ntt.texAdjust[ 0 ] );
+            glUniform( uCurrentFrame, ntt.texAdjust[ 1 ] );
+            glUniform( uMaxFrame, ntt.texAdjust[ 2 ] );
+            glUniform( uMaxAnim, ntt.texAdjust[ 3 ] );
 
 			glBindVertexArray(gfx.vertexArray);
 			glDrawArrays(GL_TRIANGLES, 0, gfx.count);

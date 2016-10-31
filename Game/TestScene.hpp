@@ -50,7 +50,7 @@ public:
 
 		listeners.push_back([this](const InputManager& inmn) {
 			if (inmn.wasKeyPressed(SDLK_m))
-				audioEngine.toggleMute();
+				pAudioEngine->toggleMute();
 		});
 
 		listeners.push_back([this](const InputManager& inmn) {

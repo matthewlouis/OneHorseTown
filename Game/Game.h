@@ -63,17 +63,30 @@ public:
         audioEngine.update();
 
 
-            glBindFramebuffer( GL_FRAMEBUFFER, 0 );
-            glViewport( 0, 0, _width, _height );
+        glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+        glViewport( 0, 0, _width, _height );
         glClear( GL_COLOR_BUFFER_BIT );// | GL_DEPTH_BUFFER_BIT );
 
         if ( Scene* top = sceneManager.topScene() )
-            glBlitNamedFramebuffer(
-                top->framebuffer.frame, 0,
+        {
+            glBindFramebuffer( GL_READ_FRAMEBUFFER, top->framebuffer.frame );
+            glReadBuffer( GL_COLOR_ATTACHMENT0 );
+
+            glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
+            GLenum drawbuf = GL_COLOR_ATTACHMENT0;
+            glDrawBuffers( 1, &drawbuf );
+
+            //glReadBuffer( top->framebuffer.frame );
+            //glDrawBuffer( 0 );
+
+            glBlitFramebuffer(
+            //glBlitNamedFramebuffer(
+            //    top->framebuffer.frame, 0,
                 0, 0, top->width, top->height,
                 0, 0, _width, _height,
                 GL_COLOR_BUFFER_BIT,// | GL_DEPTH_BUFFER_BIT,
                 GL_NEAREST );
+        }
 
         // Cap framerate at 60fps
         unsigned frameEnd = SDL_GetTicks();
