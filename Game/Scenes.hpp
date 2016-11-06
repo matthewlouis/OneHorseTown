@@ -163,11 +163,11 @@ public:
 			{
 			case odin::AnimationType::FADEOUT:
 				if (x.value.currentFrame == x.value.maxFrames) {
-					// TODO: Remove components and entity
+					gfxComponents.remove(x.key);
+					animComponents.remove(x.key);
 				}
 				else {
-					auto c = gfxComponents[x.key].color;
-					gfxComponents[x.key].color = { c.x, c.y, c.z, x.value.currentFrame / x.value.maxFrames };
+					gfxComponents[x.key].color = { 1,1,1, (float)x.value.currentFrame / (float)x.value.maxFrames };
 				}
 			default:
 				break;
@@ -433,7 +433,8 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::FacingDirection di
 	if (!gfxComponents.add(eid, GraphicalComponent::makeRect(length, 2.f)))
 		std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
 
-	if (!animComponents.add(eid, AnimatorComponent({ 3, 10, 1 }, odin::AnimationType::FADEOUT)))
+	// WHAT SHOULD THESE VALUES BE?
+	if (!animComponents.add(eid, AnimatorComponent({ 1, 10, 3 }, odin::AnimationType::FADEOUT)))
 		std::cout << "Entity " << eid << " already has an AnimatorComponent.\n";
 
 
