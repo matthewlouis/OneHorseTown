@@ -59,7 +59,7 @@ inline namespace factory
             GraphicalComponent::makeRect( 32, 32 ) );
         pGfx->texture = PLAYER;
 
-        get_components< AnimatorComponent >( pScene ).add( eid, { 1, 10, 3 } );
+        get_components< AnimatorComponent >( pScene ).add( eid, { 1, 10, 3 });
 
         b2BodyDef playerDef;
         playerDef.position = pos;

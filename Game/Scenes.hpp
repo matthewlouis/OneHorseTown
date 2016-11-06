@@ -153,12 +153,25 @@ public:
         for ( auto x : animComponents )
         {
             x.value.incrementFrame();
-            auto& texAdjust = entities[ x.key ].texAdjust;
+			auto& texAdjust = entities[x.key].texAdjust;
 
-            texAdjust[ 0 ] = x.value.animState;
-            texAdjust[ 1 ] = x.value.currentFrame;
-            texAdjust[ 2 ] = x.value.maxFrames;
-            texAdjust[ 3 ] = x.value.totalAnim;
+			texAdjust[0] = x.value.animState;
+			texAdjust[1] = x.value.currentFrame;
+			texAdjust[2] = x.value.maxFrames;
+			texAdjust[3] = x.value.totalAnim;
+			switch (x.value.type)
+			{
+			case odin::AnimationType::FADEOUT:
+				if (x.value.currentFrame == x.value.maxFrames) {
+					// TODO: Remove components and entity
+				}
+				else {
+					auto c = gfxComponents[x.key].color;
+					gfxComponents[x.key].color = { c.x, c.y, c.z, x.value.currentFrame / x.value.maxFrames };
+				}
+			default:
+				break;
+			}
         }
     }
 
@@ -219,7 +232,7 @@ public:
 
     // Using bullet start position, the velocity  direction, and default facing direction.
 
-    EntityView fireBullet( Vec2 position, Vec2 velocity, odin::FacingDirection direction );
+    EntityView fireBullet( Vec2 position, odin::FacingDirection direction );
 };
 
 struct EntityView
@@ -361,7 +374,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     // Handle Shoot input on button B
     if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B))
     {
-        fireBullet({body.GetPosition().x,body.GetPosition().y}, aimDir, gfx.direction);
+        fireBullet(entities[ eid ].position, gfx.direction);
     }
     if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_B))
     {
@@ -384,8 +397,12 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     body.SetLinearVelocity(vel);
 }
 
-inline EntityView LevelScene::fireBullet(Vec2 position, Vec2 velocity, odin::FacingDirection direction)
+inline EntityView LevelScene::fireBullet(Vec2 position, odin::FacingDirection direction)
 {
+
+	float rotation = 0;
+	float length = 100;
+
     //for alpha presentation, to simulate energy levels
     //more shots fired == more energy!
     if (energyLevel >= 1.0) {
@@ -397,33 +414,37 @@ inline EntityView LevelScene::fireBullet(Vec2 position, Vec2 velocity, odin::Fac
     pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", energyLevel);
     pAudioEngine->playEvent("event:/Desperado/Shoot");
 
-    double bulletOffset = 0.5;
-    float bulletVelocity = 100;
+	switch (direction) {
+	case odin::LEFT:
+		position.x -= length / 2;
+		break;
+	case odin::RIGHT:
+		position.x += length / 2;
+		break;
+	default:
+		break;
+	}
 
-    // first set facing direction offset for bullet, eventually bullet should have a odin::FacingDirection
-    // correct bullet firing from left side using offset
-    if (direction == odin::LEFT)
-        position.x -= bulletOffset;
+	EntityId eid("bullet", _bulletCount++);
 
-    // ensure a default case for 0 velocity incase joystick is neither held left or right.
-    if (velocity.x == 0 && velocity.y == 0 && direction == odin::LEFT)
-        velocity.x = -1;
+	if (!entities.add(eid, Entity(position, rotation)))
+		std::cout << "Entity " << eid << " already exists.\n";
 
-    if (velocity.x == 0 && velocity.y == 0 && direction == odin::RIGHT)
-    {
-        velocity.x = 1;
-    }
+	if (!gfxComponents.add(eid, GraphicalComponent::makeRect(length, 2.f)))
+		std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
 
-    // get new velocity based on direction and bullet velocity
-    velocity.x *= bulletVelocity;
-    velocity.y *= bulletVelocity;
+	if (!animComponents.add(eid, AnimatorComponent({ 3, 10, 1 }, odin::AnimationType::FADEOUT)))
+		std::cout << "Entity " << eid << " already has an AnimatorComponent.\n";
 
-    EntityId eid("bullet", _bulletCount++);
+
+	/*
+	velocity.x *= speed;
+	velocity.y *= speed;
 
     if (!entities.add(eid, Entity(position, 0)))
         std::cout << "Entity " << eid << " already exists.\n";
 
-    if (!gfxComponents.add(eid, GraphicalComponent::makeRect(.5f, .1f)))
+    if (!gfxComponents.add(eid, GraphicalComponent::makeRect(10.f, 2.f)))
         std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
 
     b2BodyDef bodyDef;
@@ -432,10 +453,11 @@ inline EntityView LevelScene::fireBullet(Vec2 position, Vec2 velocity, odin::Fac
     bodyDef.type = b2_dynamicBody;
     bodyDef.bullet = true;
 
-    if (!fsxComponents.add(eid, PhysicalComponent::makeCircle(.05f, b2world, bodyDef, 0.01f, BULLET, PLAYER)))
+    if (!fsxComponents.add(eid, PhysicalComponent::makeCircle(.05f, b2world, bodyDef, 0.01f, BULLET, 0)))
         std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
-
+	*/
     return EntityView(eid, this);
+
 }
 
 class TitleScene
