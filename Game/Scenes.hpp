@@ -454,13 +454,13 @@ public:
 	b2World                         b2world = { { 0.f, -9.81f }, &b2thd };
 	EntityMap< PhysicalComponent >  fsxComponents;
 
-	InputManager                    inputManager;
+	InputManager*                   pInputManager;
 	std::vector< InputListener >    listeners;
 
-	OHT_DEFINE_COMPONENTS(entities, gfxComponents, fsxComponents);
+	std::string                     audioBankName;
+	AudioEngine*                    pAudioEngine;
 
-	std::string audioBankName;
-	AudioEngine audioEngine;
+	OHT_DEFINE_COMPONENTS(entities, gfxComponents, fsxComponents);
 
 	//SDL_Renderer* renderer;
 
@@ -516,9 +516,9 @@ public:
 
 		if (audioBankName != "")
 		{
-			audioEngine.loadBank(audioBankName + ".bank",
+			pAudioEngine->loadBank(audioBankName + ".bank",
 				FMOD_STUDIO_LOAD_BANK_NORMAL);
-			audioEngine.loadBank(audioBankName + ".strings.bank",
+			pAudioEngine->loadBank(audioBankName + ".strings.bank",
 				FMOD_STUDIO_LOAD_BANK_NORMAL);
 		}
 	}
@@ -529,8 +529,8 @@ public:
 
 		if (audioBankName != "")
 		{
-			audioEngine.unloadBank(audioBankName + ".bank");
-			audioEngine.unloadBank(audioBankName + ".strings.bank");
+			pAudioEngine->unloadBank(audioBankName + ".bank");
+			pAudioEngine->unloadBank(audioBankName + ".strings.bank");
 		}
 	}
 
@@ -538,9 +538,8 @@ public:
 	{
 		Scene::update(ticks);
 
-		inputManager.pollEvents();
 		for ( auto& lstn : listeners )
-			lstn( inputManager );
+			lstn( *pInputManager );
 	}
 
 	void draw()
