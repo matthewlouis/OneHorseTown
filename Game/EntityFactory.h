@@ -14,6 +14,7 @@ using odin::Scene;
 enum Textures {
 	NULL_TEXTURE,
 	PLAYER_TEXTURE,
+	ARM_TEXTURE,
 	CRATE1,
 	CRATE2,
 	GROUND1,
@@ -36,12 +37,12 @@ enum Anchors {
 
 };
 
-
 enum EntityTypes {
 	PLAYER = 1 << 0,
 	HORSE = 1 << 1,
 	PLATFORM = 1 << 2,
-	BULLET = 1 << 3
+	BULLET = 1 << 3,
+	PLAYER_ARM = 1 << 4
 };
 
 namespace odin
@@ -53,13 +54,23 @@ inline namespace factory
     template< typename T >
     void make_player( T* pScene, EntityId eid, Vec2 pos )
     {
-        int pAnimInfo[3] = { 1, 10, 3 }; //idle 1 frame, run 10 frame, jump 3 frame
-
         auto pGfx = get_components< GraphicalComponent >( pScene ).add( eid,
             GraphicalComponent::makeRect( 32, 32 ) );
         pGfx->texture = PLAYER;
 
-        get_components< AnimatorComponent >( pScene ).add( eid, { 1, 10, 3 });
+		//add arm
+		auto paGfx = get_components< GraphicalComponent >(pScene).add({ "playes", 0 },
+			GraphicalComponent::makeRect(32, 32));
+		paGfx->texture = ARM_TEXTURE;
+		paGfx->visible = false;
+												//idle 10 frame, run 10 frame, jump 3 frame, shoot 3 frame (one armed, one armless)	
+        get_components< AnimatorComponent >( pScene ).add( eid, { 10, 10, 3, 3, 10, 10, 3, 3 } );
+		
+		//Set up arm
+															//5 x shoot animation at 4 frames per anim
+		auto armAnm = get_components< AnimatorComponent >(pScene).add({"playes", 0}, { 4, 4, 4, 4, 4 });
+		armAnm->play = false;
+		armAnm->loop = false;
 
         b2BodyDef playerDef;
         playerDef.position = pos;
@@ -69,6 +80,17 @@ inline namespace factory
 
         auto pFsx = get_components< PhysicalComponent >( pScene ).add( eid,
             PhysicalComponent::makeRect( 1.6, 3.2, pScene->b2world, playerDef, 1.0, PLAYER, PLATFORM | PLAYER ) );
+
+
+		//arm
+		b2BodyDef armDef;
+		armDef.position = pos;
+		armDef.type = b2_staticBody;
+
+		auto paFsx = get_components< PhysicalComponent >(pScene).add({ "playes", 0 },
+			PhysicalComponent::makeRect(1.6, 3.2, pScene->b2world, armDef, 1.0, PLAYER_ARM, 0));
+
+
     }
 
     template< typename T >
@@ -79,7 +101,7 @@ inline namespace factory
         hGfx->texture = HORSE_TEXTURE;
 
         b2BodyDef horseDef;
-        horseDef.position = pos;
+        horseDef.position = pos; 
         horseDef.fixedRotation = true;
         horseDef.type = b2_dynamicBody;
         horseDef.gravityScale = 2;

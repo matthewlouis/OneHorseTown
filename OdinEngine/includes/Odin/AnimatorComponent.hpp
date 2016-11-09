@@ -12,7 +12,10 @@ namespace odin
 	};
     struct AnimatorComponent
     {
-        static constexpr size_t MAX_ANIMATIONS = 5;
+        static constexpr size_t MAX_ANIMATIONS = 10;
+
+		bool play = true; //play animation
+		bool loop = true; //loop animation
 
 		AnimationType type;
         int animState = 0;
@@ -35,18 +38,27 @@ namespace odin
         //increment current frame to draw
         void incrementFrame() 
         {
-            if ( _frameDelay++ > 3 )
+            if ( play && _frameDelay++ > 3 )
             {
                 ++currentFrame %= animLengths[ animState ];
                 _frameDelay = 0;
+				if (!loop && currentFrame == animLengths[animState] - 1) {
+					play = false; //if not looped, then stop after playing once
+				}
             }
         }
 
         void switchAnimState( int state )
         {
-            animState = state;
-            currentFrame %= animLengths[ state ];
-        }
+			if (animState == state) {
+				currentFrame %= animLengths[state];
+			}
+			else {
+				currentFrame = 0;
+				animState = state;
+			}
+            
+		}
 
     };
 

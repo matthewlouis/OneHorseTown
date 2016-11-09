@@ -195,6 +195,9 @@ public:
             Entity& ntt = entities[ x.key ];
             auto& gfx = x.value;
 
+			if (!gfx.visible)
+				continue;
+
             mat4 mtx = cameraMatrix * translate( base, vec3( ntt.position.glmvec2, 0 ) );
             mtx = rotate( mtx, ntt.rotation, vec3( 0, 0, 1 ) );
 
@@ -301,6 +304,11 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 {
     EntityView ntt = EntityView(eid, this);
 
+	//arm
+	EntityView arm_ntt = EntityView({ "playes", 0 }, this);
+	GraphicalComponent& arm_gfx = *arm_ntt.gfxComponent();
+	AnimatorComponent& arm_anim = *arm_ntt.animComponent();
+
     b2Body& body = *ntt.fsxComponent()->pBody;
     GraphicalComponent& gfx = *ntt.gfxComponent();
     AnimatorComponent& anim = *ntt.animComponent();
@@ -311,10 +319,14 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     float actionRight = mngr.isKeyDown(SDLK_RIGHT) ? 1.f : 0.f;
 
     //adjust facing direction
-    if (actionLeft)
-        gfx.direction = odin::LEFT;
-    if (actionRight)
-        gfx.direction = odin::RIGHT;
+	if (actionLeft) {
+		gfx.direction = odin::LEFT;
+		arm_gfx.direction = odin::LEFT;
+	}
+	if (actionRight) {
+		gfx.direction = odin::RIGHT;
+		arm_gfx.direction = odin::RIGHT;
+	}
 
     Vec2 aimDir = mngr.gamepads.joystickDir( pindex );
     aimDir.y = -aimDir.y;
@@ -322,11 +334,41 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     if ( glm::length( aimDir.glmvec2 ) < 0.25f )
         aimDir = {0, 0};
 
+	//calculate angle of aim using aimDir
+	float aimAngle = atan2(aimDir.y, aimDir.x);
+	odin::Direction8Way aimDirection = odin::calculateDirection8Way(aimAngle);
+
+	//choose the correct arm animation based on direction
+	switch (aimDirection) {
+	case(odin::EAST) :
+	case(odin::WEST) :
+		arm_anim.switchAnimState(2);
+		break;
+	case(odin::NORTH_EAST) :
+	case(odin::NORTH_WEST) :
+		arm_anim.switchAnimState(1);
+		break;
+	case(odin::SOUTH_EAST) :
+	case(odin::SOUTH_WEST) :
+		arm_anim.switchAnimState(3);
+		break;
+	case(odin::NORTH) :
+		arm_anim.switchAnimState(0);
+		break;
+	case(odin::SOUTH) :
+		arm_anim.switchAnimState(4);
+		break;
+	}
+
     //adjust facing direction for joystick
-    if (aimDir.x < 0)
-        gfx.direction = odin::LEFT;
-    if (aimDir.x > 0)
-        gfx.direction = odin::RIGHT;
+	if (aimDir.x < 0) {
+		gfx.direction = odin::LEFT;
+		arm_gfx.direction = odin::LEFT;
+	}
+	if (aimDir.x > 0) {
+		gfx.direction = odin::RIGHT;
+		arm_gfx.direction = odin::RIGHT;
+	}
 
     //b2Fixture* pFixt = body.GetFixtureList();
 
@@ -335,6 +377,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
         //pFixt->SetFriction( 2 );
         vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0f));
         anim.switchAnimState(0); //idle state
+		arm_gfx.visible = false;
     }
     else
     {
@@ -344,7 +387,10 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
         vel.x -= actionLeft * (20 + 1) * (1 / 60.0f);
         vel.x += actionRight * (20 + 1) * (1 / 60.0f);
         vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
-        anim.switchAnimState(1); //running
+
+		anim.switchAnimState(5); //running
+		
+		arm_gfx.visible = true; //show arm when running
     }
 
     if (mngr.wasKeyPressed(SDLK_UP)) {
@@ -355,8 +401,9 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
         vel.y *= 0.6f;
     }
 
-    if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_A))
-        vel.y = 11;
+	if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_A)) {
+		vel.y = 11;
+	}
 
     if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_A) && vel.y > 0)
         vel.y *= 0.6f;
@@ -374,7 +421,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     // Handle Shoot input on button B
     if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B))
     {
-        fireBullet(entities[ eid ].position, gfx.direction);
+		arm_anim.play = true;
     }
     if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_B))
     {
@@ -593,8 +640,12 @@ public:
 		glUseProgram(program);
 		for (auto x : gfxComponents)
 		{
+
 			Entity& ntt = entities[x.key];
 			auto& gfx = x.value;
+
+			if (!gfx.visible)
+				continue;
 
 			mat4 mtx = translate(base, vec3(ntt.position.glmvec2, 0));
 			mtx = rotate(mtx, ntt.rotation, vec3(0, 0, 1));

@@ -20,24 +20,43 @@ public:
 
 	EntityFactory* factory;
 
+	EntityView* players;
+	EntityView* player_arms;
+	int numberPlayers;
+
+	//'table' to store offsets for placing arm - 1 for each animation state
+	Vec2 armOffsets[5];
+
 	float _scale;
 
-	TestScene( int width, int height, float scale )
-		: LevelScene( width, height, "Audio/Banks/MasterBank" )
-        , factory( EntityFactory::instance() )
-		, _scale( scale )
+	TestScene(int width, int height, float scale, int numberPlayers)
+		: LevelScene(width, height, "Audio/Banks/MasterBank")
+		, factory(EntityFactory::instance())
+		, _scale(scale)
 	{
+		players = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
+		player_arms = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
+		this->numberPlayers = numberPlayers;
 	}
 
 	void init( unsigned ticks )
     {
+		//set arm offsets so it renders in correct location
+		armOffsets[0] = Vec2(0.5, 0.9);
+		armOffsets[1] = Vec2(0.6, 0.75);
+		armOffsets[2] = Vec2(0.75, 0.475);
+		armOffsets[3] = Vec2(0.6, 0.275);
+		armOffsets[4] = Vec2(0.25, 0.05);
+
         LevelScene::init( ticks );
 
 		odin::load_texture(GROUND1, "Textures/ground.png");
 		odin::load_texture(GROUND2, "Textures/ground2.png");
 		odin::load_texture(PLAYER_TEXTURE, "Textures/CowboySS.png");
+		odin::load_texture(ARM_TEXTURE, "Textures/ArmSS.png");
 		odin::load_texture(BACKGROUND, "Textures/background.png");
 		odin::load_texture(HORSE_TEXTURE, "Textures/horse_dense.png");
+
 
 		auto background = gfxComponents.add(
 			EntityId(0), GraphicalComponent::makeRect( width, height ));
@@ -75,6 +94,9 @@ public:
         listeners.push_back( [this]( const InputManager& inmn ) {
             return player_input( inmn, {"player", 0}, 0 );
         } );
+		players[0] = EntityView({ "player", 0 }, this);
+		player_arms[0] = EntityView({ "playes", 0 }, this);
+
 
 		//factory->makeHorse(this, "horse");
         odin::make_horse( this, "horse", {0.0f, 0.0f} );
@@ -138,4 +160,21 @@ public:
 	}
 
 
+	void update(unsigned ticks)
+	{
+		//iterate through all the arms and place them relative to the player using offsets
+		for (int i = 0; i < numberPlayers; ++i) {
+			Vec2 armPosition = players[i].fsxComponent()->position();
+			
+			//current state determines the arm offset
+			int currentState = player_arms[i].animComponent()->animState;
+
+			armPosition.y += armOffsets[currentState].y;
+			armPosition.x += players[i].gfxComponent()->direction * armOffsets[currentState].x;
+
+			player_arms[i].fsxComponent()->pBody->SetTransform(armPosition, 0);
+		}
+
+		LevelScene::update(ticks);
+	}
 };

@@ -44,7 +44,9 @@ public:
 		audioEngine.init();
 
         //auto scene = new TestScene( _width, _height, SCALE * PIXEL_SIZE );
-        auto level = new TestScene( _width / PIXEL_SIZE, _height / PIXEL_SIZE, SCALE );
+
+		//note TestScene now takes number of players
+        auto level = new TestScene( _width / PIXEL_SIZE, _height / PIXEL_SIZE, SCALE, 1 ); //1 player
         level->pInputManager = &inputManager;
         level->pAudioEngine = &audioEngine;
 
