@@ -34,7 +34,7 @@ struct b2DistanceProxy
 	/// must remain in scope while the proxy is in use.
 	void Set(const b2Shape* shape, int32 index);
 
-	/// Get the supporting vertex index in the given direction.
+	/// Get the supporting vertex index in the given 
 	int32 GetSupport(const b2Vec2& d) const;
 
 	/// Get the supporting vertex in the given direction.

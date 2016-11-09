@@ -182,6 +182,9 @@ public:
             Entity& ntt = entities[ x.key ];
             auto& gfx = x.value;
 
+			if (!gfx.visible)
+				continue;
+
             mat4 mtx = cameraMatrix * translate( base, vec3( ntt.position.glmvec2, 0 ) );
             mtx = rotate( mtx, ntt.rotation, vec3( 0, 0, 1 ) );
 
@@ -288,6 +291,11 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 {
     EntityView ntt = EntityView(eid, this);
 
+	//arm
+	EntityView arm_ntt = EntityView({ "playes", 0 }, this);
+	GraphicalComponent& arm_gfx = *arm_ntt.gfxComponent();
+	AnimatorComponent& arm_anim = *arm_ntt.animComponent();
+
     b2Body& body = *ntt.fsxComponent()->pBody;
     GraphicalComponent& gfx = *ntt.gfxComponent();
     AnimatorComponent& anim = *ntt.animComponent();
@@ -298,10 +306,14 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     float actionRight = mngr.isKeyDown(SDLK_RIGHT) ? 1.f : 0.f;
 
     //adjust facing direction
-    if (actionLeft)
-        gfx.direction = odin::LEFT;
-    if (actionRight)
-        gfx.direction = odin::RIGHT;
+	if (actionLeft) {
+		gfx.direction = odin::LEFT;
+		arm_gfx.direction = odin::LEFT;
+	}
+	if (actionRight) {
+		gfx.direction = odin::RIGHT;
+		arm_gfx.direction = odin::RIGHT;
+	}
 
     Vec2 aimDir = mngr.gamepads.joystickDir( pindex );
     aimDir.y = -aimDir.y;
@@ -310,10 +322,14 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
         aimDir = {0, 0};
 
     //adjust facing direction for joystick
-    if (aimDir.x < 0)
-        gfx.direction = odin::LEFT;
-    if (aimDir.x > 0)
-        gfx.direction = odin::RIGHT;
+	if (aimDir.x < 0) {
+		gfx.direction = odin::LEFT;
+		arm_gfx.direction = odin::LEFT;
+	}
+	if (aimDir.x > 0) {
+		gfx.direction = odin::RIGHT;
+		arm_gfx.direction = odin::RIGHT;
+	}
 
     //b2Fixture* pFixt = body.GetFixtureList();
 
@@ -570,8 +586,12 @@ public:
 		glUseProgram(program);
 		for (auto x : gfxComponents)
 		{
+
 			Entity& ntt = entities[x.key];
 			auto& gfx = x.value;
+
+			if (!gfx.visible)
+				continue;
 
 			mat4 mtx = translate(base, vec3(ntt.position.glmvec2, 0));
 			mtx = rotate(mtx, ntt.rotation, vec3(0, 0, 1));
