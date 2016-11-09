@@ -158,6 +158,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="includes\Odin\Camera.cpp" />
+    <ClCompile Include="includes\Odin\InputManager.cpp" />
     <ClCompile Include="includes\Odin\SDLAudio.c" />
     <ClCompile Include="includes\Odin\AudioEngine.cpp" />
     <ClCompile Include="includes\Odin\Errors.cpp" />

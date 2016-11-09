@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL/SDL.h>
+#include <glm/glm.hpp>
 
 #include <bitset>
 #include <array>
@@ -12,6 +13,17 @@
 
 namespace odin
 {
+
+	enum Direction8Way {
+		NORTH = 0,
+		NORTH_EAST,
+		EAST,
+		SOUTH_EAST,
+		SOUTH,
+		SOUTH_WEST,
+		WEST,
+		NORTH_WEST
+	};
 
     // Manages gamepads connected to the device. Does not handle its
     // own input detection, merely provides convenient access to the 
@@ -27,7 +39,7 @@ namespace odin
         using PlayerList = std::array< SDL_JoystickID, MAX_PLAYERS >;
 
         using ButtonStates = std::array< std::bitset< SDL_CONTROLLER_BUTTON_MAX >, MAX_PLAYERS >;
-		using AxisStates = std::array< Vec2, MAX_PLAYERS >;
+		using AxisStates = std::array< glm::vec2, MAX_PLAYERS >;
 		
 		ControllerMap controllers; // Maps joystick ids to game controllers.
         PlayerList    players;     // Stores the joystick id of each player.
@@ -146,7 +158,7 @@ namespace odin
 			return currAxis[ idx ].y;
 		}
 
-		Vec2 joystickDir( PlayerIndex idx ) const
+		glm::vec2 joystickDir( PlayerIndex idx ) const
 		{
 			return currAxis[ idx ];
 		}
@@ -290,6 +302,11 @@ namespace odin
     {
     public:
 
+		static const double rad_22_5;
+		static const double rad_67_5;
+		static const double rad_112_5;
+		static const double rad_157_5;
+
         static constexpr size_t NUM_KEYS = sizeof( KEYS ) / sizeof( SDL_Keycode );
 
         std::bitset< NUM_KEYS > _currKeys;
@@ -423,5 +440,26 @@ namespace odin
             return _currKeys[ key_index( key ) ];
         }
     };
+
+	static Direction8Way calculateDirection8Way(float angle) {
+
+		if (angle < InputManager::rad_22_5 && angle >= -InputManager::rad_22_5)
+			return EAST;
+		if (angle < InputManager::rad_67_5 && angle >= InputManager::rad_22_5)
+			return NORTH_EAST;
+		if (angle < InputManager::rad_112_5 && angle >= InputManager::rad_67_5)
+			return NORTH;
+		if (angle < InputManager::rad_157_5 && angle >= InputManager::rad_112_5)
+			return NORTH_WEST;
+		if (angle < -InputManager::rad_22_5 && angle >= -InputManager::rad_67_5)
+			return SOUTH_EAST;
+		if (angle < -InputManager::rad_67_5 && angle >= -InputManager::rad_112_5)
+			return SOUTH;
+		if (angle < -InputManager::rad_112_5 && angle >= -InputManager::rad_157_5)
+			return SOUTH_WEST;
+		                      
+		//else 
+		return WEST;
+	}
 
 } // namespace odin

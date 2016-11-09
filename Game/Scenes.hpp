@@ -321,6 +321,32 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     if ( glm::length( aimDir.glmvec2 ) < 0.25f )
         aimDir = {0, 0};
 
+	//calculate angle of aim
+	float aimAngle = atan2(aimDir.y, aimDir.x);
+	odin::Direction8Way aimDirection = odin::calculateDirection8Way(aimAngle);
+
+	//choose the correct arm
+	switch (aimDirection) {
+	case(odin::EAST) :
+	case(odin::WEST) :
+		arm_anim.switchAnimState(2);
+		break;
+	case(odin::NORTH_EAST) :
+	case(odin::NORTH_WEST) :
+		arm_anim.switchAnimState(1);
+		break;
+	case(odin::SOUTH_EAST) :
+	case(odin::SOUTH_WEST) :
+		arm_anim.switchAnimState(3);
+		break;
+	case(odin::NORTH) :
+		arm_anim.switchAnimState(0);
+		break;
+	case(odin::SOUTH) :
+		arm_anim.switchAnimState(4);
+		break;
+	}
+
     //adjust facing direction for joystick
 	if (aimDir.x < 0) {
 		gfx.direction = odin::LEFT;
@@ -338,6 +364,8 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
         //pFixt->SetFriction( 2 );
         vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0f));
         anim.switchAnimState(0); //idle state
+		arm_gfx.visible = false;
+		arm_anim.switchAnimState(2);
     }
     else
     {
@@ -347,7 +375,8 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
         vel.x -= actionLeft * (20 + 1) * (1 / 60.0f);
         vel.x += actionRight * (20 + 1) * (1 / 60.0f);
         vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
-        anim.switchAnimState(1); //running
+        anim.switchAnimState(5); //running
+		arm_gfx.visible = true;
     }
 
     if (mngr.wasKeyPressed(SDLK_UP)) {

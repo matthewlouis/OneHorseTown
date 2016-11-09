@@ -24,6 +24,9 @@ public:
 	EntityView* player_arms;
 	int numberPlayers;
 
+	//'table' to store offsets for placing arm - 1 for each animation state
+	Vec2 armOffsets[5];
+
 	float _scale;
 
 	TestScene(int width, int height, float scale, int numberPlayers)
@@ -38,6 +41,12 @@ public:
 
 	void init( unsigned ticks )
     {
+		armOffsets[0] = Vec2(0.5, 0.9);
+		armOffsets[1] = Vec2(0.6, 0.75);
+		armOffsets[2] = Vec2(0.75, 0.475);
+		armOffsets[3] = Vec2(0.6, 0.275);
+		armOffsets[4] = Vec2(0.25, 0.05);
+
         LevelScene::init( ticks );
 
 		odin::load_texture(GROUND1, "Textures/ground.png");
@@ -152,8 +161,19 @@ public:
 
 	void update(unsigned ticks)
 	{
-		for (int i = 0; i < numberPlayers; ++i)
-		player_arms[i].fsxComponent()->pBody->SetTransform(players[i].fsxComponent()->position(), 0);
+		for (int i = 0; i < numberPlayers; ++i) {
+			Vec2 armPosition = players[i].fsxComponent()->position();
+			
+			int currentState = player_arms[i].animComponent()->animState;
+
+			armPosition.y += armOffsets[currentState].y;
+			armPosition.x += players[i].gfxComponent()->direction * armOffsets[currentState].x;
+
+			printf("\nArm x: %f y: %f", armPosition.x, armPosition.y);
+
+
+			player_arms[i].fsxComponent()->pBody->SetTransform(armPosition, 0);
+		}
 
 		LevelScene::update(ticks);
 	}
