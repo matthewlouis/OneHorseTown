@@ -67,8 +67,8 @@ inline namespace factory
         get_components< AnimatorComponent >( pScene ).add( eid, { 10, 10, 3, 3, 10, 10, 3, 3 } );
 		
 		//Set up arm
-															//5 x shoot animation at 3 frames per anim
-		auto armAnm = get_components< AnimatorComponent >(pScene).add({"playes", 0}, { 3, 3, 3, 3, 3 });
+															//5 x shoot animation at 4 frames per anim
+		auto armAnm = get_components< AnimatorComponent >(pScene).add({"playes", 0}, { 4, 4, 4, 4, 4 });
 		armAnm->play = false;
 		armAnm->loop = false;
 

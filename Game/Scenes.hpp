@@ -374,7 +374,9 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
         vel.x -= actionLeft * (20 + 1) * (1 / 60.0f);
         vel.x += actionRight * (20 + 1) * (1 / 60.0f);
         vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
-        anim.switchAnimState(5); //running
+
+		anim.switchAnimState(5); //running
+		
 		arm_gfx.visible = true; //show arm when running
     }
 
@@ -386,8 +388,9 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
         vel.y *= 0.6f;
     }
 
-    if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_A))
-        vel.y = 11;
+	if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_A)) {
+		vel.y = 11;
+	}
 
     if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_A) && vel.y > 0)
         vel.y *= 0.6f;

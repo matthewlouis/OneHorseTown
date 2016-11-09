@@ -37,7 +37,7 @@ namespace odin
             {
                 ++currentFrame %= animLengths[ animState ];
                 _frameDelay = 0;
-				if (!loop && currentFrame == 0) {
+				if (!loop && currentFrame == animLengths[animState] - 1) {
 					play = false; //if not looped, then stop after playing once
 				}
             }
@@ -45,9 +45,15 @@ namespace odin
 
         void switchAnimState( int state )
         {
-            animState = state;
-            currentFrame %= animLengths[ state ];
-        }
+			if (animState == state) {
+				currentFrame %= animLengths[state];
+			}
+			else {
+				currentFrame = 0;
+				animState = state;
+			}
+            
+		}
 
     };
 
