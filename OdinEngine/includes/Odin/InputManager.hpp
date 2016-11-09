@@ -302,10 +302,11 @@ namespace odin
     {
     public:
 
-		static const double rad_22_5;
-		static const double rad_67_5;
-		static const double rad_112_5;
-		static const double rad_157_5;
+		//constants to divide the joystick into 8 directions
+		static const double RAD_22_5;
+		static const double RAD_67_5;
+		static const double RAD_112_5;
+		static const double RAD_157_5;
 
         static constexpr size_t NUM_KEYS = sizeof( KEYS ) / sizeof( SDL_Keycode );
 
@@ -441,21 +442,22 @@ namespace odin
         }
     };
 
+	//takes an angle in rads and returns one of 8 directions
 	static Direction8Way calculateDirection8Way(float angle) {
 
-		if (angle < InputManager::rad_22_5 && angle >= -InputManager::rad_22_5)
+		if (angle < InputManager::RAD_22_5 && angle >= -InputManager::RAD_22_5)
 			return EAST;
-		if (angle < InputManager::rad_67_5 && angle >= InputManager::rad_22_5)
+		if (angle < InputManager::RAD_67_5 && angle >= InputManager::RAD_22_5)
 			return NORTH_EAST;
-		if (angle < InputManager::rad_112_5 && angle >= InputManager::rad_67_5)
+		if (angle < InputManager::RAD_112_5 && angle >= InputManager::RAD_67_5)
 			return NORTH;
-		if (angle < InputManager::rad_157_5 && angle >= InputManager::rad_112_5)
+		if (angle < InputManager::RAD_157_5 && angle >= InputManager::RAD_112_5)
 			return NORTH_WEST;
-		if (angle < -InputManager::rad_22_5 && angle >= -InputManager::rad_67_5)
+		if (angle < -InputManager::RAD_22_5 && angle >= -InputManager::RAD_67_5)
 			return SOUTH_EAST;
-		if (angle < -InputManager::rad_67_5 && angle >= -InputManager::rad_112_5)
+		if (angle < -InputManager::RAD_67_5 && angle >= -InputManager::RAD_112_5)
 			return SOUTH;
-		if (angle < -InputManager::rad_112_5 && angle >= -InputManager::rad_157_5)
+		if (angle < -InputManager::RAD_112_5 && angle >= -InputManager::RAD_157_5)
 			return SOUTH_WEST;
 		                      
 		//else 

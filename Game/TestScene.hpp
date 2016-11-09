@@ -41,6 +41,7 @@ public:
 
 	void init( unsigned ticks )
     {
+		//set arm offsets so it renders in correct location
 		armOffsets[0] = Vec2(0.5, 0.9);
 		armOffsets[1] = Vec2(0.6, 0.75);
 		armOffsets[2] = Vec2(0.75, 0.475);
@@ -161,16 +162,15 @@ public:
 
 	void update(unsigned ticks)
 	{
+		//iterate through all the arms and place them relative to the player using offsets
 		for (int i = 0; i < numberPlayers; ++i) {
 			Vec2 armPosition = players[i].fsxComponent()->position();
 			
+			//current state determines the arm offset
 			int currentState = player_arms[i].animComponent()->animState;
 
 			armPosition.y += armOffsets[currentState].y;
 			armPosition.x += players[i].gfxComponent()->direction * armOffsets[currentState].x;
-
-			printf("\nArm x: %f y: %f", armPosition.x, armPosition.y);
-
 
 			player_arms[i].fsxComponent()->pBody->SetTransform(armPosition, 0);
 		}

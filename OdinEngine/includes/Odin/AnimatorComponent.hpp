@@ -37,8 +37,8 @@ namespace odin
             {
                 ++currentFrame %= animLengths[ animState ];
                 _frameDelay = 0;
-				if (!loop) {
-					play = false;
+				if (!loop && currentFrame == 0) {
+					play = false; //if not looped, then stop after playing once
 				}
             }
         }

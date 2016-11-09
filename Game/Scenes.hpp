@@ -321,11 +321,11 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     if ( glm::length( aimDir.glmvec2 ) < 0.25f )
         aimDir = {0, 0};
 
-	//calculate angle of aim
+	//calculate angle of aim using aimDir
 	float aimAngle = atan2(aimDir.y, aimDir.x);
 	odin::Direction8Way aimDirection = odin::calculateDirection8Way(aimAngle);
 
-	//choose the correct arm
+	//choose the correct arm animation based on direction
 	switch (aimDirection) {
 	case(odin::EAST) :
 	case(odin::WEST) :
@@ -365,7 +365,6 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
         vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0f));
         anim.switchAnimState(0); //idle state
 		arm_gfx.visible = false;
-		arm_anim.switchAnimState(2);
     }
     else
     {
@@ -376,7 +375,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
         vel.x += actionRight * (20 + 1) * (1 / 60.0f);
         vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
         anim.switchAnimState(5); //running
-		arm_gfx.visible = true;
+		arm_gfx.visible = true; //show arm when running
     }
 
     if (mngr.wasKeyPressed(SDLK_UP)) {
@@ -406,6 +405,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     // Handle Shoot input on button B
     if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B))
     {
+		arm_anim.play = true;
         fireBullet({body.GetPosition().x,body.GetPosition().y}, aimDir, gfx.direction);
     }
     if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_B))
