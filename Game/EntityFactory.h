@@ -22,7 +22,8 @@ enum Textures {
 	HORSE_TEXTURE,
 	BACKGROUND,
 	TITLE,
-	PRESS_BUTTON
+	PRESS_BUTTON,
+	BULLET_TEXTURE
 };
 
 enum Anchors {

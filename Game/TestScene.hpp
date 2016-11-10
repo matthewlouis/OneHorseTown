@@ -56,6 +56,7 @@ public:
 		odin::load_texture(ARM_TEXTURE, "Textures/ArmSS.png");
 		odin::load_texture(BACKGROUND, "Textures/background.png");
 		odin::load_texture(HORSE_TEXTURE, "Textures/horse_dense.png");
+		odin::load_texture(BULLET_TEXTURE, "Textures/bullet.png");
 
 
 		auto background = gfxComponents.add(

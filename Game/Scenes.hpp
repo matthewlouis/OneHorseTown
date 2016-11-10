@@ -441,8 +441,13 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     }
 	
     //for testing audio
-    if (mngr.wasKeyPressed(SDLK_SPACE))
+	if (mngr.wasKeyPressed(SDLK_SPACE)) {
 		playSound("Audio/FX/Shot.wav", 127);
+		arm_anim.play = true;
+		arm_anim.currentFrame = 1;
+		
+		fireBullet(entities[{ "playes", 0 }].position, aimDirection);
+	}
     if (mngr.wasKeyPressed(SDLK_1))
         pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0); //low energy test
     if (mngr.wasKeyPressed(SDLK_2))
@@ -559,7 +564,7 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way dire
 	case odin::EAST:
 		collisionData = resolveBulletCollision(position, { 1,0 });
 		length = std::get<2>(collisionData);
-		offset = { length / 2, 0 };
+		offset = { length / 2 + 20, 0 };
 		break;
 	default:
 		break;
@@ -570,7 +575,9 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way dire
 	if (!entities.add(eid, Entity(position+offset, rotation)))
 		std::cout << "Entity " << eid << " already exists.\n";
 
-	if (!gfxComponents.add(eid, GraphicalComponent::makeRect(length, 2.f, { 255.f, 255.f, 255.f })))
+	auto bGfx = gfxComponents.add(eid, GraphicalComponent::makeRect(length, 8.0f, { 255.f, 255.f, 255.f }));
+	bGfx->texture = BULLET_TEXTURE;
+	if (!bGfx)
 		std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
 
 	if (!animComponents.add(eid, AnimatorComponent({ 8 }, odin::FADEOUT)))
