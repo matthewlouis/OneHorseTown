@@ -6,7 +6,10 @@
 
 namespace odin
 {
-
+	enum AnimationType {
+		SPRITESHEET,
+		FADEOUT
+	};
     struct AnimatorComponent
     {
         static constexpr size_t MAX_ANIMATIONS = 10;
@@ -14,6 +17,7 @@ namespace odin
 		bool play = true; //play animation
 		bool loop = true; //loop animation
 
+		AnimationType type;
         int animState = 0;
         int currentFrame = 0;
         int maxFrames; //the length of the longest animation on sprite sheet
@@ -23,9 +27,10 @@ namespace odin
 
         int _frameDelay = 0; //how many draws before changing animation frame
 
-        AnimatorComponent( std::initializer_list< int > il )
+        AnimatorComponent( std::initializer_list< int > il, AnimationType t = SPRITESHEET )
             : maxFrames( std::max( il ) )
             , totalAnim( il.size() )
+			, type(t)
         {
             std::copy( il.begin(), il.end(), animLengths );
         }

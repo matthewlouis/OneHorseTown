@@ -131,7 +131,7 @@ namespace odin
 		static GraphicalComponent makeRect(
 			float     width,
 			float     height,
-			glm::vec3 color = { 1, 1, 1 },
+			glm::vec3 color = { 1, 1, 1},
 			float     alpha = 1 )
         {
             float vertices[][5] = {
