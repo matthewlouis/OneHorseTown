@@ -13,6 +13,9 @@
 
 #include <tuple>
 
+#define PI 3.1415926f
+#define SIN45 0.7071f
+
 using odin::Entity;
 using odin::EntityId;
 using odin::GraphicalComponent;
@@ -79,6 +82,8 @@ public:
     float energyLevel = 0;
     unsigned short _bulletCount = 0;
 
+	unsigned bulletRange;
+
     LevelScene( int width, int height, std::string audioBank = "" )
         : Scene( width, height )
         , audioBankName( std::move( audioBank ) )
@@ -99,6 +104,7 @@ public:
     {
         Scene::init( ticks );
 
+		bulletRange = sqrt(width * width + height * height);
 		camera.init(width, height);
 
         if ( audioBankName != "" )
@@ -162,12 +168,13 @@ public:
 			switch (x.value.type)
 			{
 			case odin::AnimationType::FADEOUT:
-				if (x.value.currentFrame == x.value.maxFrames) {
+				if (x.value.currentFrame == x.value.maxFrames-1) {
 					gfxComponents.remove(x.key);
 					animComponents.remove(x.key);
+					entities.remove(x.key);
 				}
 				else {
-					gfxComponents[x.key].color = { 1,1,1, (float)x.value.currentFrame / (float)x.value.maxFrames };
+					gfxComponents[x.key].color = { 1,1,1, 1.f-(float)x.value.currentFrame / (float)x.value.maxFrames };
 				}
 			default:
 				break;
@@ -235,7 +242,10 @@ public:
 
     // Using bullet start position, the velocity  direction, and default facing direction.
 
-    EntityView fireBullet( Vec2 position, odin::FacingDirection direction );
+    EntityView fireBullet( Vec2 position, odin::Direction8Way direction );
+
+	// returns eid, normal to the collision, and distance from position
+	std::tuple<EntityId, Vec2, float> resolveBulletCollision(Vec2 position, Vec2 direction);
 };
 
 struct EntityView
@@ -393,20 +403,21 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 		arm_gfx.visible = true; //show arm when running
     }
 
-    if (mngr.wasKeyPressed(SDLK_UP)) {
-        vel.y = 11;
-    }
+	
+	if (mngr.wasKeyPressed(SDLK_UP)) {
+		vel.y = 11;
+	}
 
-    if (mngr.wasKeyReleased(SDLK_UP) && vel.y > 0) {
-        vel.y *= 0.6f;
-    }
+	if (mngr.wasKeyReleased(SDLK_UP) && vel.y > 0) {
+		vel.y *= 0.6f;
+	}
 
 	if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_A)) {
 		vel.y = 11;
 	}
 
-    if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_A) && vel.y > 0)
-        vel.y *= 0.6f;
+	if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_A) && vel.y > 0)
+		vel.y *= 0.6f;
 
     // Handle Duck input on button X
     if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_X))
@@ -422,6 +433,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B))
     {
 		arm_anim.play = true;
+		fireBullet(entities[{ "playes", 0 }].position, aimDirection);
     }
     if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_B))
     {
@@ -444,12 +456,50 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     body.SetLinearVelocity(vel);
 }
 
-inline EntityView LevelScene::fireBullet(Vec2 position, odin::FacingDirection direction)
+// returns eid, normal to the collision, and distance from position
+std::tuple<EntityId, Vec2, float> LevelScene::resolveBulletCollision(Vec2 position, Vec2 direction) {
+	// buffer value
+	float delta = 0.001;
+	
+	//set up input
+	b2RayCastInput input;
+	input.p1 = position;
+	input.p2 = { position.x + direction.x * bulletRange, position.y + direction.y * bulletRange };
+	input.maxFraction = 1;
+
+	//check every fixture of every body to find closest
+	float closestFraction = 1; //start with end of line as p2
+	b2Vec2 intersectionNormal(0, 0);
+
+	EntityId eid;
+
+	for (auto x : fsxComponents) {
+		b2Body* body = x.value.pBody;
+		for (b2Fixture* f = body->GetFixtureList(); f; f = f->GetNext()) {
+
+			b2RayCastOutput output;
+			if (!f->RayCast(&output, input, 0))
+				continue;
+			if(!(f->GetFilterData().maskBits & BULLET))
+				continue;
+			if (output.fraction < closestFraction && output.fraction > delta) {
+				closestFraction = output.fraction;
+				intersectionNormal = output.normal;
+				eid = x.key;
+			}
+		}
+		
+	}
+	return std::make_tuple( eid, intersectionNormal, closestFraction * bulletRange);
+
+}
+
+inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
 {
 
+	float length = 100.f;
 	float rotation = 0;
-	float length = 100;
-
+	Vec2 offset = { 0,0 };
     //for alpha presentation, to simulate energy levels
     //more shots fired == more energy!
     if (energyLevel >= 1.0) {
@@ -461,12 +511,55 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::FacingDirection di
     pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", energyLevel);
     pAudioEngine->playEvent("event:/Desperado/Shoot");
 
+	// id of the entity hit, normal to the collision, distance to target
+	std::tuple<EntityId, Vec2, float> collisionData;
+	
 	switch (direction) {
-	case odin::LEFT:
-		position.x -= length / 2;
+	case odin::NORTH_WEST:
+		collisionData = resolveBulletCollision(position, { -1,1 });
+		length = std::get<2>(collisionData);
+		rotation = -PI/4;
+		offset = { SIN45 * -length/2, SIN45 * length/2 };
 		break;
-	case odin::RIGHT:
-		position.x += length / 2;
+	case odin::NORTH_EAST:
+		collisionData = resolveBulletCollision(position, { 1,1 });
+		length = std::get<2>(collisionData);
+		rotation = PI / 4;
+		offset = { SIN45 * length / 2, SIN45 * length / 2 };
+		break;
+	case odin::SOUTH_WEST:
+		collisionData = resolveBulletCollision(position, { -1,-1 });
+		length = std::get<2>(collisionData);
+		rotation = PI / 4;
+		offset = { SIN45 * -length / 2, SIN45 * -length / 2 };
+		break;
+	case odin::SOUTH_EAST:
+		collisionData = resolveBulletCollision(position, { 1,-1 });
+		length = std::get<2>(collisionData);
+		rotation = -PI / 4;
+		offset = { SIN45 * length / 2, SIN45 * -length / 2 };
+		break;
+	case odin::NORTH:
+		collisionData = resolveBulletCollision(position, { 0,1 });
+		length = std::get<2>(collisionData);
+		rotation = PI / 2;
+		offset = { 0, length / 2 };
+		break;
+	case odin::SOUTH:
+		collisionData = resolveBulletCollision(position, { 0, -1 });
+		length = std::get<2>(collisionData);
+		rotation = -PI / 2;
+		offset = { 0, -length / 2 };
+		break;
+	case odin::WEST:
+		collisionData = resolveBulletCollision(position, { -1,0 });
+		length = std::get<2>(collisionData);
+		offset = { -length / 2, 0 };
+		break;
+	case odin::EAST:
+		collisionData = resolveBulletCollision(position, { 1,0 });
+		length = std::get<2>(collisionData);
+		offset = { length / 2, 0 };
 		break;
 	default:
 		break;
@@ -474,16 +567,14 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::FacingDirection di
 
 	EntityId eid("bullet", _bulletCount++);
 
-	if (!entities.add(eid, Entity(position, rotation)))
+	if (!entities.add(eid, Entity(position+offset, rotation)))
 		std::cout << "Entity " << eid << " already exists.\n";
 
-	if (!gfxComponents.add(eid, GraphicalComponent::makeRect(length, 2.f)))
+	if (!gfxComponents.add(eid, GraphicalComponent::makeRect(length, 2.f, { 255.f, 255.f, 255.f })))
 		std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
 
-	// WHAT SHOULD THESE VALUES BE?
-	if (!animComponents.add(eid, AnimatorComponent({ 1, 10, 3 }, odin::AnimationType::FADEOUT)))
-		std::cout << "Entity " << eid << " already has an AnimatorComponent.\n";
-
+	if (!animComponents.add(eid, AnimatorComponent({ 8 }, odin::FADEOUT)))
+		std::cout << "Entity " << eid << " already has an AnimationComponent.\n";
 
 	/*
 	velocity.x *= speed;

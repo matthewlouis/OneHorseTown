@@ -130,7 +130,7 @@ public:
 		floorShape.Set({ -11, -8 }, { 11, -8 });
 
 		wallFilter.categoryBits = PLATFORM;
-		wallFilter.maskBits = PLAYER | HORSE;
+		wallFilter.maskBits = PLAYER | HORSE | BULLET;
 
 		fsxComponents["floor"] = b2world.CreateBody(&floorDef);
 		b2Fixture* fix = fsxComponents["floor"]->CreateFixture(&floorShape, 1);

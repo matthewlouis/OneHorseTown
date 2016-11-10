@@ -79,7 +79,7 @@ inline namespace factory
         playerDef.gravityScale = 2;
 
         auto pFsx = get_components< PhysicalComponent >( pScene ).add( eid,
-            PhysicalComponent::makeRect( 1.6, 3.2, pScene->b2world, playerDef, 1.0, PLAYER, PLATFORM | PLAYER ) );
+            PhysicalComponent::makeRect( 1.6, 3.2, pScene->b2world, playerDef, 1.0, PLAYER, PLATFORM | PLAYER | BULLET ) );
 
 
 		//arm

@@ -84,7 +84,7 @@ namespace odin
             b2BodyDef bodyDef = {},
             float     density = 1, 
 			uint16 type = 1,
-			uint16 collidesWith = 0xFFFF)
+			uint16 collidesWith = 0x0000)
         {
             b2PolygonShape boxShape;
             boxShape.SetAsBox( width / 2, height / 2 );
