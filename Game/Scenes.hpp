@@ -445,7 +445,6 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 		playSound("Audio/FX/Shot.wav", 127);
 		arm_anim.play = true;
 		arm_anim.currentFrame = 1;
-		
 		fireBullet(entities[{ "playes", 0 }].position, aimDirection);
 	}
     if (mngr.wasKeyPressed(SDLK_1))
@@ -602,6 +601,8 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way dire
     if (!fsxComponents.add(eid, PhysicalComponent::makeCircle(.05f, b2world, bodyDef, 0.01f, BULLET, 0)))
         std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
 	*/
+	camera.shake();
+
     return EntityView(eid, this);
 
 }

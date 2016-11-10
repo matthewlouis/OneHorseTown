@@ -88,6 +88,9 @@ public:
 				camera.setPosition(camera.getPosition() + glm::vec2(0.0, -CAMERA_SPEED));
 			if (inmn.wasKeyPressed(SDLK_d))
 				camera.setPosition(camera.getPosition() + glm::vec2(CAMERA_SPEED, 0.0f));
+			if (inmn.wasKeyPressed(SDLK_p))
+				camera.shake();
+
 		});
 
         //factory->makePlayer( this, {"player", 0} );
