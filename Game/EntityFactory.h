@@ -11,6 +11,7 @@ using odin::PhysicalComponent;
 using odin::InputManager;
 using odin::Scene;
 
+// All the possible textures
 enum Textures {
 	NULL_TEXTURE,
 	PLAYER_TEXTURE,
@@ -26,6 +27,7 @@ enum Textures {
 	BULLET_TEXTURE
 };
 
+// Where the entity is positioned relative to
 enum Anchors {
 	CENTRE,
 	// TODO
@@ -38,6 +40,11 @@ enum Anchors {
 
 };
 
+/*
+ * Bit shifted enum used for collision detection in the physics engine.
+ * Each entity should have a single category in this list (category bits), and a list of things it collides with using a bitwise AND (mask bits)
+ * See PhysicalComponent factory methods or Box2D API for more details
+ */
 enum EntityTypes {
 	PLAYER = 1 << 0,
 	HORSE = 1 << 1,

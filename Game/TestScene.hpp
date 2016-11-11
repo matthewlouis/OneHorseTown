@@ -131,6 +131,7 @@ public:
 		b2EdgeShape floorShape;
 		b2Filter wallFilter;
 		
+		// Set up level boundaries
 		floorShape.Set({ -11, -8 }, { 11, -8 });
 
 		wallFilter.categoryBits = PLATFORM;

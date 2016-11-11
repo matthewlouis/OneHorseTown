@@ -13,6 +13,7 @@
 
 #include <tuple>
 
+// Macros to speed up rendering
 #define PI 3.1415926f
 #define SIN45 0.7071f
 
@@ -82,6 +83,7 @@ public:
     float energyLevel = 0;
     unsigned short _bulletCount = 0;
 
+	// Range of the bullets, set to diagonal screen distance by default
 	unsigned bulletRange;
 
     LevelScene( int width, int height, std::string audioBank = "" )
@@ -167,6 +169,7 @@ public:
 			texAdjust[3] = x.value.totalAnim;
 			switch (x.value.type)
 			{
+			// Handle fading animation
 			case odin::AnimationType::FADEOUT:
 				if (x.value.currentFrame == x.value.maxFrames-1) {
 					gfxComponents.remove(x.key);
@@ -244,7 +247,8 @@ public:
 
     EntityView fireBullet( Vec2 position, odin::Direction8Way direction );
 
-	// returns eid, normal to the collision, and distance from position
+	// Casts a ray from position in the direction given.
+	// returns eid, normal to the collision, and distance of collision
 	std::tuple<EntityId, Vec2, float> resolveBulletCollision(Vec2 position, Vec2 direction);
 };
 
@@ -460,6 +464,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     body.SetLinearVelocity(vel);
 }
 
+// Casts ray from position in specified direction
 // returns eid, normal to the collision, and distance from position
 std::tuple<EntityId, Vec2, float> LevelScene::resolveBulletCollision(Vec2 position, Vec2 direction) {
 	// buffer value
@@ -484,6 +489,7 @@ std::tuple<EntityId, Vec2, float> LevelScene::resolveBulletCollision(Vec2 positi
 			b2RayCastOutput output;
 			if (!f->RayCast(&output, input, 0))
 				continue;
+			// TODO: This SHOULD filter out fixtues that don't collide with bullets... But doesn't seem to do so
 			if(!(f->GetFilterData().maskBits & BULLET))
 				continue;
 			if (output.fraction < closestFraction && output.fraction > delta) {
@@ -518,6 +524,7 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way dire
 	// id of the entity hit, normal to the collision, distance to target
 	std::tuple<EntityId, Vec2, float> collisionData;
 	
+	// Determine the offset and rotation of the bullet graphic based on the aim direction
 	switch (direction) {
 	case odin::NORTH_WEST:
 		collisionData = resolveBulletCollision(position, { -1,1 });
