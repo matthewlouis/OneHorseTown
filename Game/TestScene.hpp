@@ -101,10 +101,24 @@ public:
 		// create player 2
 		odin::make_player(this, { "player", 1 }, { 0, 5 },1);
 		listeners.push_back([this](const InputManager& inmn) {
-			return player_input(inmn, { "player", 1 }, 0);
+			return player_input(inmn, { "player", 1 }, 1);
 		});
-		/*players[1] = EntityView({ "player", 1 }, this);
-		player_arms[1] = EntityView({ "playes", 1 }, this);*/
+		players[1] = EntityView({ "player", 1 }, this);
+		player_arms[1] = EntityView({ "playes", 1 }, this);
+		// create player 3
+		odin::make_player(this, { "player", 2 }, { 0, 5 }, 2);
+		listeners.push_back([this](const InputManager& inmn) {
+			return player_input(inmn, { "player", 2 }, 2);
+		});
+		/*players[2] = EntityView({ "player", 2 }, this);
+		player_arms[2] = EntityView({ "playes", 1 }, this);*/
+		// create player 4
+		odin::make_player(this, { "player", 3 }, { 0, 5 }, 3);
+		listeners.push_back([this](const InputManager& inmn) {
+			return player_input(inmn, { "player", 3 }, 3);
+		});
+		/*players[3] = EntityView({ "player", 3 }, this);
+		player_arms[3] = EntityView({ "playes", 3 }, this);*/
 
 
 		//factory->makeHorse(this, "horse");

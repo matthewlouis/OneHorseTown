@@ -106,7 +106,8 @@ inline namespace factory
 		armDef.position = pos;
 		armDef.type = b2_staticBody;
 
-		auto paFsx = get_components< PhysicalComponent >(pScene).add({ "playes", 0 },
+		//player arm physics component
+		auto paFsx = get_components< PhysicalComponent >(pScene).add({ "playes", playerNum },
 			PhysicalComponent::makeRect(playerDim.getPhysicsDim().x, playerDim.getPhysicsDim().y, pScene->b2world, armDef, 1.0, PLAYER_ARM, 0));
     }
 
