@@ -90,18 +90,36 @@ public:
 		});
 
         //factory->makePlayer( this, {"player", 0} );
-        odin::make_player( this, {"player", 0}, {0, 5} );
+
+		// create player 1
+        odin::make_player( this, {"player", 0}, {0, 5}, 0 );
         listeners.push_back( [this]( const InputManager& inmn ) {
             return player_input( inmn, {"player", 0}, 0 );
         } );
 		players[0] = EntityView({ "player", 0 }, this);
 		player_arms[0] = EntityView({ "playes", 0 }, this);
+		// create player 2
+		odin::make_player(this, { "player", 1 }, { 0, 5 },1);
+		listeners.push_back([this](const InputManager& inmn) {
+			return player_input(inmn, { "player", 1 }, 0);
+		});
+		/*players[1] = EntityView({ "player", 1 }, this);
+		player_arms[1] = EntityView({ "playes", 1 }, this);*/
 
 
 		//factory->makeHorse(this, "horse");
-        odin::make_horse( this, "horse", {0.0f, 0.0f} );
+        odin::make_horse( this, "horse", {0.0f, 5.f} );
 
-		odin::make_platform(this, "plat01", 1, { 0,0 });
+
+		//starting left top to bottom right
+		odin::make_platform(this, "plat06", 4, { -103,45 }); // left upper
+		odin::make_platform(this, "plat01", 4, { -123,0 }); // left mid
+		odin::make_platform(this, "plat05", 4, { -103,-35 }); // left lower
+		odin::make_platform(this, "plat07", 4, { 73,45 }); // right upper
+		odin::make_platform(this, "plat02", 4, { 93,0 }); // right center
+		odin::make_platform(this, "plat08", 4, { 73,-35 }); // right lower
+		odin::make_platform(this, "plat03", 5, { -25,0 }); // center
+		odin::make_platform(this, "plat04", 26, { -123, -75 }); // bottom floor
 
 		/*
 		factory->makePlatform(this, "plat1", 3, {0, -3}); // Lower Middle
@@ -123,33 +141,43 @@ public:
 
 		//GLuint nul = load_texture( "null.png", 0 );
 
+
+		// Set the physics bounds for the left,right wall and floor surfaces
 		b2BodyDef floorDef;
-		b2EdgeShape floorShape;
+		b2EdgeShape boundingShape;
 		b2Filter wallFilter;
-		
-		floorShape.Set({ -11, -8 }, { 11, -8 });
+	
+		boundingShape.Set({ -13, -8 }, { 13, -8 }); //floor plane
 
 		wallFilter.categoryBits = PLATFORM;
 		wallFilter.maskBits = PLAYER | HORSE | BULLET;
 
 		fsxComponents["floor"] = b2world.CreateBody(&floorDef);
-		b2Fixture* fix = fsxComponents["floor"]->CreateFixture(&floorShape, 1);
+		b2Fixture* fix = fsxComponents["floor"]->CreateFixture(&boundingShape, 1);
 		fix->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 		fix->SetFilterData(wallFilter);
 
-		floorShape.Set({ 11, +10 }, { 11, -8 });
+		boundingShape.Set({ 13, +10 }, { 13, -8 }); //right wall plane
 
 		fsxComponents["wallR"] = b2world.CreateBody(&floorDef);
-		fix = fsxComponents["wallR"]->CreateFixture(&floorShape, 1);
+		fix = fsxComponents["wallR"]->CreateFixture(&boundingShape, 1);
 		fix->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 		fix->SetFilterData(wallFilter);
 
-		floorShape.Set({ -11, +10 }, { -11, -8 });
+		boundingShape.Set({ -13, +10 }, { -13, -8 }); // left wall plane
 
 		fsxComponents["wallL"] = b2world.CreateBody(&floorDef);
-		fix = fsxComponents["wallL"]->CreateFixture(&floorShape, 1);
+		fix = fsxComponents["wallL"]->CreateFixture(&boundingShape, 1);
 		fix->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 		fix->SetFilterData(wallFilter);
+
+		boundingShape.Set({ -13, 8 }, { 13, 8 }); //ceiling
+
+		fsxComponents["ceil"] = b2world.CreateBody(&floorDef);
+		fix = fsxComponents["ceil"]->CreateFixture(&boundingShape, 1);
+		fix->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
+		fix->SetFilterData(wallFilter);
+
 
 		//load common events and play music
 		pAudioEngine->loadEvent("event:/Music/EnergeticTheme");
