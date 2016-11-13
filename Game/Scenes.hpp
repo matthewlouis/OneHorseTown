@@ -13,6 +13,7 @@
 
 #include <tuple>
 
+// Macros to speed up rendering
 #define PI 3.1415926f
 #define SIN45 0.7071f
 
@@ -82,6 +83,7 @@ public:
     float energyLevel = 0;
     unsigned short _bulletCount = 0;
 
+	// Range of the bullets, set to diagonal screen distance by default
 	unsigned bulletRange;
 
     LevelScene( int width, int height, std::string audioBank = "" )
@@ -167,6 +169,7 @@ public:
 			texAdjust[3] = x.value.totalAnim;
 			switch (x.value.type)
 			{
+			// Handle fading animation
 			case odin::AnimationType::FADEOUT:
 				if (x.value.currentFrame == x.value.maxFrames-1) {
 					gfxComponents.remove(x.key);
@@ -244,7 +247,8 @@ public:
 
     EntityView fireBullet( Vec2 position, odin::Direction8Way direction );
 
-	// returns eid, normal to the collision, and distance from position
+	// Casts a ray from position in the direction given.
+	// returns eid, normal to the collision, and distance of collision
 	std::tuple<EntityId, Vec2, float> resolveBulletCollision(Vec2 position, Vec2 direction);
 };
 
@@ -449,8 +453,12 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     }
 	
     //for testing audio
-    if (mngr.wasKeyPressed(SDLK_SPACE))
+	if (mngr.wasKeyPressed(SDLK_SPACE)) {
 		playSound("Audio/FX/Shot.wav", 127);
+		arm_anim.play = true;
+		arm_anim.currentFrame = 1;
+		fireBullet(entities[{ "playes", 0 }].position, aimDirection);
+	}
     if (mngr.wasKeyPressed(SDLK_1))
         pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0); //low energy test
     if (mngr.wasKeyPressed(SDLK_2))
@@ -464,6 +472,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     body.SetLinearVelocity(vel);
 }
 
+// Casts ray from position in specified direction
 // returns eid, normal to the collision, and distance from position
 std::tuple<EntityId, Vec2, float> LevelScene::resolveBulletCollision(Vec2 position, Vec2 direction) {
 	// buffer value
@@ -488,6 +497,7 @@ std::tuple<EntityId, Vec2, float> LevelScene::resolveBulletCollision(Vec2 positi
 			b2RayCastOutput output;
 			if (!f->RayCast(&output, input, 0))
 				continue;
+			// TODO: This SHOULD filter out fixtues that don't collide with bullets... But doesn't seem to do so
 			if(!(f->GetFilterData().maskBits & BULLET))
 				continue;
 			if (output.fraction < closestFraction && output.fraction > delta) {
@@ -522,6 +532,7 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way dire
 	// id of the entity hit, normal to the collision, distance to target
 	std::tuple<EntityId, Vec2, float> collisionData;
 	
+	// Determine the offset and rotation of the bullet graphic based on the aim direction
 	switch (direction) {
 	case odin::NORTH_WEST:
 		collisionData = resolveBulletCollision(position, { -1,1 });
@@ -567,7 +578,7 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way dire
 	case odin::EAST:
 		collisionData = resolveBulletCollision(position, { 1,0 });
 		length = std::get<2>(collisionData);
-		offset = { length / 2, 0 };
+		offset = { length / 2 + 20, 0 };
 		break;
 	default:
 		break;
@@ -578,7 +589,9 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way dire
 	if (!entities.add(eid, Entity(position+offset, rotation)))
 		std::cout << "Entity " << eid << " already exists.\n";
 
-	if (!gfxComponents.add(eid, GraphicalComponent::makeRect(length, 2.f, { 255.f, 255.f, 255.f })))
+	auto bGfx = gfxComponents.add(eid, GraphicalComponent::makeRect(length, 8.0f, { 255.f, 255.f, 255.f }));
+	bGfx->texture = BULLET_TEXTURE;
+	if (!bGfx)
 		std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
 
 	if (!animComponents.add(eid, AnimatorComponent({ 8 }, odin::FADEOUT)))
@@ -603,6 +616,8 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way dire
     if (!fsxComponents.add(eid, PhysicalComponent::makeCircle(.05f, b2world, bodyDef, 0.01f, BULLET, 0)))
         std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
 	*/
+	camera.shake();
+
     return EntityView(eid, this);
 
 }

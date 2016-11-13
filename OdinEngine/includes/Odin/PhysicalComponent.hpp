@@ -94,6 +94,7 @@ namespace odin
             fxtDef.friction = DEFAULT_FRICTION;
             fxtDef.density = density;
 
+			// Collision detection
 			fxtDef.filter.categoryBits = type;
 			fxtDef.filter.maskBits = collidesWith;
 

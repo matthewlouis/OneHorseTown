@@ -56,6 +56,7 @@ public:
 		odin::load_texture(ARM_TEXTURE, "Textures/ArmSS.png");
 		odin::load_texture(BACKGROUND, "Textures/background.png");
 		odin::load_texture(HORSE_TEXTURE, "Textures/horse_dense.png");
+		odin::load_texture(BULLET_TEXTURE, "Textures/bullet.png");
 
 
 		auto background = gfxComponents.add(
@@ -87,6 +88,9 @@ public:
 				camera.setPosition(camera.getPosition() + glm::vec2(0.0, -CAMERA_SPEED));
 			if (inmn.wasKeyPressed(SDLK_d))
 				camera.setPosition(camera.getPosition() + glm::vec2(CAMERA_SPEED, 0.0f));
+			if (inmn.wasKeyPressed(SDLK_p))
+				camera.shake();
+
 		});
 
         //factory->makePlayer( this, {"player", 0} );
@@ -160,7 +164,6 @@ public:
 		b2BodyDef floorDef;
 		b2EdgeShape boundingShape;
 		b2Filter wallFilter;
-	
 		boundingShape.Set({ -13, -8 }, { 13, -8 }); //floor plane
 
 		wallFilter.categoryBits = PLATFORM;

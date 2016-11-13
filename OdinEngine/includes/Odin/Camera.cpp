@@ -1,4 +1,6 @@
 #include "Camera.h"
+#include <SDL/SDL.h>
+#include <stdio.h>
 
 
 namespace odin {
@@ -25,6 +27,9 @@ namespace odin {
 
 
 	void Camera::update() {
+		if (shaking)
+			continueShaking();
+
 		if (_requiresMatrixUpdate) { //saves us from updating camera if we don't need to
 
 			// move in opposite direction(if camera moves left obj appear to move right)
@@ -38,6 +43,50 @@ namespace odin {
 
 			//matrix no longer needs updating now that calculations have been performed
 			_requiresMatrixUpdate = false;
+		}
+	}
+
+	void Camera::shake()
+	{
+		
+		_duration = 100;
+		_magnitude = 1.0f;
+
+		_startTime = SDL_GetTicks();
+
+		glm::vec2 originalCamPos = _position;
+
+		shaking = true;
+
+		continueShaking();
+	}
+
+	void Camera::continueShaking()
+	{
+		float magnitude = 2.0f; //hard coding magnitude for now
+		unsigned int elapsed = SDL_GetTicks() - _startTime;
+
+		if (SDL_GetTicks() - _startTime < _duration) {
+
+			float percentComplete = elapsed / (float)_duration;
+
+			//clamp value
+			float value = 4.0f * percentComplete - 3.0f;
+			value = value < 0.0f ? 0.0f : value > 1.0f ? 1.0f : value;;
+
+			float damper = 1.0f - value;
+
+			// map value to [-1, 1]
+			float x = rand() % 2 * 2.0f - 1.0f;
+			float y = rand() % 2 * 2.0f - 1.0f;
+			x *= magnitude * damper;
+			y *= magnitude * damper;
+
+			setPosition(glm::vec2(x, y));
+		}
+		else {
+			shaking = false;
+			setPosition(_origPosition);
 		}
 	}
 }
