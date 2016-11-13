@@ -22,7 +22,7 @@ namespace odin
 		SOUTH,
 		SOUTH_WEST,
 		WEST,
-		NORTH_WEST
+		NORTH_WEST,
 	};
 
     // Manages gamepads connected to the device. Does not handle its

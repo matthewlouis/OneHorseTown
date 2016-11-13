@@ -110,15 +110,15 @@ public:
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 2 }, 2);
 		});
-		/*players[2] = EntityView({ "player", 2 }, this);
-		player_arms[2] = EntityView({ "playes", 1 }, this);*/
+		players[2] = EntityView({ "player", 2 }, this);
+		player_arms[2] = EntityView({ "playes", 2 }, this);
 		// create player 4
 		odin::make_player(this, { "player", 3 }, { 0, 5 }, 3);
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 3 }, 3);
 		});
-		/*players[3] = EntityView({ "player", 3 }, this);
-		player_arms[3] = EntityView({ "playes", 3 }, this);*/
+		players[3] = EntityView({ "player", 3 }, this);
+		player_arms[3] = EntityView({ "playes", 3 }, this);
 
 
 		//factory->makeHorse(this, "horse");
@@ -126,14 +126,14 @@ public:
 
 
 		//starting left top to bottom right
-		odin::make_platform(this, "plat06", 4, { -103,45 }); // left upper
-		odin::make_platform(this, "plat01", 4, { -123,0 }); // left mid
-		odin::make_platform(this, "plat05", 4, { -103,-35 }); // left lower
-		odin::make_platform(this, "plat07", 4, { 73,45 }); // right upper
-		odin::make_platform(this, "plat02", 4, { 93,0 }); // right center
-		odin::make_platform(this, "plat08", 4, { 73,-35 }); // right lower
-		odin::make_platform(this, "plat03", 5, { -25,0 }); // center
-		odin::make_platform(this, "plat04", 26, { -123, -75 }); // bottom floor
+		odin::make_platform(this, "plat06", 4, { -103,25 }); // left upper
+		odin::make_platform(this, "plat01", 4, { -123,-10 }); // left mid
+		odin::make_platform(this, "plat05", 4, { -103,-45 }); // left lower
+		odin::make_platform(this, "plat07", 4, { 73,25 }); // right upper
+		odin::make_platform(this, "plat02", 4, { 93,-10 }); // right center
+		odin::make_platform(this, "plat08", 4, { 73,-45 }); // right lower
+		odin::make_platform(this, "plat03", 5, { -25,-20 }); // center
+		odin::make_platform(this, "plat04", 26, { -123, -80 }); // bottom floor
 
 		/*
 		factory->makePlatform(this, "plat1", 3, {0, -3}); // Lower Middle

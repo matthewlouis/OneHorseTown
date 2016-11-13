@@ -46,7 +46,7 @@ public:
         //auto scene = new TestScene( _width, _height, SCALE * PIXEL_SIZE );
 
 		//note TestScene now takes number of players
-        auto level = new TestScene( _width / PIXEL_SIZE, _height / PIXEL_SIZE, SCALE, 2); //1 player
+        auto level = new TestScene( _width / PIXEL_SIZE, _height / PIXEL_SIZE, SCALE, 4); //1 player
         level->pInputManager = &inputManager;
         level->pAudioEngine = &audioEngine;
 

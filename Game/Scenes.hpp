@@ -315,7 +315,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     EntityView ntt = EntityView(eid, this);
 
 	//arm
-	EntityView arm_ntt = EntityView({ "playes", 0 }, this);
+	EntityView arm_ntt = EntityView({ "playes", (uint16_t)pindex }, this);
 	GraphicalComponent& arm_gfx = *arm_ntt.gfxComponent();
 	AnimatorComponent& arm_anim = *arm_ntt.animComponent();
 
@@ -373,14 +373,22 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     //adjust facing direction for joystick
 	if (aimDir.x < 0) {
 		gfx.direction = odin::LEFT;
-		arm_gfx.direction = odin::LEFT;
+		arm_gfx.direction = odin::LEFT;		
 	}
 	if (aimDir.x > 0) {
 		gfx.direction = odin::RIGHT;
 		arm_gfx.direction = odin::RIGHT;
+		
 	}
 
-    //b2Fixture* pFixt = body.GetFixtureList();
+	// Correct default aim direction if no aim present
+	if (aimAngle == 0)
+	{
+		if (gfx.direction == odin::LEFT)
+			aimDirection = odin::Direction8Way::WEST;
+		else if (gfx.direction == odin::RIGHT)
+			aimDirection = odin::Direction8Way::EAST;
+	}
 
     if ( actionLeft == 0 && actionRight == 0 && aimDir.x == 0 )
     {
@@ -433,7 +441,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B))
     {
 		arm_anim.play = true;
-		fireBullet(entities[{ "playes", 0 }].position, aimDirection);
+		fireBullet(entities[{ "playes", (uint16_t)pindex }].position, aimDirection);
     }
     if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_B))
     {
