@@ -146,14 +146,14 @@ inline namespace factory
 		switch (anchor)
 		{
 		case CENTRE:
-			x -= length / 2.0;
+			x += length / 2.0;
 			start = { x, 0 };
 			break;
 		default:
 			break;
 		}
 
-		Vec2 pos = start + offset;
+		Vec2 pos = offset;
 		x = 1;
 		EntityId eid;
 		uint16 i;
@@ -171,25 +171,24 @@ inline namespace factory
 			ntt.gfxComponent()->texture = GROUND1;
 			//makeRect(scene, { id, i }, { 1, 1 }, pos, 0, { 1,1,1 }, GROUND1);
 			
+			
 
-			//float colliderPos = length / 2.0;
-			//offset.x += colliderPos;
-			//fset.x += pos.x;
-			b2BodyDef bodyDef;
-			bodyDef.position = { offset.x / physicsScale, offset.y / physicsScale };
-			bodyDef.angle = 0;
-			bodyDef.type = b2_staticBody;
-
-			if (!pScene->fsxComponents.add({ id, i },
-				PhysicalComponent::makeRect(platform.getPhysicsDim().x, platform.getPhysicsDim().y, pScene->b2world, bodyDef, 1.0, PLATFORM, HORSE | PLAYER)))
-				std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
-
-			offset.x += physicsScale; 
+			pos.x += physicsScale;
+			//offset.x += physicsScale; 
 		}
 
-
-
-		
+		//float colliderPos = length / 2.0;
+		//offset.x += colliderPos;
+		//fset.x += pos.x;
+		float newPos = offset.x + (platform.x*length / 2.0f) - (platform.x/2);
+		// Define the physical properties of the platform
+		b2BodyDef bodyDef;
+		bodyDef.position = { newPos / physicsScale, offset.y / physicsScale };
+		bodyDef.angle = 0;
+		bodyDef.type = b2_staticBody;
+		if (!pScene->fsxComponents.add({ id, i },
+			PhysicalComponent::makeRect(platform.getPhysicsDim().x*length, platform.getPhysicsDim().y, pScene->b2world, bodyDef, 1.0, PLATFORM, HORSE | PLAYER)))
+			std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
 		
 		
 		}
