@@ -74,9 +74,9 @@ inline namespace factory
 		Dim getPhysicsDim() { return Dim{ x / physicsScale, y / physicsScale }; } // return physics dim to scale
 	};
 	// object dimensions
-	static Dim playerDim{ 21,21 }; // intially 32x32
-	static Dim horse{29,24}; // initially 44x36
-	static Dim platform{10,10}; // initially 16x16
+	static Dim playerDim{ 32,32 }; // intially 32x32
+	static Dim horse{44,36}; // initially 44x36
+	static Dim platform{16,16}; // initially 16x16
 
     template< typename T >
     void make_player( T* pScene, EntityId eid, Vec2 pos, uint16_t playerNum )
