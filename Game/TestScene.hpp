@@ -126,7 +126,7 @@ public:
 
 
 		//factory->makeHorse(this, "horse");
-        odin::make_horse( this, "horse", {0.0f, 5.f} );
+        //odin::make_horse( this, "horse", {0.0f, 5.f} );
 
 
 		//starting left top to bottom right

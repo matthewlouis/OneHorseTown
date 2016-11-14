@@ -597,26 +597,7 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way dire
 	if (!animComponents.add(eid, AnimatorComponent({ 8 }, odin::FADEOUT)))
 		std::cout << "Entity " << eid << " already has an AnimationComponent.\n";
 
-	/*
-	velocity.x *= speed;
-	velocity.y *= speed;
-
-    if (!entities.add(eid, Entity(position, 0)))
-        std::cout << "Entity " << eid << " already exists.\n";
-
-    if (!gfxComponents.add(eid, GraphicalComponent::makeRect(10.f, 2.f)))
-        std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
-
-    b2BodyDef bodyDef;
-    bodyDef.position = position;
-    bodyDef.linearVelocity = velocity;
-    bodyDef.type = b2_dynamicBody;
-    bodyDef.bullet = true;
-
-    if (!fsxComponents.add(eid, PhysicalComponent::makeCircle(.05f, b2world, bodyDef, 0.01f, BULLET, 0)))
-        std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
-	*/
-	camera.shake();
+ 	camera.shake();
 
     return EntityView(eid, this);
 
@@ -654,6 +635,7 @@ public:
 	unsigned OFF_TIME = 40, ON_TIME = 55;
 	unsigned onFrame = 0, offFrame = 0;
 	bool promptOn = true;
+	bool started = false;
 
 	GLuint program;
 	GLint uMatrix, uColor, uTexture, uFacingDirection,
@@ -686,16 +668,18 @@ public:
 		background->texture = TITLE;
 		
 		promptID = EntityId(1);
-		auto prompt = gfxComponents.add(promptID, GraphicalComponent::makeRect(75, 10));
+		auto prompt = gfxComponents.add(promptID, GraphicalComponent::makeRect(110, 15));
 		prompt->texture = PRESS_BUTTON;
 
-		Vec2 pos = { 87, -30 };
+		Vec2 pos = { 160, -55 };
 		if (!entities.add(promptID, Entity(pos, 0)))
 		   std::cout << "Entity " << promptID << " already exists.\n";
 
 		listeners.push_back([this](const InputManager& inmn) {
-			if (inmn.wasKeyPressed(SDL_CONTROLLER_BUTTON_START) || inmn.wasKeyPressed(SDLK_RETURN))
-				this->expired = true;
+			if (inmn.wasKeyPressed(SDL_CONTROLLER_BUTTON_START) || inmn.wasKeyPressed(SDLK_RETURN)) {
+				ON_TIME = OFF_TIME = 4;
+				started = true;
+			}
 		});
 
 		if (audioBankName != "")
@@ -720,6 +704,14 @@ public:
 
 	void update(unsigned ticks)
 	{
+		if (started) {
+			static int startedTicks = ticks;
+
+			if (ticks - startedTicks >= 1000) {
+				this->expired = true;
+			}
+		}
+
 		Scene::update(ticks);
 
 		for ( auto& lstn : listeners )
