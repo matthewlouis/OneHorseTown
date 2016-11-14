@@ -7,8 +7,9 @@ thread_local std::vector< IAllocator* > allocator_pool;
 
 IAllocator& context_allocator::get()
 {
-    static VirtualAllocator< Mallocator > default_allocator;
-    return allocator_pool.empty() ? default_allocator : *allocator_pool.back();
+    static PolymorphicAllocator< Mallocator > default_allocator;
+    return allocator_pool.empty() ? default_allocator
+        : *allocator_pool.back();
 }
 
 void context_allocator::push( IAllocator& allocator )
@@ -18,7 +19,7 @@ void context_allocator::push( IAllocator& allocator )
 
 void context_allocator::push( nullptr_t )
 {
-    static VirtualAllocator< NullAllocator > null_allocator;
+    static PolymorphicAllocator< NullAllocator > null_allocator;
     allocator_pool.push_back( &null_allocator );
 }
 

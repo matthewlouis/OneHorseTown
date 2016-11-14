@@ -8,6 +8,8 @@
 //#include "Allocators.hpp"
 //#include "ContextAllocator.hpp"
 
+#include <Odin/SDLAudio.h>
+
 SDL_Window* create_window( const char* title, int width, int height )
 {
 	//previously we were not initting all of the subsystems.
@@ -17,6 +19,8 @@ SDL_Window* create_window( const char* title, int width, int height )
 		printf("SDL_Init failed: %s.\n", SDL_GetError());
 		SDL_Quit();
 	}
+
+	initAudio(); //must call first for SDL audio playback
 
 	//Request minimum version for compatibility.
 	if(SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3))
@@ -54,6 +58,9 @@ SDL_Window* create_window( const char* title, int width, int height )
     glEnable( GL_BLEND );
     glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
     printf( "OpenGL %s\n\n", glGetString( GL_VERSION ) );
+
+
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 
     return _sdlWindow;
 }
@@ -113,6 +120,12 @@ int main( int argc, char** argv )
     pool.deallocate( p6 );
     pool.deallocate( p4 );
     pool.allocate( 3 );*/
+
+    Dict< std::string, int > dict;
+
+    dict.add( "hai", 42 );
+
+    printf( "%s\n", dict.search( "hai" ) ? "found!" : "not found!" );
 
     SDL_Window* sdl_window = create_window( "One Horse Town", WIDTH, HEIGHT );
 

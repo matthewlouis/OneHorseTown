@@ -3,9 +3,12 @@
 
 namespace odin {
 
+	class SceneManager;
+
 	class Scene
     {
 	public:
+		SceneManager* sceneManager;
 
         Framebuffer framebuffer;
         int width;

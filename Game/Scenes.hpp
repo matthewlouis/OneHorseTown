@@ -3,12 +3,17 @@
 
 #include <Odin/Scene.h>
 #include <Odin/AudioEngine.h>
-#include <Odin/Entity.hpp>
+#include <Odin/ThreadedAudio.h>
 #include <Odin/TextureManager.hpp>
+#include <Odin/Camera.h>
+
 
 #include "Constants.h"
+#include "EntityFactory.h"
 
 #include <tuple>
+
+#include "ContextAllocator.hpp"
 
 using odin::Entity;
 using odin::EntityId;
@@ -21,13 +26,6 @@ using odin::ComponentType;
 using odin::AudioEngine;
 
 struct EntityView;
-
-enum EntityTypes {
-	PLAYER = 1 << 0,
-	HORSE = 1 << 1,
-	PLATFORM = 1 << 2,
-	BULLET = 1 << 3
-};
 
 
 // Defines a function which returns the component map for the 
@@ -71,6 +69,10 @@ public:
     std::string                     audioBankName;
     AudioEngine*                    pAudioEngine;
 
+	odin::Camera camera;
+
+    //SDL_Renderer* renderer;
+
     GLuint program;
     GLint uMatrix, uColor, uTexture, uFacingDirection,
         uCurrentFrame, uCurrentAnim, uMaxFrame, uMaxAnim;
@@ -78,6 +80,16 @@ public:
     //for simulating energy - alpha presentation
     float energyLevel = 0;
     unsigned short _bulletCount = 0;
+
+    PolymorphicAllocator<
+        ThresholdAllocator< 4,
+            BitsetAllocator< 1024 * 2, 4 >,
+            ThresholdAllocator< 128,
+                BitsetAllocator< 1024 * 1024, 8 >,
+                Mallocator
+            >
+        >
+    > _localAllocator;
 
     LevelScene( int width, int height, std::string audioBank = "" )
         : Scene( width, height )
@@ -99,6 +111,8 @@ public:
     {
         Scene::init( ticks );
 
+		camera.init(width, height);
+
         if ( audioBankName != "" )
         {
             pAudioEngine->loadBank( audioBankName + ".bank",
@@ -106,6 +120,18 @@ public:
             pAudioEngine->loadBank( audioBankName + ".strings.bank",
                                   FMOD_STUDIO_LOAD_BANK_NORMAL );
         }
+    }
+
+    void resume( unsigned ticks )
+    {
+        Scene::resume( ticks );
+        context_allocator::push( _localAllocator );
+    }
+
+    void pause( unsigned ticks )
+    {
+        Scene::pause( ticks );
+        context_allocator::pop();
     }
 
     void exit( unsigned ticks )
@@ -130,6 +156,9 @@ public:
         b2world.Step( timeStep, 8, 3 );
         for ( auto x : fsxComponents )
         {
+            if ( x.value.pBody == nullptr || !x.value.pBody->IsActive() )
+                continue;
+
             Entity& ntt = entities[ x.key ];
             auto& fsx = x.value;
 
@@ -165,17 +194,25 @@ public:
         using namespace glm;
         Scene::draw();
 
-        float zoom = 1.0f / SCALE;
-        float aspect = width / (float) height;
-        const mat4 camera = scale( {}, vec3( zoom, zoom * aspect, 1 ) );
+        //float zoom = 1.0f / SCALE;
+        //float aspect = width / (float) height;
+        //const mat4 base = scale( {}, vec3( zoom, zoom * aspect, 1 ) );
+		const mat4 base = mat4();
+
+		//update camera matrix
+		camera.update();
+		glm::mat4 cameraMatrix = camera.getCameraMatrix();
 
         glUseProgram( program );
         for ( auto x : gfxComponents )
         {
+            if ( !x.value.visible )
+                continue;
+
             Entity& ntt = entities[ x.key ];
             auto& gfx = x.value;
 
-            mat4 mtx = translate( camera, vec3( ntt.position.glmvec2, 0 ) );
+            mat4 mtx = cameraMatrix * translate( base, vec3( ntt.position.glmvec2, 0 ) );
             mtx = rotate( mtx, ntt.rotation, vec3( 0, 0, 1 ) );
 
             glUniform( uMatrix, mtx );
@@ -362,8 +399,11 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     }
 	
     //for testing audio
-    if (mngr.wasKeyPressed(SDLK_SPACE))
-        fireBullet({body.GetPosition().x,body.GetPosition().y}, aimDir, gfx.direction);
+    if ( mngr.wasKeyPressed( SDLK_SPACE ) )
+    {
+		playSound("Audio/FX/Shot.wav", 127);
+        this->fireBullet( {}, {}, odin::FacingDirection::RIGHT );
+    }
     if (mngr.wasKeyPressed(SDLK_1))
         pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0); //low energy test
     if (mngr.wasKeyPressed(SDLK_2))
@@ -430,3 +470,173 @@ inline EntityView LevelScene::fireBullet(Vec2 position, Vec2 velocity, odin::Fac
 
     return EntityView(eid, this);
 }
+
+class TitleScene
+	: public odin::Scene
+{
+public:
+
+	template< typename ValueType >
+	using EntityMap = odin::BinarySearchMap< EntityId, ValueType >;
+
+	EntityMap< Entity >             entities;
+
+	EntityMap< GraphicalComponent > gfxComponents;
+
+	b2ThreadPool                    b2thd;
+	b2World                         b2world = { { 0.f, -9.81f }, &b2thd };
+	EntityMap< PhysicalComponent >  fsxComponents;
+
+	InputManager                    inputManager;
+	std::vector< InputListener >    listeners;
+
+	OHT_DEFINE_COMPONENTS(entities, gfxComponents, fsxComponents);
+
+	std::string audioBankName;
+	AudioEngine audioEngine;
+
+	//SDL_Renderer* renderer;
+
+	EntityId promptID;
+
+	// Variables for blinking animation
+	unsigned OFF_TIME = 40, ON_TIME = 55;
+	unsigned onFrame = 0, offFrame = 0;
+	bool promptOn = true;
+
+	GLuint program;
+	GLint uMatrix, uColor, uTexture, uFacingDirection,
+		uCurrentFrame, uCurrentAnim, uMaxFrame, uMaxAnim;
+
+	TitleScene(int width, int height, std::string audioBank = "")
+		: Scene(width, height)
+		, audioBankName(std::move(audioBank))
+		, program(load_shaders("Shaders/vertexAnim.glsl", "Shaders/fragmentShader.glsl"))
+		, uMatrix(glGetUniformLocation(program, "uMatrix"))
+		, uColor(glGetUniformLocation(program, "uColor"))
+		, uTexture(glGetUniformLocation(program, "uTexture"))
+		, uFacingDirection(glGetUniformLocation(program, "uFacingDirection"))
+		, uCurrentFrame(glGetUniformLocation(program, "uCurrentFrame"))
+		, uCurrentAnim(glGetUniformLocation(program, "uCurrentAnim"))
+		, uMaxFrame(glGetUniformLocation(program, "uMaxFrames"))
+		, uMaxAnim(glGetUniformLocation(program, "uTotalAnim"))
+	{
+	}
+
+	void init(unsigned ticks)
+	{
+		Scene::init(ticks);
+
+		odin::load_texture(TITLE, "Textures/title.png");
+		odin::load_texture(PRESS_BUTTON, "Textures/pressbutton.png");
+
+		auto background = gfxComponents.add(
+			EntityId(0), GraphicalComponent::makeRect(width, height));
+		background->texture = TITLE;
+		
+		promptID = EntityId(1);
+		auto prompt = gfxComponents.add(promptID, GraphicalComponent::makeRect(75, 10));
+		prompt->texture = PRESS_BUTTON;
+
+		Vec2 pos = { 87, -30 };
+		if (!entities.add(promptID, Entity(pos, 0)))
+		   std::cout << "Entity " << promptID << " already exists.\n";
+
+		listeners.push_back([this](const InputManager& inmn) {
+			if (inmn.wasKeyPressed(SDL_CONTROLLER_BUTTON_START) || inmn.wasKeyPressed(SDLK_RETURN))
+				this->expired = true;
+		});
+
+		if (audioBankName != "")
+		{
+			audioEngine.loadBank(audioBankName + ".bank",
+				FMOD_STUDIO_LOAD_BANK_NORMAL);
+			audioEngine.loadBank(audioBankName + ".strings.bank",
+				FMOD_STUDIO_LOAD_BANK_NORMAL);
+		}
+	}
+
+	void exit(unsigned ticks)
+	{
+		Scene::exit(ticks);
+
+		if (audioBankName != "")
+		{
+			audioEngine.unloadBank(audioBankName + ".bank");
+			audioEngine.unloadBank(audioBankName + ".strings.bank");
+		}
+	}
+
+	void update(unsigned ticks)
+	{
+		Scene::update(ticks);
+
+		inputManager.pollEvents();
+		for ( auto& lstn : listeners )
+			lstn( inputManager );
+	}
+
+	void draw()
+	{
+		using namespace glm;
+		Scene::draw();
+
+		float zoom = 1.0f / SCALE;
+		float aspect = width / (float)height;
+		const mat4 base = scale({}, vec3(zoom, zoom * aspect, 1));
+
+		if (promptOn) {
+			++onFrame;
+			if (onFrame > ON_TIME) {
+				gfxComponents[promptID].color.w = 0;
+				promptOn = false;
+				onFrame = 0;
+			}
+		}else {
+			++offFrame;
+			if (offFrame > OFF_TIME) {
+				gfxComponents[promptID].color.w = 1;
+				promptOn = true;
+				offFrame = 0;
+			}
+		}
+
+		glUseProgram(program);
+		for (auto x : gfxComponents)
+		{
+			Entity& ntt = entities[x.key];
+			auto& gfx = x.value;
+
+			mat4 mtx = translate(base, vec3(ntt.position.glmvec2, 0));
+			mtx = rotate(mtx, ntt.rotation, vec3(0, 0, 1));
+
+			glUniform(uMatrix, mtx);
+			glUniform(uColor, gfx.color);
+			glUniform(uTexture, gfx.texture);
+			glUniform(uFacingDirection, gfx.direction);
+
+            glUniform( uCurrentAnim, ntt.texAdjust[ 0 ] );
+            glUniform( uCurrentFrame, ntt.texAdjust[ 1 ] );
+            glUniform( uMaxFrame, ntt.texAdjust[ 2 ] );
+            glUniform( uMaxAnim, ntt.texAdjust[ 3 ] );
+
+			glBindVertexArray(gfx.vertexArray);
+			glDrawArrays(GL_TRIANGLES, 0, gfx.count);
+		}
+	}
+
+	void add(EntityId eid, GraphicalComponent gfx)
+	{
+		gfxComponents.add(eid, std::move(gfx));
+	}
+
+	void add(EntityId eid, PhysicalComponent fsx)
+	{
+		fsxComponents.add(eid, std::move(fsx));
+	}
+
+	void add(InputListener lstn)
+	{
+		listeners.push_back(std::move(lstn));
+	}
+};

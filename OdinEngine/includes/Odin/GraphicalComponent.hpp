@@ -51,12 +51,14 @@ namespace odin
         GLuint     vertexBuffer = 0;
         GLuint     programId = 0;
 
+        bool       visible = true;
+
 		FacingDirection  direction = RIGHT;
 
         GraphicalComponent() = default;
 
         template< typename Vertex, typename... Attrs >
-		GraphicalComponent(const Vertex* pVertices,
+		GraphicalComponent( const Vertex* pVertices,
 							int           count,
 							glm::vec4     color = { 1, 1, 1, 1 },
                             Attrs&&...    attrs )
@@ -100,6 +102,7 @@ namespace odin
             , vertexBuffer( move.vertexBuffer )
             , programId( move.programId )
 			, direction (move.direction)
+            , visible( move.visible )
         {
             move.pData = nullptr;
             move.count = 0;
@@ -108,6 +111,7 @@ namespace odin
             move.vertexBuffer = 0;
             move.programId = 0;
 			move.direction = RIGHT;
+            move.visible = false;
         }
 
         GraphicalComponent& operator =( GraphicalComponent&& move )
@@ -120,7 +124,8 @@ namespace odin
             swap( vertexArray, move.vertexArray );
             swap( vertexBuffer, move.vertexBuffer );
             swap( programId, move.programId );
-			swap(direction, move.direction);
+            swap(direction, move.direction);
+            swap(visible, move.visible);
             return *this;
         }
 

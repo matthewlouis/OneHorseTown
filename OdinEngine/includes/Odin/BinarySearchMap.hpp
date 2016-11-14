@@ -246,14 +246,14 @@ namespace odin
         // Accesses the value mapped to the given key.
         ValueType& operator []( const KeyType& key )
         {
-            Iterator itr = _count > 0 ? search( key ) : Iterator( nullptr, _pKeys );
+            Iterator itr = search( key );
             return itr ? *itr : *_insert( itr._index( this ), key, ValueType {} );
         }
 
         // Accesses the value mapped to the given key.
         const ValueType& operator []( const KeyType& key ) const
         {
-            ConstIterator itr = _count > 0 ? search( key ) : ConstIterator( nullptr, _pKeys );
+            ConstIterator itr = search( key );
             return itr ? *itr : throw "key not found";
         }
 
@@ -261,7 +261,7 @@ namespace odin
         Iterator search( KeyType key )
         {
             const KeyType* lower = _pKeys;
-            const KeyType* upper = _pKeys + (_count - 1);
+            const KeyType* upper = (_pKeys + _count) - 1;
             const KeyType* mid   = _pKeys + (_count / 2);
 
             while ( lower <= upper )
@@ -292,7 +292,7 @@ namespace odin
         // Returns a pointer to the newly added value on success, otherwise nullptr.
         ValueType* add( KeyType key, ValueType value )
         {
-            Iterator itr = _count > 0 ? search( key ) : Iterator( nullptr, _pKeys );
+            Iterator itr = search( key );
             if ( itr )
                 return nullptr;
 

@@ -24,6 +24,7 @@ namespace odin
 
         void pushScene( Scene* scene )
         {
+			scene->sceneManager = this;
             pendingScenes.push_back( scene );
         }
 
@@ -45,6 +46,7 @@ namespace odin
         void _popScene( unsigned ticks )
         {
             Scene* top = scenes.back();
+            top->pause( ticks );
             top->exit( ticks );
             scenes.pop_back();
             delete top;
