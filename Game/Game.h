@@ -44,11 +44,18 @@ public:
 		audioEngine.init();
 
         //auto scene = new TestScene( _width, _height, SCALE * PIXEL_SIZE );
-        auto scene = new TestScene( _width / PIXEL_SIZE, _height / PIXEL_SIZE, SCALE );
-        scene->pInputManager = &inputManager;
-        scene->pAudioEngine = &audioEngine;
 
-        sceneManager.pushScene( scene );
+		//note TestScene now takes number of players
+        auto level = new TestScene( _width / PIXEL_SIZE, _height / PIXEL_SIZE, SCALE, 4); //1 player
+        level->pInputManager = &inputManager;
+        level->pAudioEngine = &audioEngine;
+
+		auto title = new TitleScene(_width / PIXEL_SIZE, _height / PIXEL_SIZE);
+		title->pInputManager = &inputManager;
+		title->pAudioEngine = &audioEngine;
+
+        sceneManager.pushScene( level );
+		sceneManager.pushScene( title );
 	}
 
     void tick()

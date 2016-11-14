@@ -84,7 +84,7 @@ namespace odin
             b2BodyDef bodyDef = {},
             float     density = 1, 
 			uint16 type = 1,
-			uint16 collidesWith = 0xFFFF)
+			uint16 collidesWith = 0x0000)
         {
             b2PolygonShape boxShape;
             boxShape.SetAsBox( width / 2, height / 2 );
@@ -94,6 +94,7 @@ namespace odin
             fxtDef.friction = DEFAULT_FRICTION;
             fxtDef.density = density;
 
+			// Collision detection
 			fxtDef.filter.categoryBits = type;
 			fxtDef.filter.maskBits = collidesWith;
 

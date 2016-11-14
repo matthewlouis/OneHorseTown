@@ -54,6 +54,7 @@ namespace odin
         bool       visible = true;
 
 		FacingDirection  direction = RIGHT;
+		bool visible = true;
 
         GraphicalComponent() = default;
 
@@ -124,15 +125,15 @@ namespace odin
             swap( vertexArray, move.vertexArray );
             swap( vertexBuffer, move.vertexBuffer );
             swap( programId, move.programId );
-            swap(direction, move.direction);
-            swap(visible, move.visible);
+			swap(direction, move.direction);
+			swap(visible, move.visible);
             return *this;
         }
 
 		static GraphicalComponent makeRect(
 			float     width,
 			float     height,
-			glm::vec3 color = { 1, 1, 1 },
+			glm::vec3 color = { 1, 1, 1},
 			float     alpha = 1 )
         {
             float vertices[][5] = {

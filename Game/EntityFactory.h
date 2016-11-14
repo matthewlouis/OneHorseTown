@@ -11,9 +11,11 @@ using odin::PhysicalComponent;
 using odin::InputManager;
 using odin::Scene;
 
+// All the possible textures
 enum Textures {
 	NULL_TEXTURE,
 	PLAYER_TEXTURE,
+	ARM_TEXTURE,
 	CRATE1,
 	CRATE2,
 	GROUND1,
@@ -22,9 +24,10 @@ enum Textures {
 	BACKGROUND,
 	TITLE,
 	PRESS_BUTTON,
-    //BLOOD,
+	BULLET_TEXTURE
 };
 
+// Where the entity is positioned relative to
 enum Anchors {
 	CENTRE,
 	// TODO
@@ -37,31 +40,65 @@ enum Anchors {
 
 };
 
-
+/*
+ * Bit shifted enum used for collision detection in the physics engine.
+ * Each entity should have a single category in this list (category bits), and a list of things it collides with using a bitwise AND (mask bits)
+ * See PhysicalComponent factory methods or Box2D API for more details
+ */
 enum EntityTypes {
 	PLAYER = 1 << 0,
 	HORSE = 1 << 1,
 	PLATFORM = 1 << 2,
 	BULLET = 1 << 3,
-    PARTICLE = 1 << 4,
+	PLAYER_ARM = 1 << 4,
+    PARTICLE = 1 << 5,
 };
+
+
+
 
 namespace odin
 {
+
 inline namespace factory
 {
     // "using namespace odin::factory;" to just use these functions.
 
-    template< typename T >
-    void make_player( T* pScene, EntityId eid, Vec2 pos )
-    {
-        int pAnimInfo[3] = { 1, 10, 3 }; //idle 1 frame, run 10 frame, jump 3 frame
+	// graphics component:physics component scale 10:1
+	static const int physicsScale = 10;
 
+	// used for specifying dimensions of objects. 
+	static struct Dim {
+		float x; // actual scale for graphics comp
+		float y;
+		//Dim(float a, float b) { x = a / 2; y = b / 2; }
+		Dim getPhysicsDim() { return Dim{ x / physicsScale, y / physicsScale }; } // return physics dim to scale
+	};
+	// object dimensions
+	static Dim playerDim{ 32,32 }; // intially 32x32
+	static Dim horse{44,36}; // initially 44x36
+	static Dim platform{16,16}; // initially 16x16
+
+    template< typename T >
+    void make_player( T* pScene, EntityId eid, Vec2 pos, uint16_t playerNum )
+    {
         auto pGfx = get_components< GraphicalComponent >( pScene ).add( eid,
-            GraphicalComponent::makeRect( 32, 32 ) );
+            GraphicalComponent::makeRect( playerDim.x, playerDim.y ) );
         pGfx->texture = PLAYER;
 
-        get_components< AnimatorComponent >( pScene ).add( eid, { 1, 10, 3 } );
+		//add arm
+		auto paGfx = get_components< GraphicalComponent >(pScene).add({ "playes", playerNum },
+			GraphicalComponent::makeRect(playerDim.x, playerDim.y));
+		paGfx->texture = ARM_TEXTURE;
+		paGfx->visible = false;
+												//idle 10 frame, run 10 frame, jump 3 frame, shoot 3 frame (one armed, one armless)	
+        get_components< AnimatorComponent >( pScene ).add( eid, { 10, 10, 3, 3, 10, 10, 3, 3 } );
+		
+		//Set up arm
+															//5 x shoot animation at 4 frames per anim
+		auto armAnm = get_components< AnimatorComponent >(pScene).add({"playes", playerNum}, { 4, 4, 4, 4, 4 });
+		armAnm->play = false;
+		armAnm->loop = false;
 
         b2BodyDef playerDef;
         playerDef.position = pos;
@@ -70,14 +107,24 @@ inline namespace factory
         playerDef.gravityScale = 2;
 
         auto pFsx = get_components< PhysicalComponent >( pScene ).add( eid,
-            PhysicalComponent::makeRect( 1.6, 3.2, pScene->b2world, playerDef, 1.0, PLAYER, PLATFORM | PLAYER ) );
+            PhysicalComponent::makeRect( playerDim.getPhysicsDim().x/2, playerDim.getPhysicsDim().y, pScene->b2world, playerDef, 1.0, PLAYER, PLATFORM | PLAYER | BULLET ) );
+
+
+		//a,rm
+		b2BodyDef armDef;
+		armDef.position = pos;
+		armDef.type = b2_staticBody;
+
+		//player arm physics component
+		auto paFsx = get_components< PhysicalComponent >(pScene).add({ "playes", playerNum },
+			PhysicalComponent::makeRect(playerDim.getPhysicsDim().x, playerDim.getPhysicsDim().y, pScene->b2world, armDef, 1.0, PLAYER_ARM, 0));
     }
 
     template< typename T >
     void make_horse( T* pScene, EntityId eid, Vec2 pos )
     {
         auto hGfx = get_components< GraphicalComponent >( pScene ).add( eid,
-            GraphicalComponent::makeRect( 44, 36 ) );
+            GraphicalComponent::makeRect( horse.x, horse.y ) );
         hGfx->texture = HORSE_TEXTURE;
 
         b2BodyDef horseDef;
@@ -87,7 +134,7 @@ inline namespace factory
         horseDef.gravityScale = 2;
 
         auto hFsx = get_components< PhysicalComponent >( pScene ).add( eid,
-            PhysicalComponent::makeRect( 4.4, 3.6, pScene->b2world, horseDef, 1.0, HORSE, PLATFORM ) );
+            PhysicalComponent::makeRect( horse.getPhysicsDim().x, horse.getPhysicsDim().y, pScene->b2world, horseDef, 1.0, HORSE, PLATFORM ) );
     }
 
 	template< typename T >
@@ -108,7 +155,7 @@ inline namespace factory
 }
 
 		Vec2 pos = start + offset;
-
+		x = 1;
 		EntityId eid;
 		uint16 i;
 		for (i = 0; i < length; i++)
@@ -118,26 +165,33 @@ inline namespace factory
 				std::cout << "Entity " << eid << " already exists.\n";
 
 			if (!pScene->gfxComponents.add(eid,
-				GraphicalComponent::makeRect(16, 16, { 1,1,1 })))
+				GraphicalComponent::makeRect(platform.x, platform.y, { 1,1,1 })))
 				std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
 
 			EntityView ntt = EntityView(eid, pScene);
 			ntt.gfxComponent()->texture = GROUND1;
-
 			//makeRect(scene, { id, i }, { 1, 1 }, pos, 0, { 1,1,1 }, GROUND1);
-			pos.x++;
-		}
-		float colliderPos = length / 2.0;
-		offset.x += colliderPos;
+			
+
+			//float colliderPos = length / 2.0;
+			//offset.x += colliderPos;
+			//fset.x += pos.x;
 		b2BodyDef bodyDef;
-		bodyDef.position = start + offset;
+			bodyDef.position = { offset.x / physicsScale, offset.y / physicsScale };
 		bodyDef.angle = 0;
 		bodyDef.type = b2_staticBody;
 
-		
 		if (!pScene->fsxComponents.add({ id, i },
-		PhysicalComponent::makeRect(length, 1, pScene->b2world, bodyDef, 1.0, PLATFORM, HORSE | PLAYER)))
+				PhysicalComponent::makeRect(platform.getPhysicsDim().x, platform.getPhysicsDim().y, pScene->b2world, bodyDef, 1.0, PLATFORM, HORSE | PLAYER)))
 		std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
+		
+			offset.x += physicsScale; 
+		}
+
+
+
+		
+		
 		
 }
 }

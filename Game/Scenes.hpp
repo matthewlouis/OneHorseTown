@@ -15,6 +15,10 @@
 
 #include "ContextAllocator.hpp"
 
+// Macros to speed up rendering
+#define PI 3.1415926f
+#define SIN45 0.7071f
+
 using odin::Entity;
 using odin::EntityId;
 using odin::GraphicalComponent;
@@ -81,6 +85,9 @@ public:
     float energyLevel = 0;
     unsigned short _bulletCount = 0;
 
+	// Range of the bullets, set to diagonal screen distance by default
+	unsigned bulletRange;
+
     PolymorphicAllocator<
         ThresholdAllocator< 4,
             BitsetAllocator< 1024 * 2, 4 >,
@@ -111,6 +118,7 @@ public:
     {
         Scene::init( ticks );
 
+		bulletRange = sqrt(width * width + height * height);
 		camera.init(width, height);
 
         if ( audioBankName != "" )
@@ -180,12 +188,27 @@ public:
         for ( auto x : animComponents )
         {
             x.value.incrementFrame();
-            auto& texAdjust = entities[ x.key ].texAdjust;
+			auto& texAdjust = entities[x.key].texAdjust;
 
-            texAdjust[ 0 ] = x.value.animState;
-            texAdjust[ 1 ] = x.value.currentFrame;
-            texAdjust[ 2 ] = x.value.maxFrames;
-            texAdjust[ 3 ] = x.value.totalAnim;
+			texAdjust[0] = x.value.animState;
+			texAdjust[1] = x.value.currentFrame;
+			texAdjust[2] = x.value.maxFrames;
+			texAdjust[3] = x.value.totalAnim;
+			switch (x.value.type)
+			{
+			// Handle fading animation
+			case odin::AnimationType::FADEOUT:
+				if (x.value.currentFrame == x.value.maxFrames-1) {
+					gfxComponents.remove(x.key);
+					animComponents.remove(x.key);
+					entities.remove(x.key);
+				}
+				else {
+					gfxComponents[x.key].color = { 1,1,1, 1.f-(float)x.value.currentFrame / (float)x.value.maxFrames };
+				}
+			default:
+				break;
+			}
         }
     }
 
@@ -211,6 +234,9 @@ public:
 
             Entity& ntt = entities[ x.key ];
             auto& gfx = x.value;
+
+			if (!gfx.visible)
+				continue;
 
             mat4 mtx = cameraMatrix * translate( base, vec3( ntt.position.glmvec2, 0 ) );
             mtx = rotate( mtx, ntt.rotation, vec3( 0, 0, 1 ) );
@@ -249,7 +275,11 @@ public:
 
     // Using bullet start position, the velocity  direction, and default facing direction.
 
-    EntityView fireBullet( Vec2 position, Vec2 velocity, odin::FacingDirection direction );
+    EntityView fireBullet( Vec2 position, odin::Direction8Way direction );
+
+	// Casts a ray from position in the direction given.
+	// returns eid, normal to the collision, and distance of collision
+	std::tuple<EntityId, Vec2, float> resolveBulletCollision(Vec2 position, Vec2 direction);
 };
 
 struct EntityView
@@ -318,6 +348,11 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 {
     EntityView ntt = EntityView(eid, this);
 
+	//arm
+	EntityView arm_ntt = EntityView({ "playes", (uint16_t)pindex }, this);
+	GraphicalComponent& arm_gfx = *arm_ntt.gfxComponent();
+	AnimatorComponent& arm_anim = *arm_ntt.animComponent();
+
     b2Body& body = *ntt.fsxComponent()->pBody;
     GraphicalComponent& gfx = *ntt.gfxComponent();
     AnimatorComponent& anim = *ntt.animComponent();
@@ -328,10 +363,14 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     float actionRight = mngr.isKeyDown(SDLK_RIGHT) ? 1.f : 0.f;
 
     //adjust facing direction
-    if (actionLeft)
+	if (actionLeft) {
         gfx.direction = odin::LEFT;
-    if (actionRight)
+		arm_gfx.direction = odin::LEFT;
+	}
+	if (actionRight) {
         gfx.direction = odin::RIGHT;
+		arm_gfx.direction = odin::RIGHT;
+	}
 
     Vec2 aimDir = mngr.gamepads.joystickDir( pindex );
     aimDir.y = -aimDir.y;
@@ -339,19 +378,58 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     if ( glm::length( aimDir.glmvec2 ) < 0.25f )
         aimDir = {0, 0};
 
-    //adjust facing direction for joystick
-    if (aimDir.x < 0)
-        gfx.direction = odin::LEFT;
-    if (aimDir.x > 0)
-        gfx.direction = odin::RIGHT;
+	//calculate angle of aim using aimDir
+	float aimAngle = atan2(aimDir.y, aimDir.x);
+	odin::Direction8Way aimDirection = odin::calculateDirection8Way(aimAngle);
 
-    //b2Fixture* pFixt = body.GetFixtureList();
+	//choose the correct arm animation based on direction
+	switch (aimDirection) {
+	case(odin::EAST) :
+	case(odin::WEST) :
+		arm_anim.switchAnimState(2);
+		break;
+	case(odin::NORTH_EAST) :
+	case(odin::NORTH_WEST) :
+		arm_anim.switchAnimState(1);
+		break;
+	case(odin::SOUTH_EAST) :
+	case(odin::SOUTH_WEST) :
+		arm_anim.switchAnimState(3);
+		break;
+	case(odin::NORTH) :
+		arm_anim.switchAnimState(0);
+		break;
+	case(odin::SOUTH) :
+		arm_anim.switchAnimState(4);
+		break;
+	}
+
+    //adjust facing direction for joystick
+	if (aimDir.x < 0) {
+        gfx.direction = odin::LEFT;
+		arm_gfx.direction = odin::LEFT;		
+	}
+	if (aimDir.x > 0) {
+        gfx.direction = odin::RIGHT;
+		arm_gfx.direction = odin::RIGHT;
+
+	}
+
+	// Correct default aim direction if no aim present
+	if (aimAngle == 0)
+	{
+		if (gfx.direction == odin::LEFT)
+			aimDirection = odin::Direction8Way::WEST;
+		else if (gfx.direction == odin::RIGHT)
+			aimDirection = odin::Direction8Way::EAST;
+	}
 
     if ( actionLeft == 0 && actionRight == 0 && aimDir.x == 0 )
     {
         //pFixt->SetFriction( 2 );
         vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0f));
         anim.switchAnimState(0); //idle state
+		arm_gfx.visible = false;
     }
     else
     {
@@ -361,9 +439,13 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
         vel.x -= actionLeft * (20 + 1) * (1 / 60.0f);
         vel.x += actionRight * (20 + 1) * (1 / 60.0f);
         vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
-        anim.switchAnimState(1); //running
+
+		anim.switchAnimState(5); //running
+		
+		arm_gfx.visible = true; //show arm when running
     }
 
+	
     if (mngr.wasKeyPressed(SDLK_UP)) {
         vel.y = 11;
     }
@@ -372,8 +454,9 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
         vel.y *= 0.6f;
     }
 
-    if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_A))
+	if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_A)) {
         vel.y = 11;
+	}
 
     if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_A) && vel.y > 0)
         vel.y *= 0.6f;
@@ -391,7 +474,8 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     // Handle Shoot input on button B
     if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B))
     {
-        fireBullet({body.GetPosition().x,body.GetPosition().y}, aimDir, gfx.direction);
+		arm_anim.play = true;
+		fireBullet(entities[{ "playes", (uint16_t)pindex }].position, aimDirection);
     }
     if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_B))
     {
@@ -399,11 +483,12 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     }
 	
     //for testing audio
-    if ( mngr.wasKeyPressed( SDLK_SPACE ) )
-    {
+	if (mngr.wasKeyPressed(SDLK_SPACE)) {
 		playSound("Audio/FX/Shot.wav", 127);
-        this->fireBullet( {}, {}, odin::FacingDirection::RIGHT );
-    }
+		arm_anim.play = true;
+		arm_anim.currentFrame = 1;
+		fireBullet(entities[{ "playes", 0 }].position, aimDirection);
+	}
     if (mngr.wasKeyPressed(SDLK_1))
         pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0); //low energy test
     if (mngr.wasKeyPressed(SDLK_2))
@@ -417,8 +502,52 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     body.SetLinearVelocity(vel);
 }
 
-inline EntityView LevelScene::fireBullet(Vec2 position, Vec2 velocity, odin::FacingDirection direction)
+// Casts ray from position in specified direction
+// returns eid, normal to the collision, and distance from position
+std::tuple<EntityId, Vec2, float> LevelScene::resolveBulletCollision(Vec2 position, Vec2 direction) {
+	// buffer value
+	float delta = 0.001;
+	
+	//set up input
+	b2RayCastInput input;
+	input.p1 = position;
+	input.p2 = { position.x + direction.x * bulletRange, position.y + direction.y * bulletRange };
+	input.maxFraction = 1;
+
+	//check every fixture of every body to find closest
+	float closestFraction = 1; //start with end of line as p2
+	b2Vec2 intersectionNormal(0, 0);
+
+	EntityId eid;
+
+	for (auto x : fsxComponents) {
+		b2Body* body = x.value.pBody;
+		for (b2Fixture* f = body->GetFixtureList(); f; f = f->GetNext()) {
+
+			b2RayCastOutput output;
+			if (!f->RayCast(&output, input, 0))
+				continue;
+			// TODO: This SHOULD filter out fixtues that don't collide with bullets... But doesn't seem to do so
+			if(!(f->GetFilterData().maskBits & BULLET))
+				continue;
+			if (output.fraction < closestFraction && output.fraction > delta) {
+				closestFraction = output.fraction;
+				intersectionNormal = output.normal;
+				eid = x.key;
+			}
+		}
+		
+	}
+	return std::make_tuple( eid, intersectionNormal, closestFraction * bulletRange);
+
+}
+
+inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
 {
+
+	float length = 100.f;
+	float rotation = 0;
+	Vec2 offset = { 0,0 };
     //for alpha presentation, to simulate energy levels
     //more shots fired == more energy!
     if (energyLevel >= 1.0) {
@@ -430,33 +559,82 @@ inline EntityView LevelScene::fireBullet(Vec2 position, Vec2 velocity, odin::Fac
     pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", energyLevel);
     pAudioEngine->playEvent("event:/Desperado/Shoot");
 
-    double bulletOffset = 0.5;
-    float bulletVelocity = 100;
+	// id of the entity hit, normal to the collision, distance to target
+	std::tuple<EntityId, Vec2, float> collisionData;
+	
+	// Determine the offset and rotation of the bullet graphic based on the aim direction
+	switch (direction) {
+	case odin::NORTH_WEST:
+		collisionData = resolveBulletCollision(position, { -1,1 });
+		length = std::get<2>(collisionData);
+		rotation = -PI/4;
+		offset = { SIN45 * -length/2, SIN45 * length/2 };
+		break;
+	case odin::NORTH_EAST:
+		collisionData = resolveBulletCollision(position, { 1,1 });
+		length = std::get<2>(collisionData);
+		rotation = PI / 4;
+		offset = { SIN45 * length / 2, SIN45 * length / 2 };
+		break;
+	case odin::SOUTH_WEST:
+		collisionData = resolveBulletCollision(position, { -1,-1 });
+		length = std::get<2>(collisionData);
+		rotation = PI / 4;
+		offset = { SIN45 * -length / 2, SIN45 * -length / 2 };
+		break;
+	case odin::SOUTH_EAST:
+		collisionData = resolveBulletCollision(position, { 1,-1 });
+		length = std::get<2>(collisionData);
+		rotation = -PI / 4;
+		offset = { SIN45 * length / 2, SIN45 * -length / 2 };
+		break;
+	case odin::NORTH:
+		collisionData = resolveBulletCollision(position, { 0,1 });
+		length = std::get<2>(collisionData);
+		rotation = PI / 2;
+		offset = { 0, length / 2 };
+		break;
+	case odin::SOUTH:
+		collisionData = resolveBulletCollision(position, { 0, -1 });
+		length = std::get<2>(collisionData);
+		rotation = -PI / 2;
+		offset = { 0, -length / 2 };
+		break;
+	case odin::WEST:
+		collisionData = resolveBulletCollision(position, { -1,0 });
+		length = std::get<2>(collisionData);
+		offset = { -length / 2, 0 };
+		break;
+	case odin::EAST:
+		collisionData = resolveBulletCollision(position, { 1,0 });
+		length = std::get<2>(collisionData);
+		offset = { length / 2 + 20, 0 };
+		break;
+	default:
+		break;
+	}
 
-    // first set facing direction offset for bullet, eventually bullet should have a odin::FacingDirection
-    // correct bullet firing from left side using offset
-    if (direction == odin::LEFT)
-        position.x -= bulletOffset;
+	EntityId eid("bullet", _bulletCount++);
 
-    // ensure a default case for 0 velocity incase joystick is neither held left or right.
-    if (velocity.x == 0 && velocity.y == 0 && direction == odin::LEFT)
-        velocity.x = -1;
+	if (!entities.add(eid, Entity(position+offset, rotation)))
+		std::cout << "Entity " << eid << " already exists.\n";
 
-    if (velocity.x == 0 && velocity.y == 0 && direction == odin::RIGHT)
-    {
-        velocity.x = 1;
-    }
+	auto bGfx = gfxComponents.add(eid, GraphicalComponent::makeRect(length, 8.0f, { 255.f, 255.f, 255.f }));
+	bGfx->texture = BULLET_TEXTURE;
+	if (!bGfx)
+		std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
 
-    // get new velocity based on direction and bullet velocity
-    velocity.x *= bulletVelocity;
-    velocity.y *= bulletVelocity;
+	if (!animComponents.add(eid, AnimatorComponent({ 8 }, odin::FADEOUT)))
+		std::cout << "Entity " << eid << " already has an AnimationComponent.\n";
 
-    EntityId eid("bullet", _bulletCount++);
+	/*
+	velocity.x *= speed;
+	velocity.y *= speed;
 
     if (!entities.add(eid, Entity(position, 0)))
         std::cout << "Entity " << eid << " already exists.\n";
 
-    if (!gfxComponents.add(eid, GraphicalComponent::makeRect(.5f, .1f)))
+    if (!gfxComponents.add(eid, GraphicalComponent::makeRect(10.f, 2.f)))
         std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
 
     b2BodyDef bodyDef;
@@ -465,10 +643,13 @@ inline EntityView LevelScene::fireBullet(Vec2 position, Vec2 velocity, odin::Fac
     bodyDef.type = b2_dynamicBody;
     bodyDef.bullet = true;
 
-    if (!fsxComponents.add(eid, PhysicalComponent::makeCircle(.05f, b2world, bodyDef, 0.01f, BULLET, PLAYER)))
+    if (!fsxComponents.add(eid, PhysicalComponent::makeCircle(.05f, b2world, bodyDef, 0.01f, BULLET, 0)))
         std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
+	*/
+	camera.shake();
 
     return EntityView(eid, this);
+
 }
 
 class TitleScene
@@ -487,13 +668,13 @@ public:
 	b2World                         b2world = { { 0.f, -9.81f }, &b2thd };
 	EntityMap< PhysicalComponent >  fsxComponents;
 
-	InputManager                    inputManager;
+	InputManager*                   pInputManager;
 	std::vector< InputListener >    listeners;
 
-	OHT_DEFINE_COMPONENTS(entities, gfxComponents, fsxComponents);
+	std::string                     audioBankName;
+	AudioEngine*                    pAudioEngine;
 
-	std::string audioBankName;
-	AudioEngine audioEngine;
+	OHT_DEFINE_COMPONENTS(entities, gfxComponents, fsxComponents);
 
 	//SDL_Renderer* renderer;
 
@@ -549,9 +730,9 @@ public:
 
 		if (audioBankName != "")
 		{
-			audioEngine.loadBank(audioBankName + ".bank",
+			pAudioEngine->loadBank(audioBankName + ".bank",
 				FMOD_STUDIO_LOAD_BANK_NORMAL);
-			audioEngine.loadBank(audioBankName + ".strings.bank",
+			pAudioEngine->loadBank(audioBankName + ".strings.bank",
 				FMOD_STUDIO_LOAD_BANK_NORMAL);
 		}
 	}
@@ -562,8 +743,8 @@ public:
 
 		if (audioBankName != "")
 		{
-			audioEngine.unloadBank(audioBankName + ".bank");
-			audioEngine.unloadBank(audioBankName + ".strings.bank");
+			pAudioEngine->unloadBank(audioBankName + ".bank");
+			pAudioEngine->unloadBank(audioBankName + ".strings.bank");
 		}
 	}
 
@@ -571,9 +752,8 @@ public:
 	{
 		Scene::update(ticks);
 
-		inputManager.pollEvents();
 		for ( auto& lstn : listeners )
-			lstn( inputManager );
+			lstn( *pInputManager );
 	}
 
 	void draw()
@@ -604,8 +784,12 @@ public:
 		glUseProgram(program);
 		for (auto x : gfxComponents)
 		{
+
 			Entity& ntt = entities[x.key];
 			auto& gfx = x.value;
+
+			if (!gfx.visible)
+				continue;
 
 			mat4 mtx = translate(base, vec3(ntt.position.glmvec2, 0));
 			mtx = rotate(mtx, ntt.rotation, vec3(0, 0, 1));

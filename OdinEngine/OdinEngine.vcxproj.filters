@@ -56,6 +56,7 @@
     <ClCompile Include="includes\Odin\TextureManager.cpp" />
     <ClCompile Include="includes\Odin\SDLAudio.c" />
     <ClCompile Include="includes\Odin\Camera.cpp" />
+    <ClCompile Include="includes\Odin\InputManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes\Box2D\Box2D.h" />
