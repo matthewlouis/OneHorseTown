@@ -323,8 +323,8 @@ struct EntityView
 };
 
 inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, int pindex )
-{
-    EntityView ntt = EntityView(eid, this);
+{	
+	EntityView ntt = EntityView(eid, this);
 
 	//arm
 	EntityView arm_ntt = EntityView({ "playes", (uint16_t)pindex }, this);
@@ -337,7 +337,8 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 	PhysicalComponent& psx = *ntt.fsxComponent();
 	b2Body& body = *ntt.fsxComponent()->pBody;
 
-	players[pindex].init(&gfx, &anim, &arm_gfx, &arm_anim, &psx);
+	if(!players[pindex].active)
+		players[pindex].init(&gfx, &anim, &psx, &arm_gfx, &arm_anim, &*arm_ntt.fsxComponent());
 
     Vec2 vel = body.GetLinearVelocity();
     float maxSpeed = 5.5f;
@@ -360,51 +361,8 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     if ( glm::length( aimDir.glmvec2 ) < 0.25f )
         aimDir = {0, 0};
 
-	//calculate angle of aim using aimDir
-	float aimAngle = atan2(aimDir.y, aimDir.x);
-	odin::Direction8Way aimDirection = odin::calculateDirection8Way(aimAngle);
-
-	//choose the correct arm animation based on direction
-	switch (aimDirection) {
-	case(odin::EAST) :
-	case(odin::WEST) :
-		arm_anim.switchAnimState(2);
-		break;
-	case(odin::NORTH_EAST) :
-	case(odin::NORTH_WEST) :
-		arm_anim.switchAnimState(1);
-		break;
-	case(odin::SOUTH_EAST) :
-	case(odin::SOUTH_WEST) :
-		arm_anim.switchAnimState(3);
-		break;
-	case(odin::NORTH) :
-		arm_anim.switchAnimState(0);
-		break;
-	case(odin::SOUTH) :
-		arm_anim.switchAnimState(4);
-		break;
-	}
-
-    //adjust facing direction for joystick
-	if (aimDir.x < 0) {
-		gfx.direction = odin::LEFT;
-		arm_gfx.direction = odin::LEFT;		
-	}
-	if (aimDir.x > 0) {
-		gfx.direction = odin::RIGHT;
-		arm_gfx.direction = odin::RIGHT;
-		
-	}
-
-	// Correct default aim direction if no aim present
-	if (aimAngle == 0)
-	{
-		if (gfx.direction == odin::LEFT)
-			aimDirection = odin::Direction8Way::WEST;
-		else if (gfx.direction == odin::RIGHT)
-			aimDirection = odin::Direction8Way::EAST;
-	}
+	//aim the arm graphics
+	odin::Direction8Way aimDirection = players[pindex].aimArm(aimDir);
 
     if ( actionLeft == 0 && actionRight == 0 && aimDir.x == 0 )
     {
@@ -421,7 +379,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
         vel.x += actionRight * (20 + 1) * (1 / 60.0f);
         vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
 		
-		//arm_gfx.visible = true; //show arm when running
+		arm_gfx.visible = true; //show arm when running
     }
 
 	
@@ -454,6 +412,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B))
     {
 		arm_anim.play = true;
+		arm_anim.currentFrame = 1;
 		fireBullet(entities[{ "playes", (uint16_t)pindex }].position, aimDirection);
     }
     if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_B))

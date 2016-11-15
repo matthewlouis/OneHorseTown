@@ -15,13 +15,13 @@ using odin::Scene;
 
 enum PlayerState {
 	IDLE = 0,
-	RUNNING,
-	IN_AIR,
-	IDLE_SHOOTING,
+	RUNNING = 5,
+	IN_AIR = 6,
+	IDLE_SHOOTING = 7,
 	RUNNING_SHOOTING = 5,
 	IN_AIR_SHOOTING = 6,
-	HIT,
-	DEAD
+	HIT = 8,
+	DEAD = 9
 };
 
 class Player {
@@ -30,6 +30,8 @@ public:
 	//arm
 	GraphicalComponent* arm_gfx;
 	AnimatorComponent* arm_anim;
+	PhysicalComponent* arm_psx;
+	Vec2 armOffsets[5];
 
 	//player
 	GraphicalComponent* gfx;
@@ -38,19 +40,33 @@ public:
 
 	PlayerState currentState;
 	bool falling = false;
+	bool shooting = false;
 
 	bool active = false;
 
 	void init(GraphicalComponent *gfx,
 			  AnimatorComponent *anim,
+			  PhysicalComponent *psx,
 			  GraphicalComponent *arm_gfx, 
 			  AnimatorComponent *arm_anim,
-			  PhysicalComponent *psx) {
+			  PhysicalComponent *arm_psx) {
+		if (active)
+			return;
 		this->gfx = gfx;
 		this->anim = anim;
 		this->arm_gfx = arm_gfx;
 		this->arm_anim = arm_anim;
+		this->arm_anim->play = false;
 		this->psx = psx;
+		this->arm_psx = arm_psx;
+
+		//set arm offsets so it renders in correct location
+		armOffsets[0] = Vec2(0.5, 0.9);
+		armOffsets[1] = Vec2(0.6, 0.75);
+		armOffsets[2] = Vec2(0.75, 0.475);
+		armOffsets[3] = Vec2(0.6, 0.275);
+		armOffsets[4] = Vec2(0.25, 0.05);
+
 		active = true;
 	}
 
@@ -72,10 +88,62 @@ public:
 		}
 	}
 
+	odin::Direction8Way aimArm(Vec2 aimDir) {
+		//calculate angle of aim using aimDir
+		float aimAngle = atan2(aimDir.y, aimDir.x);
+		odin::Direction8Way aimDirection = odin::calculateDirection8Way(aimAngle);
+
+		//choose the correct arm animation based on direction
+		switch (aimDirection) {
+		case(odin::EAST) :
+		case(odin::WEST) :
+			arm_anim->switchAnimState(2);
+			break;
+		case(odin::NORTH_EAST) :
+		case(odin::NORTH_WEST) :
+			arm_anim->switchAnimState(1);
+			break;
+		case(odin::SOUTH_EAST) :
+		case(odin::SOUTH_WEST) :
+			arm_anim->switchAnimState(3);
+			break;
+		case(odin::NORTH) :
+			arm_anim->switchAnimState(0);
+			break;
+		case(odin::SOUTH) :
+			arm_anim->switchAnimState(4);
+			break;
+		}
+
+		//adjust facing direction for joystick
+		if (aimDir.x < 0) {
+			gfx->direction = odin::LEFT;
+			arm_gfx->direction = odin::LEFT;
+		}
+		if (aimDir.x > 0) {
+			gfx->direction = odin::RIGHT;
+			arm_gfx->direction = odin::RIGHT;
+
+		}
+
+		// Correct default aim direction if no aim present
+		if (aimAngle == 0)
+		{
+			if (gfx->direction == odin::LEFT)
+				aimDirection = odin::Direction8Way::WEST;
+			else if (gfx->direction == odin::RIGHT)
+				aimDirection = odin::Direction8Way::EAST;
+		}
+
+		return aimDirection;
+	}
+
 	void update() {
 		if (!active)
 			return;
 
+
+		//Determine Player state
 		Vec2 vel = psx->pBody->GetLinearVelocity();
 
 		switch (currentState) {
@@ -84,13 +152,11 @@ public:
 					anim->switchAnimState(IN_AIR);
 					anim->loop = false;
 					currentState = IN_AIR;
-					std::cout << "\nState: " << getStateName() << std::endl;
 				}
 				else if (abs(vel.x) > FALL_THRESHOLD) {
 					anim->switchAnimState(RUNNING);
 					anim->loop = true;
 					currentState = RUNNING;
-					std::cout << "\nState: " << getStateName() << std::endl;
 				}
 				break;
 			case RUNNING:
@@ -98,7 +164,6 @@ public:
 					anim->switchAnimState(IN_AIR);
 					anim->loop = false;
 					currentState = IN_AIR;
-					std::cout << "\nState: " << getStateName() << std::endl;
 				}
 				else if (abs(vel.x) <= FALL_THRESHOLD) {
 					anim->switchAnimState(IDLE);
@@ -109,7 +174,6 @@ public:
 			case IDLE_SHOOTING:
 				break;
 			case IN_AIR:
-			case IN_AIR_SHOOTING:
 				if (vel.y < -FALL_THRESHOLD)
 					falling = true;
 
@@ -127,11 +191,21 @@ public:
 					}
 					
 					anim->loop = true;
-					std::cout << "\nState: " << getStateName() << std::endl;
 				}
 
 				break;
 		}
+
+		//Determine arm state
+		Vec2 armPosition = psx->position();
+
+		//current state determines the arm offset
+		int currentState = arm_anim->animState;
+
+		armPosition.y += armOffsets[currentState].y;
+		armPosition.x += gfx->direction * armOffsets[currentState].x;
+
+		arm_psx->pBody->SetTransform(armPosition, 0);
 	}
 
 };

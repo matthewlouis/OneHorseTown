@@ -211,19 +211,6 @@ public:
 
 	void update(unsigned ticks)
 	{
-		//iterate through all the arms and place them relative to the player using offsets
-		for (int i = 0; i < numberPlayers; ++i) {
-			Vec2 armPosition = players[i].fsxComponent()->position();
-			
-			//current state determines the arm offset
-			int currentState = player_arms[i].animComponent()->animState;
-
-			armPosition.y += armOffsets[currentState].y;
-			armPosition.x += players[i].gfxComponent()->direction * armOffsets[currentState].x;
-
-			player_arms[i].fsxComponent()->pBody->SetTransform(armPosition, 0);
-		}
-
 		LevelScene::update(ticks);
 	}
 };
