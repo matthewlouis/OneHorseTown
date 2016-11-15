@@ -635,11 +635,22 @@ public:
 	unsigned OFF_TIME = 40, ON_TIME = 55;
 	unsigned onFrame = 0, offFrame = 0;
 	bool promptOn = true;
-	bool started = false;
+	bool buttonPressed = false;
+
+	unsigned int TIME_BEFORE_INTRO = 10000;
+	bool introStarted = false;
+	int currentSlide = 0;
+	int slideTimes[14] = { 0, 3000, 3000, 1500, 1500, 2500, 700, 700, 700, 2000, 500, 500, 500, 500 };
+	GraphicalComponent* background;
+	int fadeTime = 250;
+	bool fadedOut = false;
+	bool fading = false;
+	bool goingBackToTitle = false;
 
 	GLuint program;
 	GLint uMatrix, uColor, uTexture, uFacingDirection,
-		uCurrentFrame, uCurrentAnim, uMaxFrame, uMaxAnim;
+		uCurrentFrame, uCurrentAnim, uMaxFrame, uMaxAnim,
+		uFadeOut;
 
 	TitleScene(int width, int height, std::string audioBank = "")
 		: Scene(width, height)
@@ -653,7 +664,44 @@ public:
 		, uCurrentAnim(glGetUniformLocation(program, "uCurrentAnim"))
 		, uMaxFrame(glGetUniformLocation(program, "uMaxFrames"))
 		, uMaxAnim(glGetUniformLocation(program, "uTotalAnim"))
+		, uFadeOut(glGetUniformLocation(program, "uFadeOut"))
 	{
+	}
+
+	//fade out scene, and return true when complete, must be called every update
+	bool fadeout(int startTime, int currentTime, int fadeLength) {
+		int timePassed = currentTime - startTime;
+
+		//linear fade
+		float fadeAmount = (float)timePassed / fadeLength;
+		fadeAmount = fadeAmount > 1.0f ? 1.0 : fadeAmount; //clamp if greater than 1;
+
+		glUniform(uFadeOut, fadeAmount);
+
+		if (fadeAmount >= 1.0f) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	//fade in scene, and return true when complete, must be called every update
+	bool fadein(int startTime, int currentTime, int fadeLength) {
+		int timePassed = currentTime - startTime;
+
+		//linear fade
+		float fadeAmount = 1.0f - (float)timePassed / fadeLength;
+		fadeAmount = fadeAmount < 0.0f ? 0.0 : fadeAmount; //clamp if greater than 1;
+
+		glUniform(uFadeOut, fadeAmount);
+
+		if (fadeAmount <= 0.0f) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 	void init(unsigned ticks)
@@ -662,8 +710,20 @@ public:
 
 		odin::load_texture(TITLE, "Textures/title.png");
 		odin::load_texture(PRESS_BUTTON, "Textures/pressbutton.png");
+		odin::load_texture(INTRO_1, "Textures/Intro/1.png");
+		odin::load_texture(INTRO_2, "Textures/Intro/2.png");
+		odin::load_texture(INTRO_3A, "Textures/Intro/3a.png");
+		odin::load_texture(INTRO_3B, "Textures/Intro/3b.png");
+		odin::load_texture(INTRO_4, "Textures/Intro/4.png");
+		odin::load_texture(INTRO_5A, "Textures/Intro/5a.png");
+		odin::load_texture(INTRO_5B, "Textures/Intro/5b.png");
+		odin::load_texture(INTRO_5C, "Textures/Intro/5c.png");
+		odin::load_texture(INTRO_5D, "Textures/Intro/5d.png");
+		odin::load_texture(INTRO_6, "Textures/Intro/6.png");
+		odin::load_texture(INTRO_7, "Textures/Intro/7.png");
+		odin::load_texture(INTRO_8, "Textures/Intro/8.png");
 
-		auto background = gfxComponents.add(
+		background = gfxComponents.add(
 			EntityId(0), GraphicalComponent::makeRect(width, height));
 		background->texture = TITLE;
 		
@@ -677,8 +737,7 @@ public:
 
 		listeners.push_back([this](const InputManager& inmn) {
 			if (inmn.wasKeyPressed(SDL_CONTROLLER_BUTTON_START) || inmn.wasKeyPressed(SDLK_RETURN)) {
-				ON_TIME = OFF_TIME = 4;
-				started = true;
+				buttonPressed = true;
 			}
 		});
 
@@ -704,11 +763,80 @@ public:
 
 	void update(unsigned ticks)
 	{
-		if (started) {
-			static int startedTicks = ticks;
+		static int timeAtStartScreen = ticks;
 
-			if (ticks - startedTicks >= 1000) {
+		if (ticks - timeAtStartScreen > TIME_BEFORE_INTRO) {
+			introStarted = true;
+		}
+
+
+		//Do slideshow intro
+		if (introStarted) {
+			static int slideStartTime = ticks;
+			
+			offFrame = 0;
+			promptOn = false;
+
+			if (SDL_GetTicks() - slideStartTime > slideTimes[currentSlide]) { //if enough time has passed
+				
+				static unsigned int fadeStartTime = ticks;
+				if (!fading) {
+					fadeStartTime = ticks;
+					fading = true;
+				}
+
+				//check if slide has faded out, if so change the slide
+				if (!fadedOut && fadeout(fadeStartTime, ticks, fadeTime)) {
+					fadedOut = true;
+
+					if (currentSlide > 12) {
+						background->texture = TITLE;
+						currentSlide = 0;
+					}
+					else {
+						background->texture = INTRO_1 + currentSlide++;
+					}			
+					fadeStartTime = ticks; //reset fade start to do fade-in
+				}
+				else if (fadedOut && fadein(fadeStartTime, ticks, fadeTime)) {
+					fadedOut = false;
+					slideStartTime = ticks;
+
+					fading = false;
+					if (currentSlide == 0) { //we've just faded back into the title screen
+						introStarted = false;
+						timeAtStartScreen = slideStartTime;
+					}
+				}
+			}
+		}
+
+
+		if (buttonPressed && !introStarted) {
+			static int startedTicks = ticks;
+			ON_TIME = OFF_TIME = 4;
+			
+			if (fadeout(startedTicks, ticks, 2000)) {
 				this->expired = true;
+			}
+		}
+		else if (buttonPressed && introStarted) {
+			static int startedTicks = ticks;
+			if (!goingBackToTitle) {
+				startedTicks = ticks;
+				goingBackToTitle = true;
+			}
+
+			if (fadeout(startedTicks, ticks, 500)) {
+				//reset everything to original state to go back to title
+				currentSlide = 0;
+				introStarted = false;
+				background->texture = TITLE;
+				timeAtStartScreen = ticks;
+				glUniform(uFadeOut, 0.0f);
+				buttonPressed = false;
+				goingBackToTitle = false;
+				fading = false;
 			}
 		}
 
