@@ -88,11 +88,13 @@ public:
 	// Range of the bullets, set to diagonal screen distance by default
 	unsigned bulletRange;
 
-	Player      players[4];
+	int			numberPlayers;
+	Player      players[MAX_PLAYERS];
 
-    LevelScene( int width, int height, std::string audioBank = "" )
+    LevelScene( int width, int height, std::string audioBank = "", int numberPlayers = MAX_PLAYERS )
         : Scene( width, height )
         , audioBankName( std::move( audioBank ) )
+		, numberPlayers(numberPlayers)
 
         , program( load_shaders( "Shaders/vertexAnim.glsl", "Shaders/fragmentShader.glsl" ) )
         , uMatrix( glGetUniformLocation( program, "uMatrix" ) )
@@ -137,7 +139,7 @@ public:
     {
         Scene::update( ticks );
 		
-		for (int i = 0; i < 1; i++) {
+		for (int i = 0; i < this->numberPlayers; i++) {
 			players[i].update();
 		}
 

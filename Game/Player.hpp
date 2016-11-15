@@ -76,6 +76,7 @@ public:
 	}
 
 
+	//returns the name of the state as a string for debugging
 	std::string getStateName() {
 		switch (currentState) {
 		case IDLE:

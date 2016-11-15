@@ -22,7 +22,6 @@ public:
 
 	EntityView* players;
 	EntityView* player_arms;
-	int numberPlayers;
 
 	//'table' to store offsets for placing arm - 1 for each animation state
 	Vec2 armOffsets[5];
@@ -36,7 +35,7 @@ public:
 	{
 		players = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
 		player_arms = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
-		this->numberPlayers = 1;//numberPlayers; UNCOMMENT THIS!
+		this->numberPlayers = numberPlayers;
 	}
 
 	void init( unsigned ticks )
@@ -104,7 +103,6 @@ public:
 		player_arms[0] = EntityView({ "playes", 0 }, this);
 
 
-		/* FOR TESTING ANIMATION STATES REMEMBER TO UNCOMMENT
 		// create player 2
 		odin::make_player(this, { "player", 1 }, { 0, 5 },1);
 		listeners.push_back([this](const InputManager& inmn) {
@@ -127,7 +125,6 @@ public:
 		});
 		players[3] = EntityView({ "player", 3 }, this);
 		player_arms[3] = EntityView({ "playes", 3 }, this);
-		*/
 
 		//factory->makeHorse(this, "horse");
         //odin::make_horse( this, "horse", {0.0f, 5.f} );
