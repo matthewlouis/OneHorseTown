@@ -21,10 +21,6 @@ public:
 	EntityFactory* factory;
 
 	EntityView* players;
-	EntityView* player_arms;
-
-	//'table' to store offsets for placing arm - 1 for each animation state
-	Vec2 armOffsets[5];
 
 	float _scale;
 
@@ -34,19 +30,11 @@ public:
 		, _scale(scale)
 	{
 		players = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
-		player_arms = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
 		this->numberPlayers = numberPlayers;
 	}
 
 	void init( unsigned ticks )
     {
-		//set arm offsets so it renders in correct location
-		armOffsets[0] = Vec2(0.5, 0.9);
-		armOffsets[1] = Vec2(0.6, 0.75);
-		armOffsets[2] = Vec2(0.75, 0.475);
-		armOffsets[3] = Vec2(0.6, 0.275);
-		armOffsets[4] = Vec2(0.25, 0.05);
-
         LevelScene::init( ticks );
 
 		odin::load_texture(GROUND1, "Textures/ground.png");
@@ -100,7 +88,6 @@ public:
             return player_input( inmn, {"player", 0}, 0 );
         } );
 		players[0] = EntityView({ "player", 0 }, this);
-		player_arms[0] = EntityView({ "playes", 0 }, this);
 
 
 		// create player 2
@@ -110,21 +97,18 @@ public:
 		});
 
 		players[1] = EntityView({ "player", 1 }, this);
-		player_arms[1] = EntityView({ "playes", 1 }, this);
 		// create player 3
 		odin::make_player(this, { "player", 2 }, { 0, 5 }, 2);
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 2 }, 2);
 		});
 		players[2] = EntityView({ "player", 2 }, this);
-		player_arms[2] = EntityView({ "playes", 2 }, this);
 		// create player 4
 		odin::make_player(this, { "player", 3 }, { 0, 5 }, 3);
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 3 }, 3);
 		});
 		players[3] = EntityView({ "player", 3 }, this);
-		player_arms[3] = EntityView({ "playes", 3 }, this);
 
 		//factory->makeHorse(this, "horse");
         //odin::make_horse( this, "horse", {0.0f, 5.f} );
