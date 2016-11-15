@@ -10,6 +10,7 @@
 
 #include "Constants.h"
 #include "EntityFactory.h"
+#include "Player.hpp"
 
 #include <tuple>
 
@@ -28,6 +29,7 @@ using odin::ComponentType;
 using odin::AudioEngine;
 
 struct EntityView;
+class Player;
 
 
 // Defines a function which returns the component map for the 
@@ -86,6 +88,8 @@ public:
 	// Range of the bullets, set to diagonal screen distance by default
 	unsigned bulletRange;
 
+	Player      players[4];
+
     LevelScene( int width, int height, std::string audioBank = "" )
         : Scene( width, height )
         , audioBankName( std::move( audioBank ) )
@@ -132,6 +136,10 @@ public:
     void update( unsigned ticks )
     {
         Scene::update( ticks );
+		
+		for (int i = 0; i < 1; i++) {
+			players[i].update();
+		}
 
         for ( auto& lstn : listeners )
             lstn( *pInputManager );
@@ -323,9 +331,13 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 	GraphicalComponent& arm_gfx = *arm_ntt.gfxComponent();
 	AnimatorComponent& arm_anim = *arm_ntt.animComponent();
 
-    b2Body& body = *ntt.fsxComponent()->pBody;
+    
     GraphicalComponent& gfx = *ntt.gfxComponent();
     AnimatorComponent& anim = *ntt.animComponent();
+	PhysicalComponent& psx = *ntt.fsxComponent();
+	b2Body& body = *ntt.fsxComponent()->pBody;
+
+	players[pindex].init(&gfx, &anim, &arm_gfx, &arm_anim, &psx);
 
     Vec2 vel = body.GetLinearVelocity();
     float maxSpeed = 5.5f;
@@ -398,7 +410,6 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     {
         //pFixt->SetFriction( 2 );
         vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0f));
-        anim.switchAnimState(0); //idle state
 		arm_gfx.visible = false;
     }
     else
@@ -409,10 +420,8 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
         vel.x -= actionLeft * (20 + 1) * (1 / 60.0f);
         vel.x += actionRight * (20 + 1) * (1 / 60.0f);
         vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
-
-		anim.switchAnimState(5); //running
 		
-		arm_gfx.visible = true; //show arm when running
+		//arm_gfx.visible = true; //show arm when running
     }
 
 	

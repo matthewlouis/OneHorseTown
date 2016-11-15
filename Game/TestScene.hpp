@@ -36,7 +36,7 @@ public:
 	{
 		players = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
 		player_arms = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
-		this->numberPlayers = numberPlayers;
+		this->numberPlayers = 1;//numberPlayers; UNCOMMENT THIS!
 	}
 
 	void init( unsigned ticks )
@@ -102,11 +102,15 @@ public:
         } );
 		players[0] = EntityView({ "player", 0 }, this);
 		player_arms[0] = EntityView({ "playes", 0 }, this);
+
+
+		/* FOR TESTING ANIMATION STATES REMEMBER TO UNCOMMENT
 		// create player 2
 		odin::make_player(this, { "player", 1 }, { 0, 5 },1);
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 1 }, 1);
 		});
+
 		players[1] = EntityView({ "player", 1 }, this);
 		player_arms[1] = EntityView({ "playes", 1 }, this);
 		// create player 3
@@ -123,7 +127,7 @@ public:
 		});
 		players[3] = EntityView({ "player", 3 }, this);
 		player_arms[3] = EntityView({ "playes", 3 }, this);
-
+		*/
 
 		//factory->makeHorse(this, "horse");
         //odin::make_horse( this, "horse", {0.0f, 5.f} );
