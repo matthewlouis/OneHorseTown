@@ -345,7 +345,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     float actionLeft = mngr.isKeyDown(SDLK_LEFT) ? 1.f : 0.f;
     float actionRight = mngr.isKeyDown(SDLK_RIGHT) ? 1.f : 0.f;
 
-    //adjust facing direction
+    //adjust facing direction FOR KEYBOARD ONLY
 	if (actionLeft) {
 		gfx.direction = odin::LEFT;
 		arm_gfx.direction = odin::LEFT;
@@ -368,7 +368,6 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     {
         //pFixt->SetFriction( 2 );
         vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0f));
-		arm_gfx.visible = false;
     }
     else
     {
@@ -377,9 +376,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 
         vel.x -= actionLeft * (20 + 1) * (1 / 60.0f);
         vel.x += actionRight * (20 + 1) * (1 / 60.0f);
-        vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
-		
-		arm_gfx.visible = true; //show arm when running
+        vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);		
     }
 
 	

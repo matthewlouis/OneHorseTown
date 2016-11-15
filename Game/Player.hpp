@@ -41,6 +41,10 @@ public:
 	PlayerState currentState;
 	bool falling = false;
 	bool shooting = false;
+	bool aiming = false;
+
+	//TODO: keeping track of ammunition
+	int bulletCount = 3;
 
 	bool active = false;
 
@@ -60,6 +64,7 @@ public:
 		this->psx = psx;
 		this->arm_psx = arm_psx;
 
+		//TODO: arm offsets for other animation states;
 		//set arm offsets so it renders in correct location
 		armOffsets[0] = Vec2(0.5, 0.9);
 		armOffsets[1] = Vec2(0.6, 0.75);
@@ -97,21 +102,21 @@ public:
 		switch (aimDirection) {
 		case(odin::EAST) :
 		case(odin::WEST) :
-			arm_anim->switchAnimState(2);
+			arm_anim->animState = 2;
 			break;
 		case(odin::NORTH_EAST) :
 		case(odin::NORTH_WEST) :
-			arm_anim->switchAnimState(1);
+			arm_anim->animState = 1;
 			break;
 		case(odin::SOUTH_EAST) :
 		case(odin::SOUTH_WEST) :
-			arm_anim->switchAnimState(3);
+			arm_anim->animState = 3;
 			break;
 		case(odin::NORTH) :
-			arm_anim->switchAnimState(0);
+			arm_anim->animState = 0;
 			break;
 		case(odin::SOUTH) :
-			arm_anim->switchAnimState(4);
+			arm_anim->animState = 4;
 			break;
 		}
 
@@ -133,6 +138,11 @@ public:
 				aimDirection = odin::Direction8Way::WEST;
 			else if (gfx->direction == odin::RIGHT)
 				aimDirection = odin::Direction8Way::EAST;
+
+			aiming = false;
+		}
+		else {
+			aiming = true;
 		}
 
 		return aimDirection;
@@ -142,7 +152,7 @@ public:
 		if (!active)
 			return;
 
-
+		printf("\nAiming: %d", aiming);
 		//Determine Player state
 		Vec2 vel = psx->pBody->GetLinearVelocity();
 
@@ -196,16 +206,23 @@ public:
 				break;
 		}
 
-		//Determine arm state
-		Vec2 armPosition = psx->position();
 
-		//current state determines the arm offset
-		int currentState = arm_anim->animState;
+		if (aiming) {
+			arm_gfx->visible = true;
+			//Determine arm state
+			Vec2 armPosition = psx->position();
 
-		armPosition.y += armOffsets[currentState].y;
-		armPosition.x += gfx->direction * armOffsets[currentState].x;
+			//current state determines the arm offset
+			int currentState = arm_anim->animState;
 
-		arm_psx->pBody->SetTransform(armPosition, 0);
+			armPosition.y += armOffsets[currentState].y;
+			armPosition.x += gfx->direction * armOffsets[currentState].x;
+
+			arm_psx->pBody->SetTransform(armPosition, 0);
+		}
+		else {
+			arm_gfx->visible = false;
+		}
 	}
 
 };
