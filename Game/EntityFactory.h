@@ -70,7 +70,6 @@ inline namespace factory
 	static struct Dim {
 		float x; // actual scale for graphics comp
 		float y;
-		//Dim(float a, float b) { x = a / 2; y = b / 2; }
 		Dim getPhysicsDim() { return Dim{ x / physicsScale, y / physicsScale }; } // return physics dim to scale
 	};
 	// object dimensions
@@ -153,7 +152,7 @@ inline namespace factory
 			break;
 		}
 
-		Vec2 pos = offset;
+		Vec2 pos{ offset.x + platform.x/2,offset.y };
 		x = 1;
 		EntityId eid;
 		uint16 i;
@@ -173,17 +172,17 @@ inline namespace factory
 			
 			
 
-			pos.x += physicsScale;
+			pos.x += platform.x;
 			//offset.x += physicsScale; 
 		}
 
 		//float colliderPos = length / 2.0;
 		//offset.x += colliderPos;
 		//fset.x += pos.x;
-		float newPos = offset.x + (platform.x*length / 2.0f) - (platform.x/2);
+		float newPos = offset.x - (platform.x*length / 2.0f) ;
 		// Define the physical properties of the platform
 		b2BodyDef bodyDef;
-		bodyDef.position = { newPos / physicsScale, offset.y / physicsScale };
+		bodyDef.position = { offset.x/physicsScale + (((platform.x*length)/2)/physicsScale) ,offset.y/physicsScale};
 		bodyDef.angle = 0;
 		bodyDef.type = b2_staticBody;
 		if (!pScene->fsxComponents.add({ id, i },
