@@ -51,8 +51,6 @@ namespace odin
         GLuint     vertexBuffer = 0;
         GLuint     programId = 0;
 
-        bool       visible = true;
-
 		FacingDirection  direction = RIGHT;
 		bool visible = true;
 

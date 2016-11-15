@@ -272,7 +272,7 @@ private:
 
 	// Load all of the textures
 	EntityFactory() {
-		odin::load_texture< GLubyte[4] >(NULL_TEXTURE, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF });
+		//odin::load_texture< GLubyte[4] >(NULL_TEXTURE, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF });
 	}
 };
 

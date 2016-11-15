@@ -48,6 +48,31 @@ auto& get_components( Sc* pScene )
     return pScene->components< T >();
 }
 
+class MyContactListener : public b2ContactListener
+{
+public:
+
+    std::vector< b2Body* > deadBodies;
+
+    std::function< void( b2Body* ) > func;
+
+    void BeginContact(b2Contact* contact) {
+
+        auto bodyA = contact->GetFixtureA()->GetBody();
+        auto bodyB = contact->GetFixtureB()->GetBody();
+
+        if ( bodyA->IsBullet() )
+            deadBodies.push_back( bodyA );
+
+        if ( bodyB->IsBullet() )
+            deadBodies.push_back( bodyB );
+    }
+
+    void EndContact(b2Contact* contact) {
+
+    }
+};
+
 class LevelScene
     : public odin::Scene
 {
@@ -98,6 +123,8 @@ public:
         >
     > _localAllocator;
 
+    MyContactListener _contactListener;
+
     LevelScene( int width, int height, std::string audioBank = "" )
         : Scene( width, height )
         , audioBankName( std::move( audioBank ) )
@@ -120,6 +147,8 @@ public:
 
 		bulletRange = sqrt(width * width + height * height);
 		camera.init(width, height);
+
+        b2world.SetContactListener( &_contactListener );
 
         if ( audioBankName != "" )
         {
@@ -174,16 +203,34 @@ public:
             // Round to remove blur/shimmer.
             ntt.position = glm::round( glm::vec2( fsx.position() ) * 10.f );
 
-            if ( fsx.pBody->IsBullet() )
-            {
-                Vec2 vel = fsx.pBody->GetLinearVelocity();
-
-                float angle = std::atan2( vel.y, vel.x );
-                fsx.pBody->SetTransform( ntt.position, angle );
-            }
+            //if ( fsx.pBody->IsBullet() )
+            //{
+            //    Vec2 vel = fsx.pBody->GetLinearVelocity();
+            //
+            //    float angle = std::atan2( vel.y, vel.x );
+            //    fsx.pBody->SetTransform( ntt.position, angle );
+            //}
 
             ntt.rotation = fsx.rotation();
         }
+
+        for ( auto b : _contactListener.deadBodies )
+        {
+            for ( auto x : fsxComponents )
+                if ( x.value.pBody == b )
+                {
+                    if ( _contactListener.func )
+                        _contactListener.func( b );
+
+                    entities.remove( x.key );
+                    gfxComponents.remove( x.key );
+                    fsxComponents.remove( x.key );
+                    break;
+                }
+        }
+
+        if ( !_contactListener.deadBodies.empty() )
+            _contactListener.deadBodies.clear();
 
         for ( auto x : animComponents )
         {
@@ -614,7 +661,21 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way dire
 		break;
 	}
 
-	EntityId eid("bullet", _bulletCount++);
+    EntityId bid("bulleq", _bulletCount);
+
+    entities.add( bid, Entity( position, rotation ) );
+
+    gfxComponents.add( bid, GraphicalComponent::makeRect( 1, 1, { 0, 1, 0 } ) );
+
+    b2BodyDef bodyDef;
+    bodyDef.position = Vec2( glm::vec2( position ) / 10.f ) + b2Vec2{ 1, 0 };
+    bodyDef.linearVelocity = { 10, 0 };
+    bodyDef.type = b2_dynamicBody;
+    bodyDef.bullet = true;
+
+    fsxComponents.add( bid, PhysicalComponent::makeCircle( 0.05, b2world, bodyDef ) );
+
+    /*EntityId eid("bullet", _bulletCount);
 
 	if (!entities.add(eid, Entity(position+offset, rotation)))
 		std::cout << "Entity " << eid << " already exists.\n";
@@ -625,7 +686,9 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way dire
 		std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
 
 	if (!animComponents.add(eid, AnimatorComponent({ 8 }, odin::FADEOUT)))
-		std::cout << "Entity " << eid << " already has an AnimationComponent.\n";
+		std::cout << "Entity " << eid << " already has an AnimationComponent.\n";*/
+
+    ++_bulletCount;
 
 	/*
 	velocity.x *= speed;
@@ -648,7 +711,7 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way dire
 	*/
 	camera.shake();
 
-    return EntityView(eid, this);
+    return EntityView(bid, this);
 
 }
 

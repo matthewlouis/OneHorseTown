@@ -270,11 +270,22 @@ public:
     {
         LevelScene::update( ticks );
 
+        //iterate through all the arms and place them relative to the player using offsets
+        for (int i = 0; i < numberPlayers; ++i) {
+            Vec2 armPosition = players[i].fsxComponent()->position();
+
+            //current state determines the arm offset
+            int currentState = player_arms[i].animComponent()->animState;
+
+            armPosition.y += armOffsets[currentState].y;
+            armPosition.x += players[i].gfxComponent()->direction * armOffsets[currentState].x;
+
+            player_arms[i].fsxComponent()->pBody->SetTransform(armPosition, 0);
+        }
 
         for ( auto& em : emitters )
         {
             updater.globalWorkSize[ 0 ] = em.particles.size();
-
             updater( em.particles, Scene::ticksDiff / 1000.f );
         }
 
@@ -343,10 +354,15 @@ public:
 		armOffsets[4] = Vec2(0.25, 0.05);
 
 
+        _contactListener.func = [this]( b2Body* b ) {
+            _spawnParticle( glm::vec2( Vec2( b->GetPosition() ) ) * 10.f );
+        };
+
         //_registerEntities( {PARTICLE_TAG, 0}, {PARTICLE_TAG, 100} );
 
         #undef PARTICLE_TAG
 
+        odin::load_texture< GLubyte[4] >( NULL_TEXTURE, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF } );
 		odin::load_texture(GROUND1, "Textures/ground.png");
 		odin::load_texture(GROUND2, "Textures/ground2.png");
 		odin::load_texture(PLAYER_TEXTURE, "Textures/CowboySS.png");
@@ -399,25 +415,28 @@ public:
         } );
 		players[0] = EntityView({ "player", 0 }, this);
 		player_arms[0] = EntityView({ "playes", 0 }, this);
+
 		// create player 2
 		odin::make_player(this, { "player", 1 }, { 0, 5 },1);
-		listeners.push_back([this](const InputManager& inmn) {
-			return player_input(inmn, { "player", 1 }, 1);
-		});
+		//listeners.push_back([this](const InputManager& inmn) {
+		//	return player_input(inmn, { "player", 1 }, 1);
+		//});
 		players[1] = EntityView({ "player", 1 }, this);
 		player_arms[1] = EntityView({ "playes", 1 }, this);
+
 		// create player 3
 		odin::make_player(this, { "player", 2 }, { 0, 5 }, 2);
-		listeners.push_back([this](const InputManager& inmn) {
-			return player_input(inmn, { "player", 2 }, 2);
-		});
+		//listeners.push_back([this](const InputManager& inmn) {
+		//	return player_input(inmn, { "player", 2 }, 2);
+		//});
 		players[2] = EntityView({ "player", 2 }, this);
 		player_arms[2] = EntityView({ "playes", 2 }, this);
+
 		// create player 4
 		odin::make_player(this, { "player", 3 }, { 0, 5 }, 3);
-		listeners.push_back([this](const InputManager& inmn) {
-			return player_input(inmn, { "player", 3 }, 3);
-		});
+		//listeners.push_back([this](const InputManager& inmn) {
+		//	return player_input(inmn, { "player", 3 }, 3);
+		//});
 		players[3] = EntityView({ "player", 3 }, this);
 		player_arms[3] = EntityView({ "playes", 3 }, this);
 
@@ -505,22 +524,4 @@ public:
         pAudioEngine->toggleMute(); //mute audio
 	}
 
-
-	void update(unsigned ticks)
-	{
-		//iterate through all the arms and place them relative to the player using offsets
-		for (int i = 0; i < numberPlayers; ++i) {
-			Vec2 armPosition = players[i].fsxComponent()->position();
-			
-			//current state determines the arm offset
-			int currentState = player_arms[i].animComponent()->animState;
-
-			armPosition.y += armOffsets[currentState].y;
-			armPosition.x += players[i].gfxComponent()->direction * armOffsets[currentState].x;
-
-			player_arms[i].fsxComponent()->pBody->SetTransform(armPosition, 0);
-		}
-
-		LevelScene::update(ticks);
-	}
 };
