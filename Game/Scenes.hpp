@@ -10,6 +10,7 @@
 
 #include "Constants.h"
 #include "EntityFactory.h"
+#include "Player.hpp"
 
 #include <tuple>
 
@@ -28,6 +29,7 @@ using odin::ComponentType;
 using odin::AudioEngine;
 
 struct EntityView;
+class Player;
 
 
 // Defines a function which returns the component map for the 
@@ -86,9 +88,13 @@ public:
 	// Range of the bullets, set to diagonal screen distance by default
 	unsigned bulletRange;
 
-    LevelScene( int width, int height, std::string audioBank = "" )
+	int			numberPlayers;
+	Player      players[MAX_PLAYERS];
+
+    LevelScene( int width, int height, std::string audioBank = "", int numberPlayers = MAX_PLAYERS )
         : Scene( width, height )
         , audioBankName( std::move( audioBank ) )
+		, numberPlayers(numberPlayers)
 
         , program( load_shaders( "Shaders/vertexAnim.glsl", "Shaders/fragmentShader.glsl" ) )
         , uMatrix( glGetUniformLocation( program, "uMatrix" ) )
@@ -132,6 +138,10 @@ public:
     void update( unsigned ticks )
     {
         Scene::update( ticks );
+		
+		for (int i = 0; i < this->numberPlayers; i++) {
+			players[i].update();
+		}
 
         for ( auto& lstn : listeners )
             lstn( *pInputManager );
@@ -315,24 +325,29 @@ struct EntityView
 };
 
 inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, int pindex )
-{
-    EntityView ntt = EntityView(eid, this);
+{	
+	EntityView ntt = EntityView(eid, this);
 
 	//arm
 	EntityView arm_ntt = EntityView({ "playes", (uint16_t)pindex }, this);
 	GraphicalComponent& arm_gfx = *arm_ntt.gfxComponent();
 	AnimatorComponent& arm_anim = *arm_ntt.animComponent();
 
-    b2Body& body = *ntt.fsxComponent()->pBody;
+    
     GraphicalComponent& gfx = *ntt.gfxComponent();
     AnimatorComponent& anim = *ntt.animComponent();
+	PhysicalComponent& psx = *ntt.fsxComponent();
+	b2Body& body = *ntt.fsxComponent()->pBody;
+
+	if(!players[pindex].active)
+		players[pindex].init(&gfx, &anim, &psx, &arm_gfx, &arm_anim, &*arm_ntt.fsxComponent());
 
     Vec2 vel = body.GetLinearVelocity();
     float maxSpeed = 5.5f;
     float actionLeft = mngr.isKeyDown(SDLK_LEFT) ? 1.f : 0.f;
     float actionRight = mngr.isKeyDown(SDLK_RIGHT) ? 1.f : 0.f;
 
-    //adjust facing direction
+    //adjust facing direction FOR KEYBOARD ONLY
 	if (actionLeft) {
 		gfx.direction = odin::LEFT;
 		arm_gfx.direction = odin::LEFT;
@@ -348,58 +363,13 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     if ( glm::length( aimDir.glmvec2 ) < 0.25f )
         aimDir = {0, 0};
 
-	//calculate angle of aim using aimDir
-	float aimAngle = atan2(aimDir.y, aimDir.x);
-	odin::Direction8Way aimDirection = odin::calculateDirection8Way(aimAngle);
-
-	//choose the correct arm animation based on direction
-	switch (aimDirection) {
-	case(odin::EAST) :
-	case(odin::WEST) :
-		arm_anim.switchAnimState(2);
-		break;
-	case(odin::NORTH_EAST) :
-	case(odin::NORTH_WEST) :
-		arm_anim.switchAnimState(1);
-		break;
-	case(odin::SOUTH_EAST) :
-	case(odin::SOUTH_WEST) :
-		arm_anim.switchAnimState(3);
-		break;
-	case(odin::NORTH) :
-		arm_anim.switchAnimState(0);
-		break;
-	case(odin::SOUTH) :
-		arm_anim.switchAnimState(4);
-		break;
-	}
-
-    //adjust facing direction for joystick
-	if (aimDir.x < 0) {
-		gfx.direction = odin::LEFT;
-		arm_gfx.direction = odin::LEFT;		
-	}
-	if (aimDir.x > 0) {
-		gfx.direction = odin::RIGHT;
-		arm_gfx.direction = odin::RIGHT;
-		
-	}
-
-	// Correct default aim direction if no aim present
-	if (aimAngle == 0)
-	{
-		if (gfx.direction == odin::LEFT)
-			aimDirection = odin::Direction8Way::WEST;
-		else if (gfx.direction == odin::RIGHT)
-			aimDirection = odin::Direction8Way::EAST;
-	}
+	//aim the arm graphics
+	odin::Direction8Way aimDirection = players[pindex].aimArm(aimDir);
 
     if ( actionLeft == 0 && actionRight == 0 && aimDir.x == 0 )
     {
         //pFixt->SetFriction( 2 );
         vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0f));
-        anim.switchAnimState(0); //idle state
-		arm_gfx.visible = false;
     }
     else
     {
@@ -408,11 +378,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 
         vel.x -= actionLeft * (20 + 1) * (1 / 60.0f);
         vel.x += actionRight * (20 + 1) * (1 / 60.0f);
-        vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
-
-		anim.switchAnimState(5); //running
-		
-		arm_gfx.visible = true; //show arm when running
+        vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);		
     }
 
 	
@@ -445,6 +411,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B))
     {
 		arm_anim.play = true;
+		arm_anim.currentFrame = 1;
 		fireBullet(entities[{ "playes", (uint16_t)pindex }].position, aimDirection);
     }
     if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_B))
@@ -597,26 +564,7 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way dire
 	if (!animComponents.add(eid, AnimatorComponent({ 8 }, odin::FADEOUT)))
 		std::cout << "Entity " << eid << " already has an AnimationComponent.\n";
 
-	/*
-	velocity.x *= speed;
-	velocity.y *= speed;
-
-    if (!entities.add(eid, Entity(position, 0)))
-        std::cout << "Entity " << eid << " already exists.\n";
-
-    if (!gfxComponents.add(eid, GraphicalComponent::makeRect(10.f, 2.f)))
-        std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
-
-    b2BodyDef bodyDef;
-    bodyDef.position = position;
-    bodyDef.linearVelocity = velocity;
-    bodyDef.type = b2_dynamicBody;
-    bodyDef.bullet = true;
-
-    if (!fsxComponents.add(eid, PhysicalComponent::makeCircle(.05f, b2world, bodyDef, 0.01f, BULLET, 0)))
-        std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
-	*/
-	camera.shake();
+ 	camera.shake();
 
     return EntityView(eid, this);
 
@@ -654,10 +602,22 @@ public:
 	unsigned OFF_TIME = 40, ON_TIME = 55;
 	unsigned onFrame = 0, offFrame = 0;
 	bool promptOn = true;
+	bool buttonPressed = false;
+
+	unsigned int TIME_BEFORE_INTRO = 10000;
+	bool introStarted = false;
+	int currentSlide = 0;
+	int slideTimes[14] = { 0, 3000, 3000, 1500, 1500, 2500, 700, 700, 700, 2000, 500, 500, 500, 500 };
+	GraphicalComponent* background;
+	int fadeTime = 250;
+	bool fadedOut = false;
+	bool fading = false;
+	bool goingBackToTitle = false;
 
 	GLuint program;
 	GLint uMatrix, uColor, uTexture, uFacingDirection,
-		uCurrentFrame, uCurrentAnim, uMaxFrame, uMaxAnim;
+		uCurrentFrame, uCurrentAnim, uMaxFrame, uMaxAnim,
+		uFadeOut;
 
 	TitleScene(int width, int height, std::string audioBank = "")
 		: Scene(width, height)
@@ -671,7 +631,44 @@ public:
 		, uCurrentAnim(glGetUniformLocation(program, "uCurrentAnim"))
 		, uMaxFrame(glGetUniformLocation(program, "uMaxFrames"))
 		, uMaxAnim(glGetUniformLocation(program, "uTotalAnim"))
+		, uFadeOut(glGetUniformLocation(program, "uFadeOut"))
 	{
+	}
+
+	//fade out scene, and return true when complete, must be called every update
+	bool fadeout(int startTime, int currentTime, int fadeLength) {
+		int timePassed = currentTime - startTime;
+
+		//linear fade
+		float fadeAmount = (float)timePassed / fadeLength;
+		fadeAmount = fadeAmount > 1.0f ? 1.0 : fadeAmount; //clamp if greater than 1;
+
+		glUniform(uFadeOut, fadeAmount);
+
+		if (fadeAmount >= 1.0f) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	//fade in scene, and return true when complete, must be called every update
+	bool fadein(int startTime, int currentTime, int fadeLength) {
+		int timePassed = currentTime - startTime;
+
+		//linear fade
+		float fadeAmount = 1.0f - (float)timePassed / fadeLength;
+		fadeAmount = fadeAmount < 0.0f ? 0.0 : fadeAmount; //clamp if greater than 1;
+
+		glUniform(uFadeOut, fadeAmount);
+
+		if (fadeAmount <= 0.0f) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 	void init(unsigned ticks)
@@ -680,22 +677,35 @@ public:
 
 		odin::load_texture(TITLE, "Textures/title.png");
 		odin::load_texture(PRESS_BUTTON, "Textures/pressbutton.png");
+		odin::load_texture(INTRO_1, "Textures/Intro/1.png");
+		odin::load_texture(INTRO_2, "Textures/Intro/2.png");
+		odin::load_texture(INTRO_3A, "Textures/Intro/3a.png");
+		odin::load_texture(INTRO_3B, "Textures/Intro/3b.png");
+		odin::load_texture(INTRO_4, "Textures/Intro/4.png");
+		odin::load_texture(INTRO_5A, "Textures/Intro/5a.png");
+		odin::load_texture(INTRO_5B, "Textures/Intro/5b.png");
+		odin::load_texture(INTRO_5C, "Textures/Intro/5c.png");
+		odin::load_texture(INTRO_5D, "Textures/Intro/5d.png");
+		odin::load_texture(INTRO_6, "Textures/Intro/6.png");
+		odin::load_texture(INTRO_7, "Textures/Intro/7.png");
+		odin::load_texture(INTRO_8, "Textures/Intro/8.png");
 
-		auto background = gfxComponents.add(
+		background = gfxComponents.add(
 			EntityId(0), GraphicalComponent::makeRect(width, height));
 		background->texture = TITLE;
 		
 		promptID = EntityId(1);
-		auto prompt = gfxComponents.add(promptID, GraphicalComponent::makeRect(75, 10));
+		auto prompt = gfxComponents.add(promptID, GraphicalComponent::makeRect(110, 15));
 		prompt->texture = PRESS_BUTTON;
 
-		Vec2 pos = { 87, -30 };
+		Vec2 pos = { 160, -55 };
 		if (!entities.add(promptID, Entity(pos, 0)))
 		   std::cout << "Entity " << promptID << " already exists.\n";
 
 		listeners.push_back([this](const InputManager& inmn) {
-			if (inmn.wasKeyPressed(SDL_CONTROLLER_BUTTON_START) || inmn.wasKeyPressed(SDLK_RETURN))
-				this->expired = true;
+			if (inmn.wasKeyPressed(SDL_CONTROLLER_BUTTON_START) || inmn.wasKeyPressed(SDLK_RETURN)) {
+				buttonPressed = true;
+			}
 		});
 
 		if (audioBankName != "")
@@ -720,6 +730,83 @@ public:
 
 	void update(unsigned ticks)
 	{
+		static int timeAtStartScreen = ticks;
+
+		if (ticks - timeAtStartScreen > TIME_BEFORE_INTRO) {
+			introStarted = true;
+		}
+
+
+		//Do slideshow intro
+		if (introStarted) {
+			static int slideStartTime = ticks;
+			
+			offFrame = 0;
+			promptOn = false;
+
+			if (SDL_GetTicks() - slideStartTime > slideTimes[currentSlide]) { //if enough time has passed
+				
+				static unsigned int fadeStartTime = ticks;
+				if (!fading) {
+					fadeStartTime = ticks;
+					fading = true;
+				}
+
+				//check if slide has faded out, if so change the slide
+				if (!fadedOut && fadeout(fadeStartTime, ticks, fadeTime)) {
+					fadedOut = true;
+
+					if (currentSlide > 12) {
+						background->texture = TITLE;
+						currentSlide = 0;
+					}
+					else {
+						background->texture = INTRO_1 + currentSlide++;
+					}			
+					fadeStartTime = ticks; //reset fade start to do fade-in
+				}
+				else if (fadedOut && fadein(fadeStartTime, ticks, fadeTime)) {
+					fadedOut = false;
+					slideStartTime = ticks;
+
+					fading = false;
+					if (currentSlide == 0) { //we've just faded back into the title screen
+						introStarted = false;
+						timeAtStartScreen = slideStartTime;
+					}
+				}
+			}
+		}
+
+
+		if (buttonPressed && !introStarted) {
+			static int startedTicks = ticks;
+			ON_TIME = OFF_TIME = 4;
+			
+			if (fadeout(startedTicks, ticks, 2000)) {
+				this->expired = true;
+			}
+		}
+		else if (buttonPressed && introStarted) {
+			static int startedTicks = ticks;
+			if (!goingBackToTitle) {
+				startedTicks = ticks;
+				goingBackToTitle = true;
+			}
+
+			if (fadeout(startedTicks, ticks, 500)) {
+				//reset everything to original state to go back to title
+				currentSlide = 0;
+				introStarted = false;
+				background->texture = TITLE;
+				timeAtStartScreen = ticks;
+				glUniform(uFadeOut, 0.0f);
+				buttonPressed = false;
+				goingBackToTitle = false;
+				fading = false;
+			}
+		}
+
 		Scene::update(ticks);
 
 		for ( auto& lstn : listeners )

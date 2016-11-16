@@ -21,11 +21,6 @@ public:
 	EntityFactory* factory;
 
 	EntityView* players;
-	EntityView* player_arms;
-	int numberPlayers;
-
-	//'table' to store offsets for placing arm - 1 for each animation state
-	Vec2 armOffsets[5];
 
 	float _scale;
 
@@ -35,19 +30,11 @@ public:
 		, _scale(scale)
 	{
 		players = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
-		player_arms = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
 		this->numberPlayers = numberPlayers;
 	}
 
 	void init( unsigned ticks )
     {
-		//set arm offsets so it renders in correct location
-		armOffsets[0] = Vec2(0.5, 0.9);
-		armOffsets[1] = Vec2(0.6, 0.75);
-		armOffsets[2] = Vec2(0.75, 0.475);
-		armOffsets[3] = Vec2(0.6, 0.275);
-		armOffsets[4] = Vec2(0.25, 0.05);
-
         LevelScene::init( ticks );
 
 		odin::load_texture(GROUND1, "Textures/ground.png");
@@ -93,52 +80,52 @@ public:
 
 		});
 
-        //factory->makePlayer( this, {"player", 0} );
-
 		// create player 1
         odin::make_player( this, {"player", 0}, {0, -2}, 0 );
         listeners.push_back( [this]( const InputManager& inmn ) {
             return player_input( inmn, {"player", 0}, 0 );
         } );
 		players[0] = EntityView({ "player", 0 }, this);
-		player_arms[0] = EntityView({ "playes", 0 }, this);
+
+
 		// create player 2
 		odin::make_player(this, { "player", 1 }, { 0, -2 },1);
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 1 }, 1);
 		});
+
 		players[1] = EntityView({ "player", 1 }, this);
-		player_arms[1] = EntityView({ "playes", 1 }, this);
 		// create player 3
 		odin::make_player(this, { "player", 2 }, { 0, -2 }, 2);
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 2 }, 2);
 		});
 		players[2] = EntityView({ "player", 2 }, this);
-		player_arms[2] = EntityView({ "playes", 2 }, this);
 		// create player 4
 		odin::make_player(this, { "player", 3 }, { 0, -2 }, 3);
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 3 }, 3);
 		});
 		players[3] = EntityView({ "player", 3 }, this);
-		player_arms[3] = EntityView({ "playes", 3 }, this);
 
-        odin::make_horse( this, "horse", {0.0f, 5.f} );
+        //odin::make_horse( this, "horse", {0.0f, 5.f} );
 
 		//Setup level
 		odin::make_platform(this, "plat01", 30, {-240 ,-144}); // bottom floor
 		odin::make_platform(this, "plat02", 6, { -48,-90 }); // center lower platform
 		odin::make_platform(this, "plat03", 4, { -32,-40 }); // center mid-lower platform
 
-		odin::make_platform(this, "plat04", 4, { -240,90 }); // left upper
-		odin::make_platform(this, "plat05", 4, { 176,90}); // right upper
+		odin::make_platform(this, "plat04", 6, { -240,90 }); // left upper
+		odin::make_platform(this, "plat05", 6, { 160,90}); // right upper
 		odin::make_platform(this, "plat06", 6, { -48,68 }); // center upper
 
 		odin::make_platform(this, "plat07", 3, { -148,-60 }); // right center
 		odin::make_platform(this, "plat08", 3, { 100,-60 }); // right lower
-		odin::make_platform(this, "plat09", 4, { -144,45 }); // left mid upper
-		odin::make_platform(this, "plat10", 4, { 80, 45 }); // right mid upper
+		odin::make_platform(this, "plat09", 4, { -144,25 }); // left mid upper
+		odin::make_platform(this, "plat10", 4, { 80, 25 }); // right mid upper
+
+		odin::make_platform(this, "plat11", 4, { -240, -20 }); // left mid upper
+		odin::make_platform(this, "plat12", 4, { 176, -20 }); // right mid upper
 
 		// Set the physics bounds for the left,right wall and floor surfaces
 		b2BodyDef floorDef;
@@ -187,19 +174,6 @@ public:
 
 	void update(unsigned ticks)
 	{
-		//iterate through all the arms and place them relative to the player using offsets
-		for (int i = 0; i < numberPlayers; ++i) {
-			Vec2 armPosition = players[i].fsxComponent()->position();
-			
-			//current state determines the arm offset
-			int currentState = player_arms[i].animComponent()->animState;
-
-			armPosition.y += armOffsets[currentState].y;
-			armPosition.x += players[i].gfxComponent()->direction * armOffsets[currentState].x;
-
-			player_arms[i].fsxComponent()->pBody->SetTransform(armPosition, 0);
-		}
-
 		LevelScene::update(ticks);
 	}
 };

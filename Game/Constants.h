@@ -19,3 +19,5 @@ const int LOW_HEIGHT = int( HEIGHT / PIXEL_SIZE );
 const float SCALE = VIRTUAL_WIDTH / 2;
 
 enum AXIS_DIRECTION { N, NE, E, SE, S, SW, W, NW };
+
+const int MAX_PLAYERS = 4;

@@ -24,7 +24,22 @@ enum Textures {
 	BACKGROUND,
 	TITLE,
 	PRESS_BUTTON,
-	BULLET_TEXTURE
+	BULLET_TEXTURE,
+	INTRO_1,
+	INTRO_2,
+	INTRO_3A,
+	INTRO_3B,
+	INTRO_4,
+	INTRO_5A,
+	INTRO_5B,
+	INTRO_5C,
+	INTRO_5D,
+	INTRO_6,
+	INTRO_7,
+	INTRO_8,
+	BLACK,
+	WHITE,
+	RED
 };
 
 // Where the entity is positioned relative to
