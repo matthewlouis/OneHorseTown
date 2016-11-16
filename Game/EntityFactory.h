@@ -88,7 +88,6 @@ inline namespace factory
 	static struct Dim {
 		float x; // actual scale for graphics comp
 		float y;
-		//Dim(float a, float b) { x = a / 2; y = b / 2; }
 		Dim getPhysicsDim() { return Dim{ x / physicsScale, y / physicsScale }; } // return physics dim to scale
 	};
 	// object dimensions
@@ -158,7 +157,7 @@ inline namespace factory
         hGfx->texture = HORSE_TEXTURE;
 
         b2BodyDef horseDef;
-        horseDef.position = pos;
+        horseDef.position = pos; 
         horseDef.fixedRotation = true;
         horseDef.type = b2_dynamicBody;
         horseDef.gravityScale = 2;
@@ -177,14 +176,14 @@ inline namespace factory
 		switch (anchor)
 		{
 		case CENTRE:
-			x -= length / 2.0;
+			x += length / 2.0;
 			start = { x, 0 };
 			break;
 		default:
 			break;
-}
+		}
 
-		Vec2 pos = start + offset;
+		Vec2 pos{ offset.x + platform.x/2,offset.y };
 		x = 1;
 		EntityId eid;
 		uint16 i;
@@ -202,27 +201,27 @@ inline namespace factory
 			//makeRect(scene, { id, i }, { 1, 1 }, pos, 0, { 1,1,1 }, GROUND1);
 			
 
+
+			pos.x += platform.x;
+			//offset.x += physicsScale; 
+
 			//float colliderPos = length / 2.0;
 			//offset.x += colliderPos;
 			//fset.x += pos.x;
-		b2BodyDef bodyDef;
-			bodyDef.position = { offset.x / physicsScale, offset.y / physicsScale };
-		bodyDef.angle = 0;
-		bodyDef.type = b2_staticBody;
+		    float newPos = offset.x - (platform.x*length / 2.0f) ;
+		    // Define the physical properties of the platform
+			b2BodyDef bodyDef;
+		    bodyDef.position = { offset.x/physicsScale + (((platform.x*length)/2)/physicsScale) ,offset.y/physicsScale};
+			bodyDef.angle = 0;
+			bodyDef.type = b2_staticBody;
 
-        auto pb = PhysicalComponent::makeRect( platform.getPhysicsDim().x, platform.getPhysicsDim().y, pScene->b2world, bodyDef, 1.0, PLATFORM, HORSE | PLAYER );
-        ntt.pBody = pb.pBody;
-        pb.pBody = nullptr;
+            auto pb = PhysicalComponent::makeRect( platform.getPhysicsDim().x, platform.getPhysicsDim().y, pScene->b2world, bodyDef, 1.0, PLATFORM, HORSE | PLAYER );
+            ntt.pBody = pb.pBody;
+            pb.pBody = nullptr;
+
 		
-			offset.x += physicsScale; 
 		}
-
-
-
-		
-		
-		
-}
+	}
 }
 }
 
