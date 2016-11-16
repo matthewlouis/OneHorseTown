@@ -103,7 +103,7 @@ inline namespace factory
 
         decltype(auto) ntt = pScene->entities[ eid ];
         ntt.position = pos;
-        ntt.setBase( EntityPlayer { playerNum } );
+        ntt.setBase( typename T::EntityPlayerType { playerNum, pScene } );
 
         ntt.pDrawable = pScene->newGraphics( GraphicalComponent::makeRect( playerDim.x, playerDim.y ) );
         ntt.pDrawable->texture = PLAYER;

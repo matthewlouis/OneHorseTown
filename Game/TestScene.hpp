@@ -219,6 +219,28 @@ class TestScene
 {
 public:
 
+    class EntityPlayerType
+        : public EntityBase
+    {
+    public:
+
+        int playerIndex;
+        TestScene* pScene;
+
+        EntityPlayerType( int index = -1, TestScene* scene = 0 )
+            : EntityBase()
+            , playerIndex( index )
+            , pScene( scene )
+        {
+        }
+
+        void onDestroy( Entity2& ntt ) override
+        {
+            if ( pScene == nullptr )
+                return;
+            pScene->_spawnParticle( ntt.position );
+        }
+    };
 	EntityFactory* factory;
 
 	//EntityView* players;

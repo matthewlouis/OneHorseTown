@@ -164,13 +164,17 @@ struct Entity2
         _self = std::make_unique< EntityClass >( std::move( self ) );
     }
 
-    void kill()
+    void reset()
     {
-        (*this)->onDestroy( *this );
         _self = nullptr;
         pBody = nullptr;
         pDrawable = nullptr;
         pAnimator = nullptr;
+    }
+
+    void kill()
+    {
+        (*this)->onDestroy( *this );
         flags |= 1;
     }
 
@@ -214,6 +218,8 @@ class LevelScene
     : public odin::Scene
 {
 public:
+
+    using EntityPlayerType = EntityPlayer;
 
     template< typename ValueType >
     using EntityMap = odin::BinarySearchMap< EntityId, ValueType >;
@@ -289,7 +295,7 @@ public:
     unsigned short _bulletCount = 0;
 
 	// Range of the bullets, set to diagonal screen distance by default
-	unsigned bulletRange;
+	float bulletRange;
 
     MyContactListener _contactListener;
 
@@ -366,10 +372,10 @@ public:
 
     void _destroy( Entity2& ntt )
     {
+        ntt.kill();
         deleteComponent( ntt.pBody );
         deleteComponent( ntt.pDrawable );
         deleteComponent( ntt.pAnimator );
-        ntt.kill();
     }
 
     void update( unsigned ticks )
@@ -437,8 +443,8 @@ public:
                     {
                         _destroy( x.value );
                         deadEntities.push_back( x.key );
-                        if ( _contactListener.func )
-                            _contactListener.func( &x.value );
+                        //if ( _contactListener.func )
+                        //    _contactListener.func( &x.value );
                         break;
                     }
                 }
@@ -837,7 +843,10 @@ std::tuple<EntityId, Vec2, float> LevelScene::resolveBulletCollision(Vec2 positi
 	//set up input
 	b2RayCastInput input;
 	input.p1 = position;
-	input.p2 = { position.x + direction.x * bulletRange, position.y + direction.y * bulletRange };
+    input.p2 = Vec2( position.glmvec2 + glm::normalize( direction.glmvec2 ) * bulletRange );
+    //{
+    //    position.x + direction.x * bulletRange, position.y + direction.y * bulletRange
+    //};
 	input.maxFraction = 1;
 
 	//check every fixture of every body to find closest
@@ -846,30 +855,28 @@ std::tuple<EntityId, Vec2, float> LevelScene::resolveBulletCollision(Vec2 positi
 
 	EntityId eid;
 
-	for ( auto x : entities )
+    for ( b2Body* body = b2world.GetBodyList(); body; body = body->GetNext() )
     {
-        if ( b2Body* body = x.value.pBody )
+		for ( b2Fixture* f = body->GetFixtureList(); f; f = f->GetNext() )
         {
-		    for ( b2Fixture* f = body->GetFixtureList(); f; f = f->GetNext() )
-            {
-			    b2RayCastOutput output;
-			    if (!f->RayCast(&output, input, 0))
-				    continue;
-			    // TODO: This SHOULD filter out fixtues that don't collide with bullets... But doesn't seem to do so
-			    if(!(f->GetFilterData().maskBits & BULLET))
-				    continue;
+			b2RayCastOutput output;
+			if (!f->RayCast(&output, input, 0))
+				continue;
+			
+            // TODO: This SHOULD filter out fixtues that don't collide with bullets... But doesn't seem to do so
+			//if( (f->GetFilterData().maskBits & BULLET) )
+			//	continue;
 
-			    if (output.fraction < closestFraction && output.fraction > delta)
-                {
-				    closestFraction = output.fraction;
-				    intersectionNormal = output.normal;
-				    eid = x.key;
-			    }
-		    }
-        }
+			if (output.fraction < closestFraction && output.fraction > delta)
+            {
+				closestFraction = output.fraction;
+				intersectionNormal = output.normal;
+				//eid = x.key;
+			}
+		}
 		
 	}
-	return std::make_tuple( eid, intersectionNormal, closestFraction * bulletRange);
+	return std::make_tuple( eid, intersectionNormal, (closestFraction * bulletRange) * 10 );
 
 }
 
@@ -894,52 +901,54 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
 	std::tuple<EntityId, Vec2, float> collisionData;
 	
 	// Determine the offset and rotation of the bullet graphic based on the aim direction
+    glm::vec2 pos = position;
+    pos /= 10.0f;
 	switch (direction) {
 	case odin::NORTH_WEST:
-		collisionData = resolveBulletCollision(position, { -1,1 });
+		collisionData = resolveBulletCollision(pos, { -1,1 });
 		length = std::get<2>(collisionData);
 		rotation = -PI/4;
 		offset = { SIN45 * -length/2, SIN45 * length/2 };
 		break;
 	case odin::NORTH_EAST:
-		collisionData = resolveBulletCollision(position, { 1,1 });
+		collisionData = resolveBulletCollision(pos, { 1,1 });
 		length = std::get<2>(collisionData);
 		rotation = PI / 4;
 		offset = { SIN45 * length / 2, SIN45 * length / 2 };
 		break;
 	case odin::SOUTH_WEST:
-		collisionData = resolveBulletCollision(position, { -1,-1 });
+		collisionData = resolveBulletCollision(pos, { -1,-1 });
 		length = std::get<2>(collisionData);
 		rotation = PI / 4;
 		offset = { SIN45 * -length / 2, SIN45 * -length / 2 };
 		break;
 	case odin::SOUTH_EAST:
-		collisionData = resolveBulletCollision(position, { 1,-1 });
+		collisionData = resolveBulletCollision(pos, { 1,-1 });
 		length = std::get<2>(collisionData);
 		rotation = -PI / 4;
 		offset = { SIN45 * length / 2, SIN45 * -length / 2 };
 		break;
 	case odin::NORTH:
-		collisionData = resolveBulletCollision(position, { 0,1 });
+		collisionData = resolveBulletCollision(pos, { 0,1 });
 		length = std::get<2>(collisionData);
 		rotation = PI / 2;
 		offset = { 0, length / 2 };
 		break;
 	case odin::SOUTH:
-		collisionData = resolveBulletCollision(position, { 0, -1 });
+		collisionData = resolveBulletCollision(pos, { 0, -1 });
 		length = std::get<2>(collisionData);
 		rotation = -PI / 2;
 		offset = { 0, -length / 2 };
 		break;
 	case odin::WEST:
-		collisionData = resolveBulletCollision(position, { -1,0 });
+		collisionData = resolveBulletCollision(pos, { -1,0 });
 		length = std::get<2>(collisionData);
 		offset = { -length / 2, 0 };
 		break;
 	case odin::EAST:
-		collisionData = resolveBulletCollision(position, { 1,0 });
+		collisionData = resolveBulletCollision(pos, { 1,0 });
 		length = std::get<2>(collisionData);
-		offset = { length / 2 + 20, 0 };
+		offset = { length / 2, 0 };
 		break;
 	default:
 		break;
