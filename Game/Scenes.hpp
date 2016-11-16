@@ -70,8 +70,6 @@ public:
 
     std::vector< EntityBase* > deadEntities;
 
-    std::function< void( Entity2* ) > func;
-
     void BeginContact(b2Contact* contact) {
 
         auto bodyA = contact->GetFixtureA()->GetBody();
@@ -376,6 +374,7 @@ public:
         deleteComponent( ntt.pBody );
         deleteComponent( ntt.pDrawable );
         deleteComponent( ntt.pAnimator );
+        ntt.reset();
     }
 
     void update( unsigned ticks )
@@ -424,8 +423,7 @@ public:
                         deadEntities.push_back( x.key );
                     }
                     else {
-                        ntt.pDrawable->color = { 1,1,1, 1.f - (float)animator->currentFrame
-                                                            / (float)animator->maxFrames };
+                        ntt.pDrawable->color.a = 1.f - (float)animator->currentFrame / (float)animator->maxFrames;
                     }
                 default:
                     break;
@@ -443,8 +441,6 @@ public:
                     {
                         _destroy( x.value );
                         deadEntities.push_back( x.key );
-                        //if ( _contactListener.func )
-                        //    _contactListener.func( &x.value );
                         break;
                     }
                 }
@@ -508,127 +504,6 @@ public:
             }
         }
     }
-
-    /*void update2( unsigned ticks )
-    {
-        Scene::update( ticks );
-
-        for ( auto& lstn : listeners )
-            lstn( *pInputManager );
-
-        float timeStep = Scene::ticksDiff / 1000.f;
-        b2world.Step( timeStep, 8, 3 );
-        for ( auto x : fsxComponents )
-        {
-            if ( x.value.pBody == nullptr || !x.value.pBody->IsActive() )
-                continue;
-
-            Entity& ntt = entities[ x.key ];
-            auto& fsx = x.value;
-
-            //ntt.position = fsx.position();
-            // Round to remove blur/shimmer.
-            ntt.position = glm::round( glm::vec2( fsx.position() ) * 10.f );
-
-            //if ( fsx.pBody->IsBullet() )
-            //{
-            //    Vec2 vel = fsx.pBody->GetLinearVelocity();
-            //
-            //    float angle = std::atan2( vel.y, vel.x );
-            //    fsx.pBody->SetTransform( ntt.position, angle );
-            //}
-
-            ntt.rotation = fsx.rotation();
-            }
-
-        for ( auto b : _contactListener.deadBodies )
-        {
-            for ( auto x : fsxComponents )
-                if ( x.value.pBody == b )
-                {
-                    if ( _contactListener.func )
-                        _contactListener.func( b );
-
-                    entities.remove( x.key );
-                    gfxComponents.remove( x.key );
-                    fsxComponents.remove( x.key );
-                    break;
-        }
-        }
-
-        if ( !_contactListener.deadBodies.empty() )
-            _contactListener.deadBodies.clear();
-
-        for ( auto x : animComponents )
-        {
-            x.value.incrementFrame();
-			auto& texAdjust = entities[x.key].texAdjust;
-
-			texAdjust[0] = x.value.animState;
-			texAdjust[1] = x.value.currentFrame;
-			texAdjust[2] = x.value.maxFrames;
-			texAdjust[3] = x.value.totalAnim;
-			switch (x.value.type)
-			{
-			// Handle fading animation
-			case odin::AnimationType::FADEOUT:
-				if (x.value.currentFrame == x.value.maxFrames-1) {
-					gfxComponents.remove(x.key);
-					animComponents.remove(x.key);
-					entities.remove(x.key);
-				}
-				else {
-					gfxComponents[x.key].color = { 1,1,1, 1.f-(float)x.value.currentFrame / (float)x.value.maxFrames };
-				}
-			default:
-				break;
-			}
-        }
-    }
-
-    void draw2()
-    {
-        using namespace glm;
-        Scene::draw();
-
-        //float zoom = 1.0f / SCALE;
-        //float aspect = width / (float) height;
-        //const mat4 base = scale( {}, vec3( zoom, zoom * aspect, 1 ) );
-		const mat4 base = mat4();
-
-		//update camera matrix
-		camera.update();
-		glm::mat4 cameraMatrix = camera.getCameraMatrix();
-
-        glUseProgram( program );
-        for ( auto x : gfxComponents )
-        {
-            if ( !x.value.visible )
-                continue;
-
-            Entity& ntt = entities[ x.key ];
-            auto& gfx = x.value;
-
-			if (!gfx.visible)
-				continue;
-
-            mat4 mtx = cameraMatrix * translate( base, vec3( ntt.position.glmvec2, 0 ) );
-            mtx = rotate( mtx, ntt.rotation, vec3( 0, 0, 1 ) );
-
-            glUniform( uMatrix, mtx );
-            glUniform( uColor, gfx.color );
-            glUniform( uTexture, gfx.texture );
-            glUniform( uFacingDirection, gfx.direction );
-
-            glUniform( uCurrentAnim, ntt.texAdjust[ 0 ] );
-            glUniform( uCurrentFrame, ntt.texAdjust[ 1 ] );
-            glUniform( uMaxFrame, ntt.texAdjust[ 2 ] );
-            glUniform( uMaxAnim, ntt.texAdjust[ 3 ] );
-
-            glBindVertexArray( gfx.vertexArray );
-            glDrawArrays( GL_TRIANGLES, 0, gfx.count );
-        }
-    }*/
 
     void add( EntityId eid, GraphicalComponent gfx )
     {
@@ -860,12 +735,11 @@ std::tuple<EntityId, Vec2, float> LevelScene::resolveBulletCollision(Vec2 positi
 		for ( b2Fixture* f = body->GetFixtureList(); f; f = f->GetNext() )
         {
 			b2RayCastOutput output;
-			if (!f->RayCast(&output, input, 0))
+			if ( !f->RayCast( &output, input, 0 ) )
 				continue;
 			
-            // TODO: This SHOULD filter out fixtues that don't collide with bullets... But doesn't seem to do so
-			//if( (f->GetFilterData().maskBits & BULLET) )
-			//	continue;
+            if ( !(f->GetFilterData().maskBits & BULLET) )
+                continue;
 
 			if (output.fraction < closestFraction && output.fraction > delta)
             {
@@ -960,13 +834,13 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
     bullet.position = position;
     bullet.setBase( EntityBase {} );
 
-    bullet.pDrawable = newGraphics( GraphicalComponent::makeRect( 1, 1, { 0, 0, 0 } ) );
+    //bullet.pDrawable = newGraphics( GraphicalComponent::makeRect( 1, 1, { 0, 0, 0 } ) );
 
     glm::vec2 off = offset;
 
     b2BodyDef bodyDef;
     bodyDef.position = Vec2( (position.glmvec2 / 10.f) + glm::normalize( off ) * 2.0f );
-    bodyDef.linearVelocity = Vec2( glm::normalize( off ) * 500.0f );//{ 500, 0 };
+    bodyDef.linearVelocity = Vec2( glm::normalize( off ) * 1000.0f );//{ 500, 0 };
     bodyDef.type = b2_dynamicBody;
     bodyDef.gravityScale = 0;
     bodyDef.bullet = true;
@@ -983,7 +857,8 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
     bullet2.position = Vec2( position + offset );
     bullet2.rotation = rotation;
 
-	bullet2.pDrawable = newGraphics( GraphicalComponent::makeRect(length, 8.0f, { 255.f, 255.f, 255.f }));
+    bullet2.pDrawable = newGraphics( GraphicalComponent::makeRect(
+        length, 8.0f, { 1, 1, 1 }, 1, { length / bulletRange, 1 } ));
     bullet2.pDrawable->texture = BULLET_TEXTURE;
 
     bullet2.pAnimator = newAnimator( AnimatorComponent( { 8 }, odin::FADEOUT ) );

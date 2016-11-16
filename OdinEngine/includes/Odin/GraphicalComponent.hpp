@@ -132,16 +132,19 @@ namespace odin
 			float     width,
 			float     height,
 			glm::vec3 color = { 1, 1, 1},
-			float     alpha = 1 )
+			float     alpha = 1,
+            glm::vec2 tex = { 1, 1 } )
         {
+            float x = tex.x;
+            float y = tex.y;
             float vertices[][5] = {
-                { -width / 2, -height / 2, 0, 0, 1 },
+                { -width / 2, -height / 2, 0, 0, y },
                 { -width / 2, +height / 2, 0, 0, 0 },
-                { +width / 2, +height / 2, 0, 1, 0 },
+                { +width / 2, +height / 2, 0, x, 0 },
 
-                { +width / 2, +height / 2, 0, 1, 0 },
-                { +width / 2, -height / 2, 0, 1, 1 },
-                { -width / 2, -height / 2, 0, 0, 1 },
+                { +width / 2, +height / 2, 0, x, 0 },
+                { +width / 2, -height / 2, 0, x, y },
+                { -width / 2, -height / 2, 0, 0, y },
             };
             
 			return GraphicalComponent( vertices, 6, glm::vec4{ color, alpha },
