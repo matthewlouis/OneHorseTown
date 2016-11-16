@@ -153,7 +153,6 @@ public:
 		if (!active)
 			return;
 
-		printf("\nAiming: %d", aiming);
 		//Determine Player state
 		Vec2 vel = psx->GetLinearVelocity();
 
