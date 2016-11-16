@@ -390,7 +390,7 @@ public:
 		});
 
 		// create player 1
-        odin::make_player( this, {"player", 0}, {0, -2}, 0 );
+        odin::make_player( this, {"player", 0}, {-22, 11}, 0 );
         listeners.push_back( [this]( const InputManager& inmn ) {
             return player_input( inmn, {"player", 0}, 0 );
         } );
@@ -398,21 +398,21 @@ public:
 
 
 		// create player 2
-		odin::make_player(this, { "player", 1 }, { 0, -2 },1);
+		odin::make_player(this, { "player", 1 }, { 22, 11 },1);
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 1 }, 1);
 		});
 
 		//players[1] = EntityView({ "player", 1 }, this);
 		// create player 3
-		odin::make_player(this, { "player", 2 }, { 0, -2 }, 2);
+		odin::make_player(this, { "player", 2 }, { 22, -11 }, 2);
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 2 }, 2);
 		});
 		//players[2] = EntityView({ "player", 2 }, this);
 
 		// create player 4
-		odin::make_player(this, { "player", 3 }, { 0, -2 }, 3);
+		odin::make_player(this, { "player", 3 }, { -22, -11 }, 3);
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 3 }, 3);
 		});
