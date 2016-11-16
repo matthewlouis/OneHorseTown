@@ -1,4 +1,7 @@
 #include "EntityFactory.h"
+
+const int odin::factory::PLAYER_TAG = 0;
+
 //
 //
 //EntityView EntityFactory::makePlayer(

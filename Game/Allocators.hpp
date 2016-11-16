@@ -274,8 +274,8 @@ public:
     void deallocate( Blk blk )
     {
         assert( owns( blk.ptr ) );
-        if ( blk.ptr + _round_to_aligned( blk.size ) == ptr )
-            ptr = blk.ptr;
+        if ( ((byte*) blk.ptr) + _round_to_aligned( blk.size ) == ptr )
+            ptr = (byte*) blk.ptr;
     }
 
     constexpr bool owns( void* ptr )

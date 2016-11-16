@@ -1,7 +1,6 @@
 
 struct Particle
 {
-    unsigned id;
     float    lifetime;
     float4   color;
     float2   position;

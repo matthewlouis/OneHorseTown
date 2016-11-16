@@ -12,8 +12,12 @@
 #include "EntityFactory.h"
 
 #include <tuple>
+#include <array>
+#include <bitset>
+#include <memory>
 
 #include "ContextAllocator.hpp"
+#include "TypedAllocator.hpp"
 
 // Macros to speed up rendering
 #define PI 3.1415926f
@@ -48,13 +52,23 @@ auto& get_components( Sc* pScene )
     return pScene->components< T >();
 }
 
+struct Entity2;
+
+class EntityBase
+{
+public:
+    const char* name = "<no name>";
+
+    virtual void onDestroy( Entity2& ) {}
+} g_DEFAULT_ENTITY_BASE;
+
 class MyContactListener : public b2ContactListener
 {
 public:
 
-    std::vector< b2Body* > deadBodies;
+    std::vector< EntityBase* > deadEntities;
 
-    std::function< void( b2Body* ) > func;
+    std::function< void( Entity2* ) > func;
 
     void BeginContact(b2Contact* contact) {
 
@@ -62,16 +76,137 @@ public:
         auto bodyB = contact->GetFixtureB()->GetBody();
 
         if ( bodyA->IsBullet() )
-            deadBodies.push_back( bodyA );
+        {
+            deadEntities.push_back( (EntityBase*) bodyA->GetUserData() );
+            if ( bodyB->GetUserData() )
+                deadEntities.push_back( (EntityBase*) bodyB->GetUserData() );
+        }
 
         if ( bodyB->IsBullet() )
-            deadBodies.push_back( bodyB );
+        {
+            deadEntities.push_back( (EntityBase*) bodyB->GetUserData() );
+            if ( bodyA->GetUserData() )
+                deadEntities.push_back( (EntityBase*) bodyA->GetUserData() );
+        }
     }
 
     void EndContact(b2Contact* contact) {
 
     }
 };
+
+struct Entity2
+{
+    friend class LevelScene;
+    
+    using SelfPointer = std::unique_ptr< EntityBase >;
+
+    glm::vec2 position = { 0, 0 };
+    float     rotation = 0;
+    unsigned  flags    = 0;
+
+    b2Body*             pBody     = nullptr;
+    GraphicalComponent* pDrawable = nullptr;
+    AnimatorComponent*  pAnimator = nullptr;
+
+    Entity2() = default;
+
+    Entity2( Vec2 pos, float rot, unsigned fl = 0 )
+        : position( pos )
+        , rotation( rot )
+        , flags( fl )
+    {
+    }
+
+    Entity2( Entity2&& move )
+        : position( move.position )
+        , rotation( move.rotation )
+        , flags( move.flags )
+        , pBody( move.pBody )
+        , pDrawable( move.pDrawable )
+        , pAnimator( move.pAnimator )
+        , _self( std::move( move._self ) )
+    {
+        move.pBody     = nullptr;
+        move.pDrawable = nullptr;
+        move.pAnimator = nullptr;
+    }
+
+    ~Entity2() = default;
+
+    Entity2& operator =( Entity2&& move )
+    {
+        position = move.position;
+        rotation = move.rotation;
+        flags = move.flags;
+        std::swap( pBody, move.pBody );
+        std::swap( pDrawable, move.pDrawable);
+        std::swap( pAnimator, move.pAnimator );
+        std::swap( _self, move._self );
+        return *this;
+    }
+
+    void setBase( std::nullptr_t )
+    {
+        _self = nullptr;
+    }
+
+    void setBase( SelfPointer&& self )
+    {
+        _self = std::move( self );
+    }
+
+    template< typename EntityClass >
+    void setBase( EntityClass self )
+    {
+        _self = std::make_unique< EntityClass >( std::move( self ) );
+    }
+
+    void kill()
+    {
+        (*this)->onDestroy( *this );
+        _self = nullptr;
+        pBody = nullptr;
+        pDrawable = nullptr;
+        pAnimator = nullptr;
+        flags |= 1;
+    }
+
+    EntityBase* base()
+    {
+        return _self.get();
+    }
+
+    EntityBase* operator ->()
+    {
+        return _self ? _self.get() : &g_DEFAULT_ENTITY_BASE;
+    }
+
+private:
+
+    SelfPointer _self = nullptr;
+};
+
+
+class EntityPlayer
+    : public EntityBase
+{
+public:
+
+    int playerIndex;
+
+    EntityPlayer( int index = -1 )
+        : EntityBase()
+        , playerIndex( index )
+    {
+    }
+
+    void onDestroy( Entity2& ntt ) override
+    {
+        std::cout << "Destroying player " << playerIndex << std::endl;
+    }
+};
+
 
 class LevelScene
     : public odin::Scene
@@ -81,16 +216,57 @@ public:
     template< typename ValueType >
     using EntityMap = odin::BinarySearchMap< EntityId, ValueType >;
 
-    EntityMap< Entity >             entities;
+    static constexpr size_t COMP_MAX = 500;
 
-    EntityMap< GraphicalComponent > gfxComponents;
-    EntityMap< AnimatorComponent >  animComponents;
+    template< typename T >
+    using Components = TypedAllocator< T, COMP_MAX >;
+
+    EntityMap< Entity2 > entities;
+
+    Components< GraphicalComponent > graphics;
+    Components< AnimatorComponent >  animations;
+
+    GraphicalComponent* newGraphics( GraphicalComponent gfx )
+    {
+        return ALLOC( graphics, GraphicalComponent )( std::move( gfx ) );
+    }
+
+    AnimatorComponent* newAnimator( AnimatorComponent anim )
+    {
+        return ALLOC( animations, AnimatorComponent )( std::move( anim ) );
+    }
+
+    b2Body* newBody( const b2BodyDef& bodyDef )
+    {
+        return b2world.CreateBody( &bodyDef );
+    }
+
+    void deleteComponent( GraphicalComponent* gfx )
+    {
+        DEALLOC( graphics, gfx );
+    }
+
+    void deleteComponent( AnimatorComponent* anim )
+    {
+        DEALLOC( animations, anim );
+    }
+
+    void deleteComponent( b2Body* body )
+    {
+        if ( body ) b2world.DestroyBody( body );
+    }
+
+
+    //EntityMap< Entity >             entities;
+
+    //EntityMap< GraphicalComponent > gfxComponents;
+    //EntityMap< AnimatorComponent >  animComponents;
 
     b2ThreadPool                    b2thd;
     b2World                         b2world = { { 0.f, -9.81f }, &b2thd };
-    EntityMap< PhysicalComponent >  fsxComponents;
+    //EntityMap< PhysicalComponent >  fsxComponents;
 
-    OHT_DEFINE_COMPONENTS( entities, gfxComponents, animComponents, fsxComponents );
+    //OHT_DEFINE_COMPONENTS( entities, gfxComponents, animComponents, fsxComponents );
 
     InputManager*                   pInputManager;
     std::vector< InputListener >    listeners;
@@ -113,7 +289,9 @@ public:
 	// Range of the bullets, set to diagonal screen distance by default
 	unsigned bulletRange;
 
-    PolymorphicAllocator<
+    MyContactListener _contactListener;
+
+    /*PolymorphicAllocator<
         ThresholdAllocator< 4,
             BitsetAllocator< 1024 * 2, 4 >,
             ThresholdAllocator< 128,
@@ -121,9 +299,7 @@ public:
                 Mallocator
             >
         >
-    > _localAllocator;
-
-    MyContactListener _contactListener;
+    > _localAllocator;*/
 
     LevelScene( int width, int height, std::string audioBank = "" )
         : Scene( width, height )
@@ -162,13 +338,13 @@ public:
     void resume( unsigned ticks )
     {
         Scene::resume( ticks );
-        context_allocator::push( _localAllocator );
+        //context_allocator::push( _localAllocator );
     }
 
     void pause( unsigned ticks )
     {
         Scene::pause( ticks );
-        context_allocator::pop();
+        //context_allocator::pop();
     }
 
     void exit( unsigned ticks )
@@ -182,7 +358,142 @@ public:
         }
     }
 
+    void _destroy( Entity2& ntt )
+    {
+        deleteComponent( ntt.pBody );
+        deleteComponent( ntt.pDrawable );
+        deleteComponent( ntt.pAnimator );
+        ntt.kill();
+    }
+
     void update( unsigned ticks )
+    {
+        Scene::update( ticks );
+
+        for ( auto& lstn : listeners )
+            lstn( *pInputManager );
+
+        float timeStep = Scene::ticksDiff / 1000.f;
+        b2world.Step( timeStep, 8, 3 );
+
+
+        for ( auto x : entities )
+        {
+            decltype(auto) ntt = x.value;
+            if ( auto body = ntt.pBody )
+            {
+                Vec2 pos = body->GetPosition();
+                ntt.position = glm::round( glm::vec2( pos ) * 10.0f );
+                ntt.rotation = body->GetAngle();
+            }
+        }
+
+        std::vector< EntityId > deadEntities;
+        deadEntities.reserve( _contactListener.deadEntities.size() );
+
+        for ( auto x : entities )
+        {
+            decltype(auto) ntt = x.value;
+            if ( auto animator = ntt.pAnimator )
+            {
+                animator->incrementFrame();
+
+                switch ( animator->type )
+                {
+                    // Handle fading animation
+                case odin::AnimationType::FADEOUT:
+                    if (animator->currentFrame == animator->maxFrames-1)
+                    {
+                        _destroy( ntt );
+                        deadEntities.push_back( x.key );
+                    }
+                    else {
+                        ntt.pDrawable->color = { 1,1,1, 1.f - (float)animator->currentFrame
+                                                            / (float)animator->maxFrames };
+                    }
+                default:
+                    break;
+                }
+            }
+        }
+
+        for ( auto x : entities )
+        {
+            if ( auto pbase = x.value.base() )
+            {
+                for ( EntityBase* ebase : _contactListener.deadEntities )
+                {
+                    if ( ebase == pbase )
+                    {
+                        _destroy( x.value );
+                        deadEntities.push_back( x.key );
+                        if ( _contactListener.func )
+                            _contactListener.func( &x.value );
+                        break;
+                    }
+                }
+            }
+        }
+
+        if ( !_contactListener.deadEntities.empty() )
+            _contactListener.deadEntities.clear();
+
+        for ( EntityId eid : deadEntities )
+            entities.remove( eid );
+    }
+
+    void draw()
+    {
+        using namespace glm;
+        Scene::draw();
+
+        //float zoom = 1.0f / SCALE;
+        //float aspect = width / (float) height;
+        //const mat4 base = scale( {}, vec3( zoom, zoom * aspect, 1 ) );
+		//update camera matrix
+		camera.update();
+		glm::mat4 cameraMatrix = camera.getCameraMatrix();
+
+        glUseProgram( program );
+
+        for ( auto x : entities )
+        {
+            decltype(auto) ntt = x.value;
+            if ( auto drawable = ntt.pDrawable )
+            {
+                if ( !drawable->visible )
+                    continue;
+
+                mat4 mtx = cameraMatrix * translate( {}, vec3( ntt.position, 0 ) );
+                mtx = rotate( mtx, ntt.rotation, vec3( 0, 0, 1 ) );
+
+                glUniform( uMatrix, mtx );
+                glUniform( uColor, drawable->color );
+                glUniform( uTexture, drawable->texture );
+                glUniform( uFacingDirection, drawable->direction );
+
+                if ( auto anim = ntt.pAnimator )
+                {
+                    glUniform( uCurrentAnim, (float) anim->animState );
+                    glUniform( uCurrentFrame, (float) anim->currentFrame );
+                    glUniform( uMaxFrame, (float) anim->maxFrames );
+                    glUniform( uMaxAnim, (float) anim->totalAnim );
+                }
+                else
+                {
+                    glUniform( uCurrentAnim, 0.f );
+                    glUniform( uCurrentFrame, 0.f );
+                    glUniform( uMaxFrame, 1.f );
+                    glUniform( uMaxAnim, 1.f );
+                }
+
+                glBindVertexArray( drawable->vertexArray );
+                glDrawArrays( GL_TRIANGLES, 0, drawable->count );
+            }
+        }
+    }
+
+    /*void update2( unsigned ticks )
     {
         Scene::update( ticks );
 
@@ -259,7 +570,7 @@ public:
         }
     }
 
-    void draw()
+    void draw2()
     {
         using namespace glm;
         Scene::draw();
@@ -301,16 +612,16 @@ public:
             glBindVertexArray( gfx.vertexArray );
             glDrawArrays( GL_TRIANGLES, 0, gfx.count );
         }
-    }
+    }*/
 
     void add( EntityId eid, GraphicalComponent gfx )
     {
-        gfxComponents.add( eid, std::move( gfx ) );
+        //gfxComponents.add( eid, std::move( gfx ) );
     }
 
     void add( EntityId eid, PhysicalComponent fsx )
     {
-        fsxComponents.add( eid, std::move( fsx ) );
+        //fsxComponents.add( eid, std::move( fsx ) );
     }
 
     void add( InputListener lstn )
@@ -322,14 +633,14 @@ public:
 
     // Using bullet start position, the velocity  direction, and default facing direction.
 
-    EntityView fireBullet( Vec2 position, odin::Direction8Way direction );
+    void fireBullet( Vec2 position, odin::Direction8Way direction );
 
 	// Casts a ray from position in the direction given.
 	// returns eid, normal to the collision, and distance of collision
 	std::tuple<EntityId, Vec2, float> resolveBulletCollision(Vec2 position, Vec2 direction);
 };
 
-struct EntityView
+/*struct EntityView
 {
     EntityId    eid;
     LevelScene* pScene;
@@ -389,20 +700,23 @@ struct EntityView
         return itr ? (AnimatorComponent*) itr : nullptr;
     }
 
-};
+};*/
 
 inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, int pindex )
 {
-    EntityView ntt = EntityView(eid, this);
+    if ( !entities.search( eid ) )
+        return;
+
+    decltype(auto) ntt = entities[ eid ];
 
 	//arm
-	EntityView arm_ntt = EntityView({ "playes", (uint16_t)pindex }, this);
-	GraphicalComponent& arm_gfx = *arm_ntt.gfxComponent();
-	AnimatorComponent& arm_anim = *arm_ntt.animComponent();
+    decltype(auto) arm_ntt = entities[ { "playes", (uint16_t)pindex } ];
+	GraphicalComponent& arm_gfx = *arm_ntt.pDrawable;
+	AnimatorComponent& arm_anim = *arm_ntt.pAnimator;
 
-    b2Body& body = *ntt.fsxComponent()->pBody;
-    GraphicalComponent& gfx = *ntt.gfxComponent();
-    AnimatorComponent& anim = *ntt.animComponent();
+    b2Body& body = *ntt.pBody;
+    GraphicalComponent& gfx = *ntt.pDrawable;
+    AnimatorComponent& anim = *ntt.pAnimator;
 
     Vec2 vel = body.GetLinearVelocity();
     float maxSpeed = 5.5f;
@@ -522,7 +836,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B))
     {
 		arm_anim.play = true;
-		fireBullet(entities[{ "playes", (uint16_t)pindex }].position, aimDirection);
+		fireBullet( arm_ntt.position, aimDirection);
     }
     if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_B))
     {
@@ -534,7 +848,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 		playSound("Audio/FX/Shot.wav", 127);
 		arm_anim.play = true;
 		arm_anim.currentFrame = 1;
-		fireBullet(entities[{ "playes", 0 }].position, aimDirection);
+		fireBullet( arm_ntt.position, aimDirection);
 	}
     if (mngr.wasKeyPressed(SDLK_1))
         pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0); //low energy test
@@ -567,7 +881,7 @@ std::tuple<EntityId, Vec2, float> LevelScene::resolveBulletCollision(Vec2 positi
 
 	EntityId eid;
 
-	for (auto x : fsxComponents) {
+	/*for (auto x : fsxComponents) {
 		b2Body* body = x.value.pBody;
 		for (b2Fixture* f = body->GetFixtureList(); f; f = f->GetNext()) {
 
@@ -584,12 +898,12 @@ std::tuple<EntityId, Vec2, float> LevelScene::resolveBulletCollision(Vec2 positi
 			}
 		}
 		
-	}
+	}*/
 	return std::make_tuple( eid, intersectionNormal, closestFraction * bulletRange);
 
 }
 
-inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
+inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
 {
 
 	float length = 100.f;
@@ -663,30 +977,35 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way dire
 
     EntityId bid("bulleq", _bulletCount);
 
-    entities.add( bid, Entity( position, rotation ) );
+    decltype(auto) bullet = entities[ bid ];
+    bullet.position = position;
+    bullet.setBase( EntityBase {} );
 
-    gfxComponents.add( bid, GraphicalComponent::makeRect( 1, 1, { 0, 1, 0 } ) );
+    bullet.pDrawable = newGraphics( GraphicalComponent::makeRect( 1, 1, { 0, 0, 0 } ) );
 
     b2BodyDef bodyDef;
     bodyDef.position = Vec2( glm::vec2( position ) / 10.f ) + b2Vec2{ 1, 0 };
-    bodyDef.linearVelocity = { 10, 0 };
+    bodyDef.linearVelocity = { 500, 0 };
     bodyDef.type = b2_dynamicBody;
+    bodyDef.gravityScale = 0;
     bodyDef.bullet = true;
+    bodyDef.userData = bullet.base();
 
-    fsxComponents.add( bid, PhysicalComponent::makeCircle( 0.05, b2world, bodyDef ) );
+    //bullet.pBody = newBody( bodyDef );
+    auto circ = PhysicalComponent::makeCircle( 0.05, b2world, bodyDef );
+    bullet.pBody = circ.pBody;
+    circ.pBody = nullptr;
 
-    /*EntityId eid("bullet", _bulletCount);
+    EntityId eid("bullet", _bulletCount);
 
-	if (!entities.add(eid, Entity(position+offset, rotation)))
-		std::cout << "Entity " << eid << " already exists.\n";
+    decltype(auto) bullet2 = entities[ eid ];
+    bullet2.position = Vec2( position + offset );
+    bullet2.rotation = rotation;
 
-	auto bGfx = gfxComponents.add(eid, GraphicalComponent::makeRect(length, 8.0f, { 255.f, 255.f, 255.f }));
-	bGfx->texture = BULLET_TEXTURE;
-	if (!bGfx)
-		std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
+	bullet2.pDrawable = newGraphics( GraphicalComponent::makeRect(length, 8.0f, { 255.f, 255.f, 255.f }));
+    bullet2.pDrawable->texture = BULLET_TEXTURE;
 
-	if (!animComponents.add(eid, AnimatorComponent({ 8 }, odin::FADEOUT)))
-		std::cout << "Entity " << eid << " already has an AnimationComponent.\n";*/
+    bullet2.pAnimator = newAnimator( AnimatorComponent( { 8 }, odin::FADEOUT ) );
 
     ++_bulletCount;
 
@@ -711,7 +1030,7 @@ inline EntityView LevelScene::fireBullet(Vec2 position, odin::Direction8Way dire
 	*/
 	camera.shake();
 
-    return EntityView(bid, this);
+    //return EntityView(bid, this);
 
 }
 

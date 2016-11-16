@@ -27,6 +27,9 @@ namespace odin
 
         int _frameDelay = 0; //how many draws before changing animation frame
 
+        AnimatorComponent() = default;
+        ~AnimatorComponent() = default;
+
         AnimatorComponent( std::initializer_list< int > il, AnimationType t = SPRITESHEET )
             : maxFrames( std::max( il ) )
             , totalAnim( il.size() )

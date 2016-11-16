@@ -153,6 +153,7 @@
     <ClInclude Include="OpenCLKernel.h" />
     <ClInclude Include="Scenes.hpp" />
     <ClInclude Include="TestScene.hpp" />
+    <ClInclude Include="TypedAllocator.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Game.rc" />

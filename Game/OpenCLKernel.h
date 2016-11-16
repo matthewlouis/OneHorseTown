@@ -173,7 +173,7 @@ public:
 
     void operator ()( typename ClMemBridge< Args >::type... args )
     {
-        std::lock_guard< std::mutex > lck( _mutex );
+        //std::lock_guard< std::mutex > lck( _mutex );
 
         _setArgs( 0, args... );
 

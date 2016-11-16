@@ -62,6 +62,8 @@ namespace odin
 
 inline namespace factory
 {
+    extern const int PLAYER_TAG;
+
     // "using namespace odin::factory;" to just use these functions.
 
 	// graphics component:physics component scale 10:1
@@ -82,33 +84,43 @@ inline namespace factory
     template< typename T >
     void make_player( T* pScene, EntityId eid, Vec2 pos, uint16_t playerNum )
     {
-        auto pGfx = get_components< GraphicalComponent >( pScene ).add( eid,
-            GraphicalComponent::makeRect( playerDim.x, playerDim.y ) );
-        pGfx->texture = PLAYER;
+        pScene->entities[ eid ];
+        pScene->entities[ { "playes", playerNum } ];
+
+        decltype(auto) ntt = pScene->entities[ eid ];
+        ntt.position = pos;
+        ntt.setBase( EntityPlayer { playerNum } );
+
+        ntt.pDrawable = pScene->newGraphics( GraphicalComponent::makeRect( playerDim.x, playerDim.y ) );
+        ntt.pDrawable->texture = PLAYER;
+
+        decltype(auto) nttarm = pScene->entities[ { "playes", playerNum } ];
 
 		//add arm
-		auto paGfx = get_components< GraphicalComponent >(pScene).add({ "playes", playerNum },
-			GraphicalComponent::makeRect(playerDim.x, playerDim.y));
-		paGfx->texture = ARM_TEXTURE;
-		paGfx->visible = false;
+        nttarm.pDrawable = pScene->newGraphics( GraphicalComponent::makeRect(playerDim.x, playerDim.y));
+		nttarm.pDrawable->texture = ARM_TEXTURE;
+		nttarm.pDrawable->visible = false;
 												//idle 10 frame, run 10 frame, jump 3 frame, shoot 3 frame (one armed, one armless)	
-        get_components< AnimatorComponent >( pScene ).add( eid, { 10, 10, 3, 3, 10, 10, 3, 3 } );
+        //get_components< AnimatorComponent >( pScene ).add( eid, { 10, 10, 3, 3, 10, 10, 3, 3 } );
 		
+        ntt.pAnimator = pScene->newAnimator( { 10, 10, 3, 3, 10, 10, 3, 3 } );
+
 		//Set up arm
 															//5 x shoot animation at 4 frames per anim
-		auto armAnm = get_components< AnimatorComponent >(pScene).add({"playes", playerNum}, { 4, 4, 4, 4, 4 });
-		armAnm->play = false;
-		armAnm->loop = false;
+        nttarm.pAnimator = pScene->newAnimator( { 4, 4, 4, 4, 4 } );
+		nttarm.pAnimator->play = false;
+		nttarm.pAnimator->loop = false;
 
         b2BodyDef playerDef;
         playerDef.position = pos;
         playerDef.fixedRotation = true;
         playerDef.type = b2_dynamicBody;
         playerDef.gravityScale = 2;
+        playerDef.userData = ntt.base();
 
-        auto pFsx = get_components< PhysicalComponent >( pScene ).add( eid,
-            PhysicalComponent::makeRect( playerDim.getPhysicsDim().x/2, playerDim.getPhysicsDim().y, pScene->b2world, playerDef, 1.0, PLAYER, PLATFORM | PLAYER | BULLET ) );
-
+        auto pRec = PhysicalComponent::makeRect( playerDim.getPhysicsDim().x/2, playerDim.getPhysicsDim().y, pScene->b2world, playerDef, 1.0, PLAYER, PLATFORM | PLAYER | BULLET );
+        ntt.pBody = pRec.pBody;
+        pRec.pBody = nullptr;
 
 		//a,rm
 		b2BodyDef armDef;
@@ -116,13 +128,16 @@ inline namespace factory
 		armDef.type = b2_staticBody;
 
 		//player arm physics component
-		auto paFsx = get_components< PhysicalComponent >(pScene).add({ "playes", playerNum },
-			PhysicalComponent::makeRect(playerDim.getPhysicsDim().x, playerDim.getPhysicsDim().y, pScene->b2world, armDef, 1.0, PLAYER_ARM, 0));
+		auto paFsx = PhysicalComponent::makeRect(playerDim.getPhysicsDim().x, playerDim.getPhysicsDim().y, pScene->b2world, armDef, 1.0, PLAYER_ARM, 0);
+        nttarm.pBody = paFsx.pBody;
+        paFsx.pBody = nullptr;
     }
 
     template< typename T >
     void make_horse( T* pScene, EntityId eid, Vec2 pos )
     {
+        decltype(auto) ntt = pScene->entities[ eid ];
+
         auto hGfx = get_components< GraphicalComponent >( pScene ).add( eid,
             GraphicalComponent::makeRect( horse.x, horse.y ) );
         hGfx->texture = HORSE_TEXTURE;
@@ -161,15 +176,14 @@ inline namespace factory
 		for (i = 0; i < length; i++)
 		{
 			eid = { id, i };
-			if (!pScene->entities.add(eid, Entity(pos, 0)))
-				std::cout << "Entity " << eid << " already exists.\n";
+            decltype(auto) ntt = pScene->entities[ eid ];
 
-			if (!pScene->gfxComponents.add(eid,
-				GraphicalComponent::makeRect(platform.x, platform.y, { 1,1,1 })))
-				std::cout << "Entity " << eid << " already has a GraphicalComponent.\n";
+            ntt.position = pos;
 
-			EntityView ntt = EntityView(eid, pScene);
-			ntt.gfxComponent()->texture = GROUND1;
+            ntt.pDrawable = pScene->newGraphics(
+                GraphicalComponent::makeRect( platform.x, platform.y, { 1,1,1 } ) );
+
+            ntt.pDrawable->texture = GROUND1;
 			//makeRect(scene, { id, i }, { 1, 1 }, pos, 0, { 1,1,1 }, GROUND1);
 			
 
@@ -181,9 +195,9 @@ inline namespace factory
 		bodyDef.angle = 0;
 		bodyDef.type = b2_staticBody;
 
-		if (!pScene->fsxComponents.add({ id, i },
-				PhysicalComponent::makeRect(platform.getPhysicsDim().x, platform.getPhysicsDim().y, pScene->b2world, bodyDef, 1.0, PLATFORM, HORSE | PLAYER)))
-		std::cout << "Entity " << eid << " already has a PhysicalComponent.\n";
+        auto pb = PhysicalComponent::makeRect( platform.getPhysicsDim().x, platform.getPhysicsDim().y, pScene->b2world, bodyDef, 1.0, PLATFORM, HORSE | PLAYER );
+        ntt.pBody = pb.pBody;
+        pb.pBody = nullptr;
 		
 			offset.x += physicsScale; 
 		}

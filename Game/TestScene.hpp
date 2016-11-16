@@ -27,7 +27,6 @@ struct ParticleDeleter
 
 struct Particle
 {
-    unsigned  id;
     float     lifetime;
     cl_float4 color = { 1, 1, 1, 1 };
     cl_float2 position = { 0, 0 };
@@ -35,10 +34,9 @@ struct Particle
     
     Particle() = default;
 
-    Particle( unsigned id, float lifetime, glm::vec4 color,
+    Particle( float lifetime, glm::vec4 color,
               glm::vec2 pos, glm::vec2 vel )
-        : id( id )
-        , lifetime( lifetime )
+        : lifetime( lifetime )
         , color( { color.x, color.y, color.z, color.w } )
         , position( { pos.x, pos.y } )
         , velocity( { vel.x, vel.y } )
@@ -53,7 +51,8 @@ struct Particle
     static void default_update( Particle& p, float step )
     {
         p.lifetime -= step;
-        //p.position += p.velocity * step;
+        p.position.x += p.velocity.x * step;
+        p.position.y += p.velocity.y * step;
     }
 };
 
@@ -102,8 +101,6 @@ public:
 
     Particle* emitt()
     {
-        static unsigned s_NextId = 0;
-
         float length = apply_variance( velocityMagnitude, velocityMagnitudeVariance );
         float angle = apply_variance( velocityAngle, velocityAngleVariance );
 
@@ -112,7 +109,7 @@ public:
             length * glm::sin( angle )
         };
 
-        Particle particle( s_NextId++,
+        Particle particle(
             apply_variance( lifetime, lifetimeVariance ),
             apply_variance( color, colorVariance ),
             position, vel );
@@ -122,40 +119,52 @@ public:
         return &particles.back();
     }
 
+    void spawn( float timeStep )
+    {
+        float numToEmitt = std::rand() / float( RAND_MAX );
+        numToEmitt *= spawnRate * timeStep * 10;
+        numToEmitt = glm::round( numToEmitt );
+
+        while ( numToEmitt-- > 0 )
+            emitt();
+    }
+
     void update( float timeStep )
     {
-        //for ( Particle* p : particles )
-        //{
-        //    p->velocity += glm::vec2( 0, -50 ) * timeStep;
-        //    Particle::default_update( *p, timeStep );
-        //}
+        for ( Particle& p : particles )
+        {
+            p.velocity.y += -100 * timeStep;
+            Particle::default_update( p, timeStep );
+        }
 
         auto split = std::remove_if( particles.begin(), particles.end(),
             []( Particle& p ) {
                 return p.isExpired();
             } );
 
-        //if ( fnUpdate )
-        //    std::for_each( particles.begin(), split,
-        //        [this, timeStep]( Particle* p ) {
-        //            fnUpdate( *p, timeStep );
-        //        } );
-
-        //std::for_each( split, particles.end(),
-        //    []( Particle* p ) {
-        //        context_dealloc( p );
-        //    } );
+        if ( fnUpdate )
+            std::for_each( particles.begin(), split,
+                [this, timeStep]( Particle& p ) {
+                    fnUpdate( p, timeStep );
+                } );
 
         particles.erase( split, particles.end() );
 
-        if ( !active )
-            return;
+        if ( active && spawnRate > 0 )
+            spawn( timeStep );
+    }
 
-        float numToEmitt = std::rand() / float( RAND_MAX ) * spawnRate;
-        numToEmitt = glm::round( numToEmitt * timeStep * 10 );
+    void update2( float timeStep )
+    {
+        auto split = std::remove_if( particles.begin(), particles.end(),
+            []( Particle& p ) {
+                return p.isExpired();
+            } );
 
-        while ( numToEmitt-- > 0 )
-            emitt();
+        particles.erase( split, particles.end() );
+
+        if ( active && spawnRate > 0 )
+            spawn( timeStep );
     }
 
     template< typename T >
@@ -212,8 +221,9 @@ public:
 
 	EntityFactory* factory;
 
-	EntityView* players;
-	EntityView* player_arms;
+    EntityId players[ 4 ];
+    EntityId player_arms[ 4 ];
+
 	int numberPlayers;
 
 	//'table' to store offsets for placing arm - 1 for each animation state
@@ -233,8 +243,8 @@ public:
         , updater( "ParticleSystem.cl" )
 	{
         srand((unsigned)time(NULL));
-        players = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
-        player_arms = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
+        //players = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
+        //player_arms = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
 	}
 
     #define PARTICLE_TAG "playez"
@@ -243,21 +253,18 @@ public:
 	{
         ParticleEmitter emitter( position );
         emitter.active = false;
-        //emitter.spawnRate = 20;
-        emitter.color = { 0.9, 0, 0, 1 };
+        //emitter.spawnRate = 10;
+        emitter.color = { 0.8, 0, 0, 1 };
         emitter.colorVariance = { 0.1, 0, 0, 0 };
         emitter.lifetime = 3;
         emitter.lifetimeVariance = 0.3;
         emitter.velocityMagnitude = 40;
         emitter.velocityMagnitudeVariance = 30;
-        //emitter.velocityAngle = (std::rand() / float( RAND_MAX )) * glm::two_pi< float >();
-        //emitter.velocityAngleVariance = glm::pi< float >() / 6;
-
         emitter.velocityAngle = 0;
         emitter.velocityAngleVariance = glm::pi< float >();
 
         emitter.fnUpdate = []( Particle& p, float timeStep ) {
-            //p.color.w -= timeStep / 3;
+            p.color.w -= timeStep / 3;
         };
 
         for ( size_t i = 0; i < 50; ++i )
@@ -272,25 +279,28 @@ public:
 
         //iterate through all the arms and place them relative to the player using offsets
         for (int i = 0; i < numberPlayers; ++i) {
-            Vec2 armPosition = players[i].fsxComponent()->position();
+
+            if ( !entities.search( players[ i ] ) )
+                continue;
+
+            Vec2 armPosition = entities[ players[i] ].pBody->GetPosition();
 
             //current state determines the arm offset
-            int currentState = player_arms[i].animComponent()->animState;
+            int currentState = entities[ player_arms[i] ].pAnimator->animState;
 
             armPosition.y += armOffsets[currentState].y;
-            armPosition.x += players[i].gfxComponent()->direction * armOffsets[currentState].x;
+            armPosition.x += entities[ players[i] ].pDrawable->direction * armOffsets[currentState].x;
 
-            player_arms[i].fsxComponent()->pBody->SetTransform(armPosition, 0);
+            entities[ player_arms[i] ].pBody->SetTransform(armPosition, 0);
         }
 
         for ( auto& em : emitters )
         {
-            updater.globalWorkSize[ 0 ] = em.particles.size();
-            updater( em.particles, Scene::ticksDiff / 1000.f );
+            //updater.globalWorkSize[ 0 ] = em.particles.size();
+            //updater( em.particles, Scene::ticksDiff / 1000.f );
+            //em.update2( Scene::ticksDiff / 1000.f );
+            em.update( Scene::ticksDiff / 1000.f );
         }
-
-        for ( auto& emitter : emitters )
-            emitter.update( Scene::ticksDiff / 1000.f );
         
         auto itr = std::remove_if( emitters.begin(), emitters.end(),
             []( const ParticleEmitter& em ) {
@@ -300,24 +310,24 @@ public:
         emitters.erase( itr, emitters.end() );
     }
 
+    GraphicalComponent _gfx = GraphicalComponent::makeRect( 1, 1 );
+
     void draw()
     {
         LevelScene::draw();
 
-        GraphicalComponent gfx = GraphicalComponent::makeRect( 1, 1 );
-
         using namespace glm;
 
         glUseProgram( program );
-        glUniform( uTexture, gfx.texture );
-        glUniform( uFacingDirection, gfx.direction );
+        glUniform( uTexture, _gfx.texture );
+        glUniform( uFacingDirection, _gfx.direction );
 
-        glUniform( uCurrentAnim, 0 );
-        glUniform( uCurrentFrame, 0 );
-        glUniform( uMaxFrame, 1 );
-        glUniform( uMaxAnim, 1 );
+        glUniform( uCurrentAnim, 0.f );
+        glUniform( uCurrentFrame, 0.f );
+        glUniform( uMaxFrame, 1.f );
+        glUniform( uMaxAnim, 1.f );
 
-        glBindVertexArray( gfx.vertexArray );
+        glBindVertexArray( _gfx.vertexArray );
 
         for ( auto& emitter : emitters )
         {
@@ -328,18 +338,8 @@ public:
 
                 glUniform( uMatrix, mtx );
                 glUniform( uColor, vec4( p.color.x, p.color.y, p.color.z, p.color.w ) );
-                glDrawArrays( GL_TRIANGLES, 0, gfx.count );
+                glDrawArrays( GL_TRIANGLES, 0, _gfx.count );
             }
-        }
-    }
-
-    void _registerEntities( EntityId first, EntityId last )
-    {
-        for ( auto eid = first; eid < last; ++eid._bitPattern )
-        {
-            entities[ eid ];
-            gfxComponents[ eid ];
-            fsxComponents[ eid ];
         }
     }
 
@@ -354,8 +354,8 @@ public:
 		armOffsets[4] = Vec2(0.25, 0.05);
 
 
-        _contactListener.func = [this]( b2Body* b ) {
-            _spawnParticle( glm::vec2( Vec2( b->GetPosition() ) ) * 10.f );
+        _contactListener.func = [this]( Entity2* ntt ) {
+            _spawnParticle( ntt->position );
         };
 
         //_registerEntities( {PARTICLE_TAG, 0}, {PARTICLE_TAG, 100} );
@@ -369,12 +369,11 @@ public:
 		odin::load_texture(ARM_TEXTURE, "Textures/ArmSS.png");
 		odin::load_texture(BACKGROUND, "Textures/background.png");
 		odin::load_texture(HORSE_TEXTURE, "Textures/horse_dense.png");
-		odin::load_texture(BULLET_TEXTURE, "Textures/bullet.png");
+        odin::load_texture(BULLET_TEXTURE, "Textures/bullet.png");
 
-
-		auto background = gfxComponents.add(
-			EntityId(0), GraphicalComponent::makeRect( width, height ));
-		background->texture = BACKGROUND;
+        decltype(auto) bg = entities[ EntityId( 0 ) ];
+        bg.pDrawable = newGraphics( GraphicalComponent::makeRect( width, height ) );
+		bg.pDrawable->texture = BACKGROUND;
 
         listeners.push_back( [this]( const InputManager& inmn ) {
             if ( inmn.wasKeyPressed( SDLK_BACKSPACE ) )
@@ -403,7 +402,6 @@ public:
 				camera.setPosition(camera.getPosition() + glm::vec2(CAMERA_SPEED, 0.0f));
 			if (inmn.wasKeyPressed(SDLK_p))
 				camera.shake();
-
 		});
 
         //factory->makePlayer( this, {"player", 0} );
@@ -413,32 +411,32 @@ public:
         listeners.push_back( [this]( const InputManager& inmn ) {
             return player_input( inmn, {"player", 0}, 0 );
         } );
-		players[0] = EntityView({ "player", 0 }, this);
-		player_arms[0] = EntityView({ "playes", 0 }, this);
+		players[0] = { "player", 0 };
+		player_arms[0] = { "playes", 0 };
 
 		// create player 2
 		odin::make_player(this, { "player", 1 }, { 0, 5 },1);
 		//listeners.push_back([this](const InputManager& inmn) {
-		//	return player_input(inmn, { "player", 1 }, 1);
+		//    return player_input(inmn, { "player", 1 }, 1);
 		//});
-		players[1] = EntityView({ "player", 1 }, this);
-		player_arms[1] = EntityView({ "playes", 1 }, this);
+		players[1] = { "player", 1 };
+		player_arms[1] = { "playes", 1 };
 
 		// create player 3
 		odin::make_player(this, { "player", 2 }, { 0, 5 }, 2);
 		//listeners.push_back([this](const InputManager& inmn) {
-		//	return player_input(inmn, { "player", 2 }, 2);
+		//    return player_input(inmn, { "player", 2 }, 2);
 		//});
-		players[2] = EntityView({ "player", 2 }, this);
-		player_arms[2] = EntityView({ "playes", 2 }, this);
+		players[2] = { "player", 2 };
+		player_arms[2] = { "playes", 2 };
 
 		// create player 4
 		odin::make_player(this, { "player", 3 }, { 0, 5 }, 3);
 		//listeners.push_back([this](const InputManager& inmn) {
-		//	return player_input(inmn, { "player", 3 }, 3);
+		//    return player_input(inmn, { "player", 3 }, 3);
 		//});
-		players[3] = EntityView({ "player", 3 }, this);
-		player_arms[3] = EntityView({ "playes", 3 }, this);
+		players[3] = { "player", 3 };
+		player_arms[3] = { "playes", 3 };
 
         listeners.push_back( [this]( const InputManager& inmn ) {
             if ( inmn.wasKeyPressed( SDLK_b ) )
@@ -446,7 +444,7 @@ public:
         } );
 
 		//factory->makeHorse(this, "horse");
-        odin::make_horse( this, "horse", {0.0f, 5.f} );
+        //odin::make_horse( this, "horse", {0.0f, 5.f} );
 
 
 		//starting left top to bottom right
@@ -489,29 +487,32 @@ public:
 		wallFilter.categoryBits = PLATFORM;
 		wallFilter.maskBits = PLAYER | HORSE | BULLET;
 
-		fsxComponents["floor"] = b2world.CreateBody(&floorDef);
-		b2Fixture* fix = fsxComponents["floor"]->CreateFixture(&boundingShape, 1);
+        b2Body* floorBody = entities[ "floor" ].pBody = newBody( floorDef );
+
+		b2Fixture* fix = floorBody->CreateFixture(&boundingShape, 1);
 		fix->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 		fix->SetFilterData(wallFilter);
 
 		boundingShape.Set({ 13, +10 }, { 13, -8 }); //right wall plane
 
-		fsxComponents["wallR"] = b2world.CreateBody(&floorDef);
-		fix = fsxComponents["wallR"]->CreateFixture(&boundingShape, 1);
+        b2Body* wallRBody = entities[ "wallR" ].pBody = newBody( floorDef );
+
+		fix = wallRBody->CreateFixture(&boundingShape, 1);
 		fix->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 		fix->SetFilterData(wallFilter);
 
 		boundingShape.Set({ -13, +10 }, { -13, -8 }); // left wall plane
 
-		fsxComponents["wallL"] = b2world.CreateBody(&floorDef);
-		fix = fsxComponents["wallL"]->CreateFixture(&boundingShape, 1);
+        b2Body* wallLBody = entities[ "wallL" ].pBody = newBody( floorDef );
+
+		fix = wallLBody->CreateFixture(&boundingShape, 1);
 		fix->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 		fix->SetFilterData(wallFilter);
 
 		boundingShape.Set({ -13, 8 }, { 13, 8 }); //ceiling
 
-		fsxComponents["ceil"] = b2world.CreateBody(&floorDef);
-		fix = fsxComponents["ceil"]->CreateFixture(&boundingShape, 1);
+		b2Body* ceilBody = entities[ "ceil" ].pBody = newBody( floorDef );
+		fix = ceilBody->CreateFixture(&boundingShape, 1);
 		fix->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 		fix->SetFilterData(wallFilter);
 

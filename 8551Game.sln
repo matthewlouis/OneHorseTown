@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OdinEngine", "OdinEngine\OdinEngine.vcxproj", "{CF638361-64E3-43CC-9000-2353E2DBC430}"
 EndProject
@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Game", "Game\Game.vcxproj",
 	ProjectSection(ProjectDependencies) = postProject
 		{CF638361-64E3-43CC-9000-2353E2DBC430} = {CF638361-64E3-43CC-9000-2353E2DBC430}
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{69C0FC4B-F76C-4FEC-AC9B-867DC8FB9B85}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
