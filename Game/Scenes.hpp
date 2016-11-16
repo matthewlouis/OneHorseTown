@@ -846,24 +846,29 @@ std::tuple<EntityId, Vec2, float> LevelScene::resolveBulletCollision(Vec2 positi
 
 	EntityId eid;
 
-	/*for (auto x : fsxComponents) {
-		b2Body* body = x.value.pBody;
-		for (b2Fixture* f = body->GetFixtureList(); f; f = f->GetNext()) {
+	for ( auto x : entities )
+    {
+        if ( b2Body* body = x.value.pBody )
+        {
+		    for ( b2Fixture* f = body->GetFixtureList(); f; f = f->GetNext() )
+            {
+			    b2RayCastOutput output;
+			    if (!f->RayCast(&output, input, 0))
+				    continue;
+			    // TODO: This SHOULD filter out fixtues that don't collide with bullets... But doesn't seem to do so
+			    if(!(f->GetFilterData().maskBits & BULLET))
+				    continue;
 
-			b2RayCastOutput output;
-			if (!f->RayCast(&output, input, 0))
-				continue;
-			// TODO: This SHOULD filter out fixtues that don't collide with bullets... But doesn't seem to do so
-			if(!(f->GetFilterData().maskBits & BULLET))
-				continue;
-			if (output.fraction < closestFraction && output.fraction > delta) {
-				closestFraction = output.fraction;
-				intersectionNormal = output.normal;
-				eid = x.key;
-			}
-		}
+			    if (output.fraction < closestFraction && output.fraction > delta)
+                {
+				    closestFraction = output.fraction;
+				    intersectionNormal = output.normal;
+				    eid = x.key;
+			    }
+		    }
+        }
 		
-	}*/
+	}
 	return std::make_tuple( eid, intersectionNormal, closestFraction * bulletRange);
 
 }
@@ -949,8 +954,8 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
     bullet.pDrawable = newGraphics( GraphicalComponent::makeRect( 1, 1, { 0, 0, 0 } ) );
 
     b2BodyDef bodyDef;
-    bodyDef.position = Vec2( glm::vec2( position ) / 10.f ) + b2Vec2{ 1, 0 };
-    bodyDef.linearVelocity = { 500, 0 };
+    bodyDef.position = Vec2( (position.glmvec2 / 10.f) + glm::normalize( offset.glmvec2 ) );
+    bodyDef.linearVelocity = Vec2( glm::normalize( offset.glmvec2 ) * 500.0f );//{ 500, 0 };
     bodyDef.type = b2_dynamicBody;
     bodyDef.gravityScale = 0;
     bodyDef.bullet = true;

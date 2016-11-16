@@ -152,9 +152,9 @@ inline namespace factory
     {
         decltype(auto) ntt = pScene->entities[ eid ];
 
-        auto hGfx = get_components< GraphicalComponent >( pScene ).add( eid,
-            GraphicalComponent::makeRect( horse.x, horse.y ) );
-        hGfx->texture = HORSE_TEXTURE;
+
+        ntt.pDrawable = pScene->newGraphics( GraphicalComponent::makeRect( horse.x, horse.y ) );
+        ntt.pDrawable->texture = HORSE_TEXTURE;
 
         b2BodyDef horseDef;
         horseDef.position = pos; 
@@ -162,8 +162,9 @@ inline namespace factory
         horseDef.type = b2_dynamicBody;
         horseDef.gravityScale = 2;
 
-        auto hFsx = get_components< PhysicalComponent >( pScene ).add( eid,
-            PhysicalComponent::makeRect( horse.getPhysicsDim().x, horse.getPhysicsDim().y, pScene->b2world, horseDef, 1.0, HORSE, PLATFORM ) );
+        auto hFsx = PhysicalComponent::makeRect( horse.getPhysicsDim().x, horse.getPhysicsDim().y, pScene->b2world, horseDef, 1.0, HORSE, PLATFORM );
+        ntt.pBody = hFsx.pBody;
+        hFsx.pBody = nullptr;
     }
 
 	template< typename T >
