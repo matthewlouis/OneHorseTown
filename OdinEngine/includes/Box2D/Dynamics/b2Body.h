@@ -666,6 +666,7 @@ inline bool b2Body::IsBullet() const
 	return (m_flags & e_bulletFlag) == e_bulletFlag;
 }
 
+
 inline void b2Body::SetAwake(bool flag)
 {
 	if (flag)
