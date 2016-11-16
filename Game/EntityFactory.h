@@ -235,7 +235,7 @@ namespace odin
 			bodyDef.angle = 0;
 			bodyDef.type = b2_staticBody;
 
-			auto pb = PhysicalComponent::makeRect(platform.getPhysicsDim().x*length, platform.getPhysicsDim().y, pScene->b2world, bodyDef, 1.0, PLATFORM, HORSE | PLAYER);
+			auto pb = PhysicalComponent::makeRect(platform.getPhysicsDim().x*length, platform.getPhysicsDim().y, pScene->b2world, bodyDef, 1.0, PLATFORM, HORSE | PLAYER | BULLET);
 			ntt.pBody = pb.pBody;
 			pb.pBody = nullptr;
 		}
