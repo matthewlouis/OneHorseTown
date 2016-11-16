@@ -89,7 +89,9 @@ public:
             deadEntities.push_back( (EntityBase*) bodyB->GetUserData() );
             if ( bodyA->GetUserData() )
                 deadEntities.push_back( (EntityBase*) bodyA->GetUserData() );
-        }
+        }	
+
+
     }
 
     void EndContact(b2Contact* contact) {
@@ -664,7 +666,11 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 	}
 
 	if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_A)) {
-		vel.y = 11;
+		if (players[pindex].doubleJump < 2)
+		{
+			vel.y = 11;
+			players[pindex].doubleJump++;
+		}
 	}
 
 	if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_A) && vel.y > 0)
