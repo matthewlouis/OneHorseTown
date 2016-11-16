@@ -255,13 +255,13 @@ public:
 
     std::vector< ParticleEmitter > emitters;
 
-    OpenCLKernel< Particle*, float > updater;
+    //OpenCLKernel< Particle*, float > updater;
 
 	TestScene( int width, int height, float scale, int numberPlayers = 1 )
 		: LevelScene( width, height, "Audio/Banks/MasterBank" )
         , numberPlayers( numberPlayers )
 		, _scale( scale )
-        , updater( "ParticleSystem.cl" )
+        //, updater( "ParticleSystem.cl" )
 	{
 	}
 
