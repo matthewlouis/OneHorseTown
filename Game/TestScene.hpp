@@ -389,10 +389,8 @@ public:
 				camera.shake();
 		});
 
-        //factory->makePlayer( this, {"player", 0} );
-
 		// create player 1
-        odin::make_player( this, {"player", 0}, {0, 5}, 0 );
+        odin::make_player( this, {"player", 0}, {0, -2}, 0 );
         listeners.push_back( [this]( const InputManager& inmn ) {
             return player_input( inmn, {"player", 0}, 0 );
         } );
@@ -400,66 +398,50 @@ public:
 
 
 		// create player 2
-		odin::make_player(this, { "player", 1 }, { 0, 5 },1);
+		odin::make_player(this, { "player", 1 }, { 0, -2 },1);
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 1 }, 1);
 		});
 
 		//players[1] = EntityView({ "player", 1 }, this);
 		// create player 3
-		odin::make_player(this, { "player", 2 }, { 0, 5 }, 2);
+		odin::make_player(this, { "player", 2 }, { 0, -2 }, 2);
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 2 }, 2);
 		});
 		//players[2] = EntityView({ "player", 2 }, this);
 
 		// create player 4
-		odin::make_player(this, { "player", 3 }, { 0, 5 }, 3);
+		odin::make_player(this, { "player", 3 }, { 0, -2 }, 3);
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 3 }, 3);
 		});
 		//players[3] = EntityView({ "player", 3 }, this);
 
-		//factory->makeHorse(this, "horse");
         //odin::make_horse( this, "horse", {0.0f, 5.f} );
 
+		//Setup level
+		odin::make_platform(this, "plat01", 30, {-240 ,-144}); // bottom floor
+		odin::make_platform(this, "plat02", 6, { -48,-90 }); // center lower platform
+		odin::make_platform(this, "plat03", 4, { -32,-40 }); // center mid-lower platform
 
-		//starting left top to bottom right
-		odin::make_platform(this, "plat06", 4, { -103,25 }); // left upper
-		odin::make_platform(this, "plat01", 4, { -123,-10 }); // left mid
-		odin::make_platform(this, "plat05", 4, { -103,-45 }); // left lower
-		odin::make_platform(this, "plat07", 4, { 73,25 }); // right upper
-		odin::make_platform(this, "plat02", 4, { 93,-10 }); // right center
-		odin::make_platform(this, "plat08", 4, { 73,-45 }); // right lower
-		odin::make_platform(this, "plat03", 5, { -25,-20 }); // center
-		odin::make_platform(this, "plat04", 26, { -123, -80 }); // bottom floor
+		odin::make_platform(this, "plat04", 6, { -240,90 }); // left upper
+		odin::make_platform(this, "plat05", 6, { 160,90}); // right upper
+		odin::make_platform(this, "plat06", 6, { -48,68 }); // center upper
 
-		/*
-		factory->makePlatform(this, "plat1", 3, {0, -3}); // Lower Middle
-		factory->makePlatform(this, "plat2", 6, { 0.5, 3 }); // Upper middle
-		
-		factory->makePlatform(this, "plat3", 4, { -9, 5 }); // Top Left
-		factory->makePlatform(this, "plat4", 4, { 10, 5 }); // Top Right
-		
-		factory->makePlatform(this, "plat5", 5, { -6, 0 }); // Middle Left
-		factory->makePlatform(this, "plat6", 5, { 6, 0 }); // Middle Right
-		
-		factory->makePlatform(this, "plat7", 2, { -3, -5.5 }); // Lower Left
-		factory->makePlatform(this, "plat8", 2, { 3, -5.5 }); // Lower Right
-		*/
+		odin::make_platform(this, "plat07", 3, { -148,-60 }); // right center
+		odin::make_platform(this, "plat08", 3, { 100,-60 }); // right lower
+		odin::make_platform(this, "plat09", 4, { -144,25 }); // left mid upper
+		odin::make_platform(this, "plat10", 4, { 80, 25 }); // right mid upper
 
-		//factory->makeRect(this, "box", { 1,1 }, { 1,1 }, 0, { 1,1,1 });
-
-		//fireBullet({ -170, 5.5f }, { 100, 0 });
-
-		//GLuint nul = load_texture( "null.png", 0 );
-
+		odin::make_platform(this, "plat11", 4, { -240, -20 }); // left mid upper
+		odin::make_platform(this, "plat12", 4, { 176, -20 }); // right mid upper
 
 		// Set the physics bounds for the left,right wall and floor surfaces
 		b2BodyDef floorDef;
 		b2EdgeShape boundingShape;
 		b2Filter wallFilter;
-		boundingShape.Set({ -13, -8 }, { 13, -8 }); //floor plane
+		boundingShape.Set({ -24, -14.5 }, { 24, -14.5 }); //floor plane
 
 		wallFilter.categoryBits = PLATFORM;
 		wallFilter.maskBits = PLAYER | HORSE | BULLET;
@@ -470,7 +452,7 @@ public:
 		fix->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 		fix->SetFilterData(wallFilter);
 
-		boundingShape.Set({ 13, +10 }, { 13, -8 }); //right wall plane
+		boundingShape.Set({ 24, 14.5 }, { 24, -14.5 }); //right wall plane
 
         b2Body* wallRBody = entities[ "wallR" ].pBody = newBody( floorDef );
 
@@ -478,7 +460,7 @@ public:
 		fix->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 		fix->SetFilterData(wallFilter);
 
-		boundingShape.Set({ -13, +10 }, { -13, -8 }); // left wall plane
+		boundingShape.Set({ -24, 14.5 }, { -24, -14.5 }); // left wall plane
 
         b2Body* wallLBody = entities[ "wallL" ].pBody = newBody( floorDef );
 
@@ -486,7 +468,7 @@ public:
 		fix->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 		fix->SetFilterData(wallFilter);
 
-		boundingShape.Set({ -13, 8 }, { 13, 8 }); //ceiling
+		boundingShape.Set({ -24, 14.5 }, { 24, 14.5 }); //ceiling
 
 		b2Body* ceilBody = entities[ "ceil" ].pBody = newBody( floorDef );
 		fix = ceilBody->CreateFixture(&boundingShape, 1);
