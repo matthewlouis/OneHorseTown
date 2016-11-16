@@ -221,13 +221,9 @@ public:
 
 	EntityFactory* factory;
 
-    EntityId players[ 4 ];
-    EntityId player_arms[ 4 ];
-
+	//EntityView* players;
+	//EntityView* player_arms;
 	int numberPlayers;
-
-	//'table' to store offsets for placing arm - 1 for each animation state
-	Vec2 armOffsets[5];
 
 	float _scale;
 
@@ -278,7 +274,7 @@ public:
         LevelScene::update( ticks );
 
         //iterate through all the arms and place them relative to the player using offsets
-        for (int i = 0; i < numberPlayers; ++i) {
+        /*for (int i = 0; i < numberPlayers; ++i) {
 
             if ( !entities.search( players[ i ] ) )
                 continue;
@@ -292,7 +288,7 @@ public:
             armPosition.x += entities[ players[i] ].pDrawable->direction * armOffsets[currentState].x;
 
             entities[ player_arms[i] ].pBody->SetTransform(armPosition, 0);
-        }
+        }*/
 
         for ( auto& em : emitters )
         {
@@ -341,26 +337,15 @@ public:
                 glDrawArrays( GL_TRIANGLES, 0, _gfx.count );
             }
         }
-    }
+	}
 
 	void init( unsigned ticks )
     {
         LevelScene::init( ticks );
-        //set arm offsets so it renders in correct location
-		armOffsets[0] = Vec2(0.5, 0.9);
-		armOffsets[1] = Vec2(0.6, 0.75);
-		armOffsets[2] = Vec2(0.75, 0.475);
-		armOffsets[3] = Vec2(0.6, 0.275);
-		armOffsets[4] = Vec2(0.25, 0.05);
-
 
         _contactListener.func = [this]( Entity2* ntt ) {
             _spawnParticle( ntt->position );
         };
-
-        //_registerEntities( {PARTICLE_TAG, 0}, {PARTICLE_TAG, 100} );
-
-        #undef PARTICLE_TAG
 
         odin::load_texture< GLubyte[4] >( NULL_TEXTURE, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF } );
 		odin::load_texture(GROUND1, "Textures/ground.png");
@@ -369,7 +354,7 @@ public:
 		odin::load_texture(ARM_TEXTURE, "Textures/ArmSS.png");
 		odin::load_texture(BACKGROUND, "Textures/background.png");
 		odin::load_texture(HORSE_TEXTURE, "Textures/horse_dense.png");
-        odin::load_texture(BULLET_TEXTURE, "Textures/bullet.png");
+		odin::load_texture(BULLET_TEXTURE, "Textures/bullet.png");
 
         decltype(auto) bg = entities[ EntityId( 0 ) ];
         bg.pDrawable = newGraphics( GraphicalComponent::makeRect( width, height ) );
@@ -411,37 +396,29 @@ public:
         listeners.push_back( [this]( const InputManager& inmn ) {
             return player_input( inmn, {"player", 0}, 0 );
         } );
-		players[0] = { "player", 0 };
-		player_arms[0] = { "playes", 0 };
+		//players[0] = EntityView({ "player", 0 }, this);
+
 
 		// create player 2
 		odin::make_player(this, { "player", 1 }, { 0, 5 },1);
-		//listeners.push_back([this](const InputManager& inmn) {
-		//    return player_input(inmn, { "player", 1 }, 1);
-		//});
-		players[1] = { "player", 1 };
-		player_arms[1] = { "playes", 1 };
+		listeners.push_back([this](const InputManager& inmn) {
+			return player_input(inmn, { "player", 1 }, 1);
+		});
 
+		//players[1] = EntityView({ "player", 1 }, this);
 		// create player 3
 		odin::make_player(this, { "player", 2 }, { 0, 5 }, 2);
-		//listeners.push_back([this](const InputManager& inmn) {
-		//    return player_input(inmn, { "player", 2 }, 2);
-		//});
-		players[2] = { "player", 2 };
-		player_arms[2] = { "playes", 2 };
+		listeners.push_back([this](const InputManager& inmn) {
+			return player_input(inmn, { "player", 2 }, 2);
+		});
+		//players[2] = EntityView({ "player", 2 }, this);
 
 		// create player 4
 		odin::make_player(this, { "player", 3 }, { 0, 5 }, 3);
-		//listeners.push_back([this](const InputManager& inmn) {
-		//    return player_input(inmn, { "player", 3 }, 3);
-		//});
-		players[3] = { "player", 3 };
-		player_arms[3] = { "playes", 3 };
-
-        listeners.push_back( [this]( const InputManager& inmn ) {
-            if ( inmn.wasKeyPressed( SDLK_b ) )
-                _spawnParticle( entities[ "player" ].position );
-        } );
+		listeners.push_back([this](const InputManager& inmn) {
+			return player_input(inmn, { "player", 3 }, 3);
+		});
+		//players[3] = EntityView({ "player", 3 }, this);
 
 		//factory->makeHorse(this, "horse");
         //odin::make_horse( this, "horse", {0.0f, 5.f} );
@@ -483,7 +460,7 @@ public:
 		b2EdgeShape boundingShape;
 		b2Filter wallFilter;
 		boundingShape.Set({ -13, -8 }, { 13, -8 }); //floor plane
-		
+
 		wallFilter.categoryBits = PLATFORM;
 		wallFilter.maskBits = PLAYER | HORSE | BULLET;
 

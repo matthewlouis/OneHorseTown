@@ -151,6 +151,7 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="Memory.h" />
     <ClInclude Include="OpenCLKernel.h" />
+    <ClInclude Include="Player.hpp" />
     <ClInclude Include="Scenes.hpp" />
     <ClInclude Include="TestScene.hpp" />
     <ClInclude Include="TypedAllocator.hpp" />

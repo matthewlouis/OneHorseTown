@@ -53,6 +53,7 @@ namespace odin
 
         void switchAnimState( int state )
         {
+			play = true;
 			if (animState == state) {
 				currentFrame %= animLengths[state];
 			}
