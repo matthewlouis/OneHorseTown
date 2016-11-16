@@ -154,6 +154,7 @@
     <ClInclude Include="Player.hpp" />
     <ClInclude Include="Scenes.hpp" />
     <ClInclude Include="TestScene.hpp" />
+    <ClInclude Include="TitleScene.hpp" />
     <ClInclude Include="TypedAllocator.hpp" />
   </ItemGroup>
   <ItemGroup>

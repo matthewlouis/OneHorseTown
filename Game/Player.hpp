@@ -42,6 +42,7 @@ public:
 	bool falling = false;
 	bool shooting = false;
 	bool aiming = false;
+	int doubleJump = 0;
 
 	//TODO: keeping track of ammunition
 	int bulletCount = 3;
@@ -193,11 +194,13 @@ public:
 					if (abs(vel.x) < FALL_THRESHOLD) {
 						anim->switchAnimState(IDLE);
 						currentState = IDLE;
+						doubleJump = 0;
 					}
 					else {
 						anim->switchAnimState(RUNNING);
 						anim->currentFrame = 4;
 						currentState = RUNNING;
+						doubleJump = 0;
 					}
 					
 					anim->loop = true;

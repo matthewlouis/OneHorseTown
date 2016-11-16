@@ -99,24 +99,33 @@ public:
         particles.reserve( 50 );
     }
 
-    Particle* emitt()
+    Particle* emitt( int n = 1 )
     {
-        float length = apply_variance( velocityMagnitude, velocityMagnitudeVariance );
-        float angle = apply_variance( velocityAngle, velocityAngleVariance );
+        if ( n < 1 )
+            return nullptr;
 
-        glm::vec2 vel = {
-            length * glm::cos( angle ),
-            length * glm::sin( angle )
-        };
+        particles.reserve( particles.size() + n );
+        size_t first = particles.size();
 
-        Particle particle(
-            apply_variance( lifetime, lifetimeVariance ),
-            apply_variance( color, colorVariance ),
-            position, vel );
+        while ( n-- > 0 )
+        {
+            float length = apply_variance( velocityMagnitude, velocityMagnitudeVariance );
+            float angle = apply_variance( velocityAngle, velocityAngleVariance );
 
-        particles.push_back( particle );
+            glm::vec2 vel = {
+                length * glm::cos( angle ),
+                length * glm::sin( angle )
+            };
 
-        return &particles.back();
+            Particle particle(
+                apply_variance( lifetime, lifetimeVariance ),
+                apply_variance( color, colorVariance ),
+                position, vel );
+
+            particles.push_back( particle );
+        }
+
+        return &particles[ first ];
     }
 
     void spawn( float timeStep )
@@ -125,8 +134,7 @@ public:
         numToEmitt *= spawnRate * timeStep * 10;
         numToEmitt = glm::round( numToEmitt );
 
-        while ( numToEmitt-- > 0 )
-            emitt();
+        emitt( (int) numToEmitt );
     }
 
     void update( float timeStep )
@@ -219,28 +227,42 @@ class TestScene
 {
 public:
 
-	EntityFactory* factory;
+    class EntityPlayerType
+        : public EntityBase
+    {
+    public:
 
-	//EntityView* players;
-	//EntityView* player_arms;
+        int playerIndex;
+        TestScene* pScene;
+
+        EntityPlayerType( int index = -1, TestScene* scene = 0 )
+            : EntityBase()
+            , playerIndex( index )
+            , pScene( scene )
+        {
+        }
+
+        void onDestroy( Entity2& ntt ) override
+        {
+            if ( pScene == nullptr )
+                return;
+            pScene->_spawnParticle( ntt.position );
+        }
+    };
 	int numberPlayers;
 
 	float _scale;
 
     std::vector< ParticleEmitter > emitters;
 
-    OpenCLKernel< Particle*, float > updater;
+    //OpenCLKernel< Particle*, float > updater;
 
 	TestScene( int width, int height, float scale, int numberPlayers = 1 )
 		: LevelScene( width, height, "Audio/Banks/MasterBank" )
-        , factory( EntityFactory::instance() )
         , numberPlayers( numberPlayers )
 		, _scale( scale )
-        , updater( "ParticleSystem.cl" )
+        //, updater( "ParticleSystem.cl" )
 	{
-        srand((unsigned)time(NULL));
-        //players = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
-        //player_arms = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
 	}
 
     #define PARTICLE_TAG "playez"
@@ -254,8 +276,8 @@ public:
         emitter.colorVariance = { 0.1, 0, 0, 0 };
         emitter.lifetime = 3;
         emitter.lifetimeVariance = 0.3;
-        emitter.velocityMagnitude = 40;
-        emitter.velocityMagnitudeVariance = 30;
+        emitter.velocityMagnitude = 35;
+        emitter.velocityMagnitudeVariance = 34;
         emitter.velocityAngle = 0;
         emitter.velocityAngleVariance = glm::pi< float >();
 
@@ -263,8 +285,7 @@ public:
             p.color.w -= timeStep / 3;
         };
 
-        for ( size_t i = 0; i < 50; ++i )
-            emitter.emitt();
+        emitter.emitt( 100 );
 
         emitters.push_back( emitter );
 	}
@@ -272,23 +293,6 @@ public:
     void update( unsigned ticks )
     {
         LevelScene::update( ticks );
-
-        //iterate through all the arms and place them relative to the player using offsets
-        /*for (int i = 0; i < numberPlayers; ++i) {
-
-            if ( !entities.search( players[ i ] ) )
-                continue;
-
-            Vec2 armPosition = entities[ players[i] ].pBody->GetPosition();
-
-            //current state determines the arm offset
-            int currentState = entities[ player_arms[i] ].pAnimator->animState;
-
-            armPosition.y += armOffsets[currentState].y;
-            armPosition.x += entities[ players[i] ].pDrawable->direction * armOffsets[currentState].x;
-
-            entities[ player_arms[i] ].pBody->SetTransform(armPosition, 0);
-        }*/
 
         for ( auto& em : emitters )
         {
@@ -343,10 +347,6 @@ public:
     {
         LevelScene::init( ticks );
 
-        _contactListener.func = [this]( Entity2* ntt ) {
-            _spawnParticle( ntt->position );
-        };
-
         odin::load_texture< GLubyte[4] >( NULL_TEXTURE, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF } );
 		odin::load_texture(GROUND1, "Textures/ground.png");
 		odin::load_texture(GROUND2, "Textures/ground2.png");
@@ -390,7 +390,7 @@ public:
 		});
 
 		// create player 1
-        odin::make_player( this, {"player", 0}, {0, -2}, 0 );
+        odin::make_player( this, {"player", 0}, {-22, 11}, 0 );
         listeners.push_back( [this]( const InputManager& inmn ) {
             return player_input( inmn, {"player", 0}, 0 );
         } );
@@ -398,27 +398,28 @@ public:
 
 
 		// create player 2
-		odin::make_player(this, { "player", 1 }, { 0, -2 },1);
+		odin::make_player(this, { "player", 1 }, { 22, 11 },1);
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 1 }, 1);
 		});
 
 		//players[1] = EntityView({ "player", 1 }, this);
 		// create player 3
-		odin::make_player(this, { "player", 2 }, { 0, -2 }, 2);
+		odin::make_player(this, { "player", 2 }, { 22, -11 }, 2);
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 2 }, 2);
 		});
 		//players[2] = EntityView({ "player", 2 }, this);
 
 		// create player 4
-		odin::make_player(this, { "player", 3 }, { 0, -2 }, 3);
+		odin::make_player(this, { "player", 3 }, { -22, -11 }, 3);
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 3 }, 3);
 		});
 		//players[3] = EntityView({ "player", 3 }, this);
 
         //odin::make_horse( this, "horse", {0.0f, 5.f} );
+
 
 		//Setup level
 		odin::make_platform(this, "plat01", 30, {-240 ,-144}); // bottom floor

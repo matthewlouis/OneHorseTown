@@ -5,6 +5,7 @@
 #include "Constants.h"
 #include <Odin/SceneManager.hpp>
 #include "TestScene.hpp"
+#include "TitleScene.hpp"
 #include <Odin\AudioEngine.h>
 
 using odin::Entity;
@@ -46,16 +47,13 @@ public:
         //auto scene = new TestScene( _width, _height, SCALE * PIXEL_SIZE );
 
 		//note TestScene now takes number of players
-        auto level = new TestScene( _width / PIXEL_SIZE, _height / PIXEL_SIZE, SCALE, 4); //1 player
-        level->pInputManager = &inputManager;
-        level->pAudioEngine = &audioEngine;
-
-		auto title = new TitleScene(_width / PIXEL_SIZE, _height / PIXEL_SIZE);
+		auto title = new TitleScene( _width / PIXEL_SIZE, _height / PIXEL_SIZE);
 		title->pInputManager = &inputManager;
 		title->pAudioEngine = &audioEngine;
+        title->pSceneManager = &sceneManager;
 
-        sceneManager.pushScene( level );
 		sceneManager.pushScene( title );
+        //sceneManager.pushScene( level );
 	}
 
     void tick()
