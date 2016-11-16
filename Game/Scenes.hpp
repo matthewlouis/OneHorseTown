@@ -953,9 +953,11 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
 
     bullet.pDrawable = newGraphics( GraphicalComponent::makeRect( 1, 1, { 0, 0, 0 } ) );
 
+    glm::vec2 off = offset;
+
     b2BodyDef bodyDef;
-    bodyDef.position = Vec2( (position.glmvec2 / 10.f) + glm::normalize( offset.glmvec2 ) );
-    bodyDef.linearVelocity = Vec2( glm::normalize( offset.glmvec2 ) * 500.0f );//{ 500, 0 };
+    bodyDef.position = Vec2( (position.glmvec2 / 10.f) + glm::normalize( off ) * 2.0f );
+    bodyDef.linearVelocity = Vec2( glm::normalize( off ) * 500.0f );//{ 500, 0 };
     bodyDef.type = b2_dynamicBody;
     bodyDef.gravityScale = 0;
     bodyDef.bullet = true;
