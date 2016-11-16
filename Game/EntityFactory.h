@@ -39,7 +39,8 @@ enum Textures {
 	INTRO_8,
 	BLACK,
 	WHITE,
-	RED
+	RED,
+	WIN_TEXTURE
 };
 
 // Where the entity is positioned relative to
