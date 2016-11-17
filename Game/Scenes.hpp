@@ -834,7 +834,7 @@ inline void LevelScene::player_input(const InputManager& mngr, EntityId eid, int
 	
     //for testing audio
 	if (pindex == 0 && mngr.wasKeyPressed(SDLK_SPACE)) {
-		playSound("Audio/FX/Shot.wav", 127);
+		//playSound("Audio/FX/Shot.wav", 127);
 		arm_anim.play = true;
 		arm_anim.currentFrame = 1;
 		fireBullet(ntt.position, aimDirection, -1);
@@ -904,7 +904,10 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction,
 	float rotation = 0;
 	Vec2 offset = { 0,0 };
 
-    pAudioEngine->playEvent("event:/Desperado/Shoot");
+	//play sound using multithreaded audio buffer copying
+	playSound("Audio/FX/Shot.wav", 127);
+	//play sound using FMOD
+    //pAudioEngine->playEvent("event:/Desperado/Shoot");
 
 	// id of the entity hit, normal to the collision, distance to target
 	std::tuple<EntityId, Vec2, float> collisionData;
