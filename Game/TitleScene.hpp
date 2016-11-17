@@ -38,7 +38,7 @@ public:
 	bool promptOn = true;
 	bool buttonPressed = false;
 
-	unsigned int TIME_BEFORE_INTRO = 10000;
+	unsigned int TIME_BEFORE_INTRO = 15000;
 	bool introStarted = false;
 	int currentSlide = 0;
 	int slideTimes[14] = { 0, 3000, 3000, 1500, 1500, 2500, 700, 700, 700, 2000, 500, 500, 500, 500 };
@@ -164,7 +164,7 @@ public:
 		background->texture = TITLE;
 		
 		promptID = EntityId(1);
-		auto prompt = gfxComponents.add(promptID, GraphicalComponent::makeRect(110, 15));
+		auto prompt = gfxComponents.add(promptID, GraphicalComponent::makeRect(120, 9));
 		prompt->texture = PRESS_BUTTON;
 
 		Vec2 pos = { 160, -55 };

@@ -810,6 +810,14 @@ inline void LevelScene::player_input(const InputManager& mngr, EntityId eid, int
     {
 
     }
+
+	if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_START))
+	{
+		if (gameOver) {
+			this->expired = true;
+		}
+		
+	}
 	
     //for testing audio
 	if (pindex == 0 && mngr.wasKeyPressed(SDLK_SPACE)) {
@@ -989,7 +997,7 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction,
     ++_bulletCount;
 
 	if(!gameOver)
-	camera.shake();
+		camera.shake();
 
     //return EntityView(bid, this);
 
