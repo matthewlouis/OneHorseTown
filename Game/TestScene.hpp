@@ -237,18 +237,20 @@ public:
         {
         }
 
-        void onDestroy( Entity2& ntt ) override
-        {
-            EntityPlayer::onDestroy( ntt );
-            if ( pScene != nullptr )
-                pScene->_spawnParticle( ntt.position );
-        }
+        //void onDestroy( Entity2& ntt ) override
+        //{
+        //    EntityPlayer::onDestroy( ntt );
+        //    if ( pScene != nullptr )
+        //        pScene->_spawnParticle( ntt.position );
+        //}
 
         void onEvent( int e ) override
         {
-            if ( e == 1 )
+            EntityPlayer::onEvent( e );
+            if ( e == 1 && player )
             {
-                std::cout << "Player " << playerIndex << " was shot" << std::endl;
+                player->alive = false;
+                pScene->_spawnParticle( pScene->entities[ { "player", (unsigned short) playerIndex } ].position );
             }
         }
     };
@@ -277,8 +279,8 @@ public:
         emitter.colorVariance = { 0.1, 0, 0, 0 };
         emitter.lifetime = 3;
         emitter.lifetimeVariance = 0.3;
-        emitter.velocityMagnitude = 35;
-        emitter.velocityMagnitudeVariance = 34;
+        emitter.velocityMagnitude = 60;
+        emitter.velocityMagnitudeVariance = 55;
         emitter.velocityAngle = 0;
         emitter.velocityAngleVariance = glm::pi< float >();
 
@@ -286,9 +288,15 @@ public:
             p.color.w -= timeStep / 3;
         };
 
-        emitter.emitt( 100 );
+        emitter.emitt( 500 );
 
         emitters.push_back( std::move( emitter ) );
+	}
+
+	void exit(unsigned ticks) override {
+		LevelScene::exit(ticks);
+		gameOver = false;
+		Player::deadPlayers = 0;
 	}
 
     void update( unsigned ticks )
@@ -356,8 +364,9 @@ public:
 		odin::load_texture(BACKGROUND, "Textures/background.png");
 		odin::load_texture(HORSE_TEXTURE, "Textures/horse_dense.png");
 		odin::load_texture(BULLET_TEXTURE, "Textures/bullet.png");
+		odin::load_texture(WIN_TEXTURE, "Textures/win.png");
 
-        decltype(auto) bg = entities[ EntityId( 0 ) ];
+        Entity2& bg = entities[ EntityId( 0 ) ];
         bg.pDrawable = newGraphics( GraphicalComponent::makeRect( width, height ) );
 		bg.pDrawable->texture = BACKGROUND;
 
@@ -390,8 +399,15 @@ public:
 				camera.shake();
 		});
 
+
+		/*
+		* Create Players. EntitityPlayers need to be updated to store player information so collision
+		* resolution can use the data.
+		*/
 		// create player 1
-        odin::make_player( this, {"player", 0}, {-22, 11}, 0 );
+        odin::make_player( this, {"player", 0}, {0, -2}, 0 );
+		EntityPlayer * ep1 = (EntityPlayer *) entities[{"player", 0}].base();
+		ep1->player = &players[0];
         listeners.push_back( [this]( const InputManager& inmn ) {
             return player_input( inmn, {"player", 0}, 0 );
         } );
@@ -399,21 +415,27 @@ public:
 
 
 		// create player 2
-		odin::make_player(this, { "player", 1 }, { 22, 11 },1);
+		odin::make_player(this, { "player", 1 }, { 0, -2 },1);
+		EntityPlayer * ep2 = (EntityPlayer *)entities[{ "player", 1 }].base();
+	    ep2->player = &players[1];
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 1 }, 1);
 		});
 
 		//players[1] = EntityView({ "player", 1 }, this);
 		// create player 3
-		odin::make_player(this, { "player", 2 }, { 22, -11 }, 2);
+		odin::make_player(this, { "player", 2 }, { 0, -2 }, 2);
+		EntityPlayer * ep3 = (EntityPlayer *)entities[{ "player", 2 }].base();
+		ep3->player = &players[2];
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 2 }, 2);
 		});
 		//players[2] = EntityView({ "player", 2 }, this);
 
 		// create player 4
-		odin::make_player(this, { "player", 3 }, { -22, -11 }, 3);
+		odin::make_player(this, { "player", 3 }, { 0, -2 }, 3);
+		EntityPlayer * ep4 = (EntityPlayer *)entities[{ "player", 3 }].base();
+		ep4->player = &players[3];
 		listeners.push_back([this](const InputManager& inmn) {
 			return player_input(inmn, { "player", 3 }, 3);
 		});

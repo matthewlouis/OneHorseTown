@@ -26,7 +26,6 @@
     <ClInclude Include="OpenCLKernel.h" />
     <ClInclude Include="TypedAllocator.hpp" />
     <ClInclude Include="Player.h" />
-    <ClInclude Include="TitleScene.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Game.rc" />

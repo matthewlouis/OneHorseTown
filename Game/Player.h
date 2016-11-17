@@ -11,7 +11,7 @@ using odin::EntityId;
 using odin::GraphicalComponent;
 using odin::PhysicalComponent;
 using odin::AnimatorComponent;
-using odin::Scene;
+//using odin::Scene;
 
 enum PlayerState {
 	IDLE = 0,
@@ -26,6 +26,7 @@ enum PlayerState {
 
 class Player {
 public:
+	static int deadPlayers;
 	const float FALL_THRESHOLD = 0.1f;
 	//arm
 	GraphicalComponent* arm_gfx;
@@ -46,6 +47,8 @@ public:
 
 	//TODO: keeping track of ammunition
 	int bulletCount = 3;
+	int killCount = 0;
+	bool alive = true;
 
 	bool active = false;
 
@@ -57,6 +60,7 @@ public:
                b2Body *arm_psx) {
 		if (active)
 			return;
+
 		this->gfx = gfx;
 		this->anim = anim;
 		this->arm_gfx = arm_gfx;
@@ -226,6 +230,11 @@ public:
 		else {
 			arm_gfx->visible = false;
 		}
+	}
+
+	void countKill() {
+		killCount++;
+		Player::deadPlayers++;
 	}
 
 };

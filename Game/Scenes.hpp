@@ -11,7 +11,7 @@
 
 #include "Constants.h"
 #include "EntityFactory.h"
-#include "Player.hpp"
+#include "Player.h"
 
 #include <tuple>
 #include <array>
@@ -51,7 +51,7 @@ auto& components()                                              \
 }
 
 template< typename T, typename Sc >
-auto& get_components( Sc* pScene )
+auto& get_components(Sc* pScene)
 {
     return pScene->components< T >();
 }
@@ -69,6 +69,49 @@ public:
 
 } g_DEFAULT_ENTITY_BASE;
 
+class EntityBullet
+	: public EntityBase
+{
+public:
+
+	Player *player;
+
+	EntityBullet(Player* player)
+		: EntityBase()
+		, player(player)
+	{
+	}
+};
+
+class EntityPlayer
+	: public EntityBase
+{
+public:
+
+	int playerIndex;
+	Player *player;
+
+	EntityPlayer( int index = -1, Player* player = NULL )
+		: EntityBase()
+		, playerIndex( index )
+		, player( player )
+	{
+	}
+
+	void onDestroy( Entity2& ntt ) override
+	{
+		std::cout << "Destroying player " << playerIndex << std::endl;
+	}
+
+    void onEvent( int e ) override
+    {
+        if ( e == 1 )
+        {
+            std::cout << "Hit player " << playerIndex << std::endl;
+        }
+    }
+};
+
 class MyContactListener : public b2ContactListener
 {
 public:
@@ -80,28 +123,37 @@ public:
         auto bodyA = contact->GetFixtureA()->GetBody();
         auto bodyB = contact->GetFixtureB()->GetBody();
 
-        if ( bodyA->IsBullet() )
+		if (bodyA->IsBullet())
         {
-            deadEntities.push_back( (EntityBase*) bodyA->GetUserData() );
-            if ( bodyB->GetUserData() )
-            {
-                auto pNtt = (EntityBase*) bodyB->GetUserData();
-                deadEntities.push_back( pNtt );
-                //pNtt->onEvent( 1 );
-            }
-        }
+			deadEntities.push_back((EntityBase*)bodyA->GetUserData());
+			if (bodyB->GetUserData()) {
+				EntityPlayer* ep = (EntityPlayer *)bodyB->GetUserData();
+				ep->player->alive = false;
+				deadEntities.push_back((EntityBase*)bodyB->GetUserData());
 
-        if ( bodyB->IsBullet() )
-        {
-            deadEntities.push_back( (EntityBase*) bodyB->GetUserData() );
-            if ( bodyA->GetUserData() )
-            {
-                auto pNtt = (EntityBase*) bodyA->GetUserData();
-                deadEntities.push_back( pNtt );
-                //pNtt->onEvent( 1 );
-            }
+				EntityBullet * eb = (EntityBullet *)bodyA->GetUserData();
+				eb->player->countKill();
         }
+		}
+
+		if (bodyB->IsBullet())
+        {
+			EntityBullet * eb = (EntityBullet *)bodyB->GetUserData();
+
+			eb->player->killCount++;
+
+			deadEntities.push_back((EntityBase*)bodyB->GetUserData());
+			if (bodyA->GetUserData()) {
+				auto ep = (EntityPlayer *)bodyA->GetUserData();
+				ep->player->alive = false;
+				deadEntities.push_back((EntityBase*)bodyA->GetUserData());
+
+				EntityBullet * eb = (EntityBullet *)bodyB->GetUserData();
+				eb->player->countKill();
+				deadEntities.push_back((EntityBase*)bodyB->GetUserData());
+        }	
     }
+	}
 
     void EndContact(b2Contact* contact) {
 
@@ -116,9 +168,9 @@ struct Entity2
 
     glm::vec2 position = { 0, 0 };
     float     rotation = 0;
-    unsigned  flags    = 0;
+	unsigned  flags = 0;
 
-    b2Body*             pBody     = nullptr;
+	b2Body*             pBody = nullptr;
     GraphicalComponent* pDrawable = nullptr;
     AnimatorComponent*  pAnimator = nullptr;
 
@@ -140,7 +192,7 @@ struct Entity2
         , pAnimator( move.pAnimator )
         , _base( std::move( move._base ) )
     {
-        move.pBody     = nullptr;
+		move.pBody = nullptr;
         move.pDrawable = nullptr;
         move.pAnimator = nullptr;
     }
@@ -164,9 +216,9 @@ struct Entity2
         _base = nullptr;
     }
 
-    void setBase( BasePointer&& self )
+    void setBase( BasePointer&& base )
     {
-        _base = std::move( self );
+        _base = std::move( base );
     }
 
     template< typename EntityClass >
@@ -205,32 +257,7 @@ private:
 };
 
 
-class EntityPlayer
-    : public EntityBase
-{
-public:
 
-    int playerIndex;
-
-    EntityPlayer( int index = -1 )
-        : EntityBase()
-        , playerIndex( index )
-    {
-    }
-
-    void onDestroy( Entity2& ntt ) override
-    {
-        std::cout << "Destroying player " << playerIndex << std::endl;
-    }
-
-    void onEvent( int e ) override
-    {
-        if ( e == 1 )
-        {
-            std::cout << "Hit player " << playerIndex << std::endl;
-        }
-    }
-};
 
 class LevelScene
     : public odin::Scene
@@ -331,66 +358,91 @@ public:
 
 	int			numberPlayers;
 	Player      players[MAX_PLAYERS];
+	Player*		winningPlayer;
+	bool		gameOver = false;
+	Uint32		gameOverStartTicks;
 
-    LevelScene( int width, int height, std::string audioBank = "", int numberPlayers = MAX_PLAYERS )
-        : Scene( width, height )
-        , audioBankName( std::move( audioBank ) )
+	LevelScene(int width, int height, std::string audioBank = "", int numberPlayers = MAX_PLAYERS)
+		: Scene(width, height)
+		, audioBankName(std::move(audioBank))
 		, numberPlayers(numberPlayers)
 
-        , program( load_shaders( "Shaders/vertexAnim.glsl", "Shaders/fragmentShader.glsl" ) )
-        , uMatrix( glGetUniformLocation( program, "uMatrix" ) )
-        , uColor( glGetUniformLocation( program, "uColor" ) )
-        , uTexture( glGetUniformLocation( program, "uTexture" ) )
-        , uFacingDirection( glGetUniformLocation( program, "uFacingDirection" ) )
-        , uCurrentFrame( glGetUniformLocation( program, "uCurrentFrame" ) )
-        , uCurrentAnim( glGetUniformLocation( program, "uCurrentAnim" ) )
-        , uMaxFrame( glGetUniformLocation( program, "uMaxFrames" ) )
-        , uMaxAnim( glGetUniformLocation( program, "uTotalAnim" ) )
+		, program(load_shaders("Shaders/vertexAnim.glsl", "Shaders/fragmentShader.glsl"))
+		, uMatrix(glGetUniformLocation(program, "uMatrix"))
+		, uColor(glGetUniformLocation(program, "uColor"))
+		, uTexture(glGetUniformLocation(program, "uTexture"))
+		, uFacingDirection(glGetUniformLocation(program, "uFacingDirection"))
+		, uCurrentFrame(glGetUniformLocation(program, "uCurrentFrame"))
+		, uCurrentAnim(glGetUniformLocation(program, "uCurrentAnim"))
+		, uMaxFrame(glGetUniformLocation(program, "uMaxFrames"))
+		, uMaxAnim(glGetUniformLocation(program, "uTotalAnim"))
     {
     }
 
-    void init( unsigned ticks )
+	void init(unsigned ticks)
     {
-        Scene::init( ticks );
+		Scene::init(ticks);
 
 		bulletRange = sqrt(width * width + height * height);
 		camera.init(width, height);
 
-        b2world.SetContactListener( &_contactListener );
+		b2world.SetContactListener(&_contactListener);
 
-        if ( audioBankName != "" )
+		if (audioBankName != "")
         {
-            pAudioEngine->loadBank( audioBankName + ".bank",
-                                  FMOD_STUDIO_LOAD_BANK_NORMAL );
-            pAudioEngine->loadBank( audioBankName + ".strings.bank",
-                                  FMOD_STUDIO_LOAD_BANK_NORMAL );
+			pAudioEngine->loadBank(audioBankName + ".bank",
+				FMOD_STUDIO_LOAD_BANK_NORMAL);
+			pAudioEngine->loadBank(audioBankName + ".strings.bank",
+				FMOD_STUDIO_LOAD_BANK_NORMAL);
         }
+
+
+		//win screen creation (starts with alpha = 0)
+		EntityId wineid("wintex", 0);
+		decltype(auto) wintex = entities[wineid];
+		wintex.position = Vec2(0, 0);
+
+		wintex.pDrawable = newGraphics(GraphicalComponent::makeRect(64, 64, { 255.f, 255.f, 255.f }, 0.0f));
+		wintex.pDrawable->texture = WIN_TEXTURE;
+
+		wintex.pAnimator = newAnimator(AnimatorComponent({ 1, 1 }));
+
+		listeners.push_back([this](const InputManager& inmn) {
+			if (inmn.wasKeyPressed(SDLK_g)) {
+				entities["wintex"].position.x -= 10;
+    }
+		});
+		listeners.push_back([this](const InputManager& inmn) {
+			if (inmn.wasKeyPressed(SDLK_h)) {
+				entities["wintex"].position.x += 10;
+        }
+		});
     }
 
-    void resume( unsigned ticks )
+	void resume(unsigned ticks)
     {
-        Scene::resume( ticks );
+		Scene::resume(ticks);
         //context_allocator::push( _localAllocator );
     }
 
-    void pause( unsigned ticks )
+	void pause(unsigned ticks)
     {
-        Scene::pause( ticks );
+		Scene::pause(ticks);
         //context_allocator::pop();
     }
 
-    void exit( unsigned ticks )
+	void exit(unsigned ticks)
     {
-        Scene::exit( ticks );
+		Scene::exit(ticks);
 
-        if ( audioBankName != "" )
+		if (audioBankName != "")
         {
-            pAudioEngine->unloadBank( audioBankName + ".bank" );
-            pAudioEngine->unloadBank( audioBankName + ".strings.bank" );
+			pAudioEngine->unloadBank(audioBankName + ".bank");
+			pAudioEngine->unloadBank(audioBankName + ".strings.bank");
         }
     }
 
-    void _destroy( Entity2& ntt )
+	void _destroy(Entity2& ntt)
     {
         ntt.kill();
         deleteComponent( ntt.pBody );
@@ -399,50 +451,85 @@ public:
         ntt.reset();
     }
 
-    void update( unsigned ticks )
+	void update(unsigned ticks)
     {
-        Scene::update( ticks );
+		Scene::update(ticks);
 
-		for (int i = 0; i < this->numberPlayers; i++) {
-			players[i].update();
+		for (Player& p : players) {
+			p.update();
 		}
 
-        for ( auto& lstn : listeners )
-            lstn( *pInputManager );
+		if (gameOver) {
+
+			if (ticks - gameOverStartTicks > 600) {
+				entities["wintex"].pAnimator->switchAnimState(1);
+			}
+			float maxscale = 4.0f;
+			float scale = camera.getScale();
+			if (scale < maxscale) {
+				scale += 0.1f;
+			}
+
+			glm::vec2 focusPos = { winningPlayer->psx->GetPosition().x * 10 * maxscale, winningPlayer->psx->GetPosition().y * 10 * maxscale };
+			glm::vec2 cameraPos = camera.getPosition();
+
+			if (focusPos.x <= cameraPos.x - 10) {
+				cameraPos.x -= CAMERA_MOVE_AMOUNT;
+			}
+			else if(focusPos.x > cameraPos.x + 10){
+				cameraPos.x += CAMERA_MOVE_AMOUNT;
+			}
+
+			if (focusPos.y <= cameraPos.y - 10) {
+				cameraPos.y -= CAMERA_MOVE_AMOUNT;
+			}
+			else if(focusPos.y > cameraPos.y + 10) {
+				cameraPos.y += CAMERA_MOVE_AMOUNT;
+			}
+
+			camera.setPosition(cameraPos);
+			camera.setScale(scale);
+
+			entities["wintex"].position = glm::vec2(cameraPos.x / scale, cameraPos.y / scale);
+
+		}
+
+		for (auto& lstn : listeners)
+			lstn(*pInputManager);
 
         float timeStep = Scene::ticksDiff / 1000.f;
-        b2world.Step( timeStep, 8, 3 );
+		b2world.Step(timeStep, 8, 3);
 
 
-        for ( auto x : entities )
+		for (auto x : entities)
         {
             Entity2& ntt = x.value;
             if ( auto body = ntt.pBody )
             {
                 Vec2 pos = body->GetPosition();
-                ntt.position = glm::round( glm::vec2( pos ) * 10.0f );
+				ntt.position = glm::round(glm::vec2(pos) * 10.0f);
                 ntt.rotation = body->GetAngle();
             }
         }
 
         std::vector< EntityId > deadEntities;
-        deadEntities.reserve( _contactListener.deadEntities.size() );
+		deadEntities.reserve(_contactListener.deadEntities.size());
 
-        for ( auto x : entities )
+		for (auto x : entities)
         {
             Entity2& ntt = x.value;
             if ( auto animator = ntt.pAnimator )
             {
                 animator->incrementFrame();
 
-                switch ( animator->type )
+				switch (animator->type)
                 {
                     // Handle fading animation
                 case odin::AnimationType::FADEOUT:
-                    if (animator->currentFrame == animator->maxFrames-1)
+					if (animator->currentFrame == animator->maxFrames - 1)
                     {
-                        _destroy( ntt );
-                        deadEntities.push_back( x.key );
+						_destroy(ntt);
+						deadEntities.push_back(x.key);
                     }
                     else {
                         ntt.pDrawable->color.a = 1.f - (float)animator->currentFrame / (float)animator->maxFrames;
@@ -472,8 +559,24 @@ public:
         if ( !_contactListener.deadEntities.empty() )
             _contactListener.deadEntities.clear();
 
-        for ( EntityId eid : deadEntities )
-            entities.remove( eid );
+		for (EntityId eid : deadEntities)
+			entities.remove(eid);
+
+
+		if (!gameOver && Player::deadPlayers >= numberPlayers - 1) {
+			gameOver = true;
+			gameOverStartTicks = SDL_GetTicks();
+			entities["wintex"].pDrawable->color = glm::vec4(255, 255, 255, 1);
+
+			for (int i = 0; i < numberPlayers; i++) {
+				if (players[i].alive) {
+					winningPlayer = &players[i];
+					printf("\n****GAME OVER and Player %d won!", i + 1);
+				}
+			}
+
+		}
+
     }
 
     void draw()
@@ -527,26 +630,26 @@ public:
         }
     }
 
-    void add( EntityId eid, GraphicalComponent gfx )
+	void add(EntityId eid, GraphicalComponent gfx)
     {
         //gfxComponents.add( eid, std::move( gfx ) );
     }
 
-    void add( EntityId eid, PhysicalComponent fsx )
+	void add(EntityId eid, PhysicalComponent fsx)
     {
         //fsxComponents.add( eid, std::move( fsx ) );
     }
 
-    void add( InputListener lstn )
+	void add(InputListener lstn)
     {
-        listeners.push_back( std::move( lstn ) );
+		listeners.push_back(std::move(lstn));
     }
 
-    void player_input( const InputManager& mngr, EntityId eid, int pindex );
+	void player_input(const InputManager& mngr, EntityId eid, int pindex);
 
     // Using bullet start position, the velocity  direction, and default facing direction.
 
-    void fireBullet( Vec2 position, odin::Direction8Way direction );
+	void fireBullet(Vec2 position, odin::Direction8Way direction, int pIndex);
 
 	// Casts a ray from position in the direction given.
 	// returns eid, normal to the collision, and distance of collision
@@ -615,9 +718,9 @@ public:
 
 };*/
 
-inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, int pindex )
+inline void LevelScene::player_input(const InputManager& mngr, EntityId eid, int pindex)
 {
-    if ( !entities.search( eid ) )
+	if (!entities.search(eid))
         return;
 
     Entity2& ntt = entities[ eid ];
@@ -631,7 +734,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     GraphicalComponent& gfx = *ntt.pDrawable;
     AnimatorComponent& anim = *ntt.pAnimator;
     
-	if(!players[pindex].active)
+	if (!players[pindex].active)
 		players[pindex].init(&gfx, &anim, &body, &arm_gfx, &arm_anim, arm_ntt.pBody);
 
     Vec2 vel = body.GetLinearVelocity();
@@ -658,7 +761,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 	//aim the arm graphics
 	odin::Direction8Way aimDirection = players[pindex].aimArm(aimDir);
 
-    if ( actionLeft == 0 && actionRight == 0 && aimDir.x == 0 )
+	if (actionLeft == 0 && actionRight == 0 && aimDir.x == 0)
     {
         //pFixt->SetFriction( 2 );
         vel.x = tween<float>(vel.x, 0, 16 * (1 / 60.0f));
@@ -705,11 +808,11 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     //float rTrigger = mngr.gamepads.rightTrigger( pindex );
 
     // Handle Shoot input on button B
-    if ( mngr.gamepads.didRightTriggerCross( pindex, 1 ) || mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B) )
+    if ( mngr.gamepads.didRightTriggerCross( pindex, 0.9 ) || mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B) )
     {
 		arm_anim.play = true;
 		arm_anim.currentFrame = 1;
-		fireBullet( ntt.position, aimDirection);
+		fireBullet(ntt.position, aimDirection, pindex);
     }
     if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_B))
     {
@@ -720,7 +823,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 	if ( pindex == 0 && mngr.wasKeyPressed(SDLK_SPACE)) {
 		arm_anim.play = true;
 		arm_anim.currentFrame = 1;
-		fireBullet( ntt.position, aimDirection);
+		fireBullet(ntt.position, aimDirection, -1);
 	}
     if (mngr.wasKeyPressed(SDLK_1))
         pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0); //low energy test
@@ -781,7 +884,7 @@ std::tuple<EntityBase*, Vec2, float> LevelScene::resolveBulletCollision(Vec2 pos
 
 }
 
-inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
+inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction, int pIndex)
 {
     playSound("Audio/FX/Shot.wav", 127);
 
@@ -809,8 +912,8 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
 	case odin::NORTH_WEST:
 		collisionData = resolveBulletCollision(pos, { -1,1 });
 		length = std::get<2>(collisionData);
-		rotation = -PI/4;
-		offset = { SIN45 * -length/2, SIN45 * length/2 };
+		rotation = -PI / 4;
+		offset = { SIN45 * -length / 2, SIN45 * length / 2 };
 		break;
 	case odin::NORTH_EAST:
 		collisionData = resolveBulletCollision(pos, { 1,1 });
@@ -865,9 +968,9 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
 
     Entity2& bullet = entities[ bid ];
     bullet.position = position;
-    bullet.setBase( EntityBase {} );
+	bullet.setBase(EntityBullet{ &players[pIndex] });
 
-    bullet.pDrawable = newGraphics( GraphicalComponent::makeRect( 1, 1, { 0, 0, 0 } ) );
+    //bullet.pDrawable = newGraphics( GraphicalComponent::makeRect( 1, 1, { 0, 0, 0 } ) );
 
     glm::vec2 off = offset;
 
@@ -878,6 +981,7 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
     bodyDef.gravityScale = 0;
     bodyDef.bullet = true;
     bodyDef.userData = bullet.base();
+
 
     //bullet.pBody = newBody( bodyDef );
     auto circ = PhysicalComponent::makeCircle( 0.05, b2world, bodyDef );
@@ -898,6 +1002,7 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
 
     ++_bulletCount;
 
+	if(!gameOver)
 	camera.shake();
 
     //return EntityView(bid, this);

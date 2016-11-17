@@ -142,6 +142,7 @@
     <ClCompile Include="ContextAllocator.cpp" />
     <ClCompile Include="EntityFactory.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Player.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Allocators.hpp" />
@@ -151,7 +152,7 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="Memory.h" />
     <ClInclude Include="OpenCLKernel.h" />
-    <ClInclude Include="Player.hpp" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="Scenes.hpp" />
     <ClInclude Include="TestScene.hpp" />
     <ClInclude Include="TitleScene.hpp" />
