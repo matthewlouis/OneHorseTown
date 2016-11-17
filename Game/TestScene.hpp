@@ -513,10 +513,10 @@ public:
 		fix->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 		fix->SetFilterData(wallFilter);
 
-
 		//load common events and play music
 		pAudioEngine->loadEvent("event:/Music/EnergeticTheme");
 		pAudioEngine->loadEvent("event:/Desperado/Shoot");
+		pAudioEngine->loadEvent("event:/Desperado/Die");
 
 		pAudioEngine->playEvent("event:/Music/EnergeticTheme");
         //pAudioEngine->toggleMute(); //mute audio

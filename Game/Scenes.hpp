@@ -122,7 +122,8 @@ public:
 
 				EntityBullet * eb = (EntityBullet *)bodyA->GetUserData();
 				eb->player->countKill();
-        }
+				eb->player->soundEvent = { true, "event:/Desperado/Die" };
+			}
 		}
 
 		if (bodyB->IsBullet())
@@ -140,6 +141,7 @@ public:
 				EntityBullet * eb = (EntityBullet *)bodyB->GetUserData();
 				eb->player->countKill();
 				deadEntities.push_back((EntityBase*)bodyB->GetUserData());
+				eb->player->soundEvent = { true, "event:/Desperado/Die" };
         }
 
 
@@ -426,6 +428,8 @@ public:
     {
 		Scene::exit(ticks);
 		pAudioEngine->stopAllEvents();
+		pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0);
+		energyLevel = 0;
 
 		/*Using 1 bank for all scene now so do NOT unload
 		if (audioBankName != "")
@@ -450,6 +454,10 @@ public:
 
 		for (Player& p : players) {
 			p.update();
+			if (p.soundEvent.playEvent) { //if there is a sound to play
+				pAudioEngine->playEvent(p.soundEvent.event); //play it
+				p.soundEvent = {}; //reset soundevent
+			}
 		}
 
 		if (gameOver) {
@@ -558,6 +566,7 @@ public:
 
 		if (!gameOver && Player::deadPlayers >= numberPlayers - 1) {
 			gameOver = true;
+			pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "GameOver", 1.0f);
 			gameOverStartTicks = SDL_GetTicks();
 			entities["wintex"].pDrawable->color = glm::vec4(255, 255, 255, 1);
 
@@ -569,6 +578,10 @@ public:
 			}
 
 		}
+
+		energyLevel = Player::deadPlayers * 0.4f;
+		energyLevel = energyLevel > 1.0f ? 1.0f : energyLevel;
+		pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", energyLevel);
 
     }
 
@@ -771,7 +784,7 @@ inline void LevelScene::player_input(const InputManager& mngr, EntityId eid, int
 
 	
 	if (mngr.wasKeyPressed(SDLK_UP)) {
-		vel.y = 11;
+		vel.y = 12;
 	}
 
 	if (mngr.wasKeyReleased(SDLK_UP) && vel.y > 0) {
@@ -781,7 +794,7 @@ inline void LevelScene::player_input(const InputManager& mngr, EntityId eid, int
 	if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_A)) {
 		if (players[pindex].doubleJump < 2)
 		{
-		vel.y = 11;
+		vel.y = 12;
 			players[pindex].doubleJump++;
 	}
 	}
@@ -890,15 +903,7 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction,
 	float length = 100.f;
 	float rotation = 0;
 	Vec2 offset = { 0,0 };
-    //for alpha presentation, to simulate energy levels
-    //more shots fired == more energy!
-    if (energyLevel >= 1.0) {
-        energyLevel = 1.0f;
-    }
-    else {
-        energyLevel += 0.2f;
-    }
-    pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", energyLevel);
+
     pAudioEngine->playEvent("event:/Desperado/Shoot");
 
 	// id of the entity hit, normal to the collision, distance to target

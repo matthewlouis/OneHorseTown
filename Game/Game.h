@@ -47,7 +47,7 @@ public:
         //auto scene = new TestScene( _width, _height, SCALE * PIXEL_SIZE );
 
 		//note TestScene now takes number of players
-		auto title = new TitleScene( _width / PIXEL_SIZE, _height / PIXEL_SIZE);
+		auto title = new TitleScene( _width / PIXEL_SIZE, _height / PIXEL_SIZE, "Audio/Banks/MasterBank");
 		title->pInputManager = &inputManager;
 		title->pAudioEngine = &audioEngine;
         title->pSceneManager = &sceneManager;
