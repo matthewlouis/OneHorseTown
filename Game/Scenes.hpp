@@ -355,7 +355,7 @@ public:
 
 	LevelScene(int width, int height, std::string audioBank = "", int numberPlayers = MAX_PLAYERS)
 		: Scene(width, height)
-		, audioBankName(std::move(audioBank))
+		, audioBankName(audioBank)
 		, numberPlayers(numberPlayers)
 
 		, program(load_shaders("Shaders/vertexAnim.glsl", "Shaders/fragmentShader.glsl"))
@@ -425,12 +425,14 @@ public:
 	void exit(unsigned ticks)
     {
 		Scene::exit(ticks);
+		pAudioEngine->stopAllEvents();
 
+		/*Using 1 bank for all scene now so do NOT unload
 		if (audioBankName != "")
         {
 			pAudioEngine->unloadBank(audioBankName + ".bank");
 			pAudioEngine->unloadBank(audioBankName + ".strings.bank");
-        }
+        }*/
     }
 
 	void _destroy(Entity2& ntt)
@@ -808,6 +810,14 @@ inline void LevelScene::player_input(const InputManager& mngr, EntityId eid, int
     {
 
     }
+
+	if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_START))
+	{
+		if (gameOver) {
+			this->expired = true;
+		}
+		
+	}
 	
     //for testing audio
 	if (pindex == 0 && mngr.wasKeyPressed(SDLK_SPACE)) {
@@ -987,7 +997,7 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction,
     ++_bulletCount;
 
 	if(!gameOver)
-	camera.shake();
+		camera.shake();
 
     //return EntityView(bid, this);
 

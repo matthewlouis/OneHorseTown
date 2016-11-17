@@ -57,6 +57,7 @@ namespace odin {
 
 		void stopChannel(int nChannelId);
 		void stopEvent(const std::string& strEventName, bool bImmediate = false);
+		void stopAllEvents();
 		void stopAllChannels();
 
 		void setChannel3dPosition(int nChannelId, const glm::vec3& vPosition);
