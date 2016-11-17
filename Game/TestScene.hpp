@@ -458,9 +458,21 @@ public:
 		odin::make_platform(this, "plat13", 3, { -240, -90 }); // left mid upper
 		odin::make_platform(this, "plat14", 3, { 192, -90 }); // right mid upper
 
-		odin::make_platform(this, "plat15", 1, { -56, -128 }); // barrel
-		odin::make_platform(this, "plat16", 1, { -48, -112 }); // barrel
-		odin::make_platform(this, "plat17", 1, { -40, -128 }); // barrel
+		odin::make_platform(this, "barr01", 1, { -72, -128 },GROUND2); // barrel stack bottom left
+		odin::make_platform(this, "barr02", 1, { -64, -112 }, GROUND2); // barrel
+		odin::make_platform(this, "barr03", 1, { -56, -128 }, GROUND2); // barrel
+		 
+		odin::make_platform(this, "barr04", 1, { 56, -128 }, GROUND2); // barrel stack bottom right
+		odin::make_platform(this, "barr05", 1, { 48, -112 }, GROUND2); // barrel
+		odin::make_platform(this, "barr06", 1, { 40, -128 }, GROUND2); // barrel
+
+		odin::make_platform(this, "barr07", 1, {-16, 84 }, GROUND2); // barrel stack top center
+		odin::make_platform(this, "barr08", 1, { -8, 116  }, GROUND2); // barrel top
+		odin::make_platform(this, "barr09", 1, { -16, 100 }, GROUND2); // barrel mid row
+		odin::make_platform(this, "barr10", 1, { 0, 100 }, GROUND2); // barrel
+		odin::make_platform(this, "barr11", 1, { -8, 84 }, GROUND2); // barrel bottom row
+		odin::make_platform(this, "barr12", 1, { 8, 84 }, GROUND2); // barrel
+		odin::make_platform(this, "barr13", 1, { -24, 84 }, GROUND2); // barrel
 
 		// Set the physics bounds for the left,right wall and floor surfaces
 		b2BodyDef floorDef;
