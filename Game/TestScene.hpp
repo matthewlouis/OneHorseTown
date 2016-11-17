@@ -406,7 +406,7 @@ public:
 		* resolution can use the data.
 		*/
 		// create player 1
-        odin::make_player( this, {"player", 0}, {0, -2}, 0 );
+        odin::make_player( this, {"player", 0}, {-22, 11}, 0 );
 		EntityPlayer * ep1 = (EntityPlayer *) entities[{"player", 0}].base();
 		ep1->player = &players[0];
         listeners.push_back( [this]( const InputManager& inmn ) {
@@ -416,7 +416,7 @@ public:
 
 
 		// create player 2
-		odin::make_player(this, { "player", 1 }, { 0, -2 },1);
+		odin::make_player(this, { "player", 1 }, { 22, 11 },1);
 		EntityPlayer * ep2 = (EntityPlayer *)entities[{ "player", 1 }].base();
 	    ep2->player = &players[1];
 		listeners.push_back([this](const InputManager& inmn) {
@@ -425,7 +425,7 @@ public:
 
 		//players[1] = EntityView({ "player", 1 }, this);
 		// create player 3
-		odin::make_player(this, { "player", 2 }, { 0, -2 }, 2);
+		odin::make_player(this, { "player", 2 }, { 22, -11 }, 2);
 		EntityPlayer * ep3 = (EntityPlayer *)entities[{ "player", 2 }].base();
 		ep3->player = &players[2];
 		listeners.push_back([this](const InputManager& inmn) {
@@ -434,7 +434,7 @@ public:
 		//players[2] = EntityView({ "player", 2 }, this);
 
 		// create player 4
-		odin::make_player(this, { "player", 3 }, { 0, -2 }, 3);
+		odin::make_player(this, { "player", 3 }, { -22, -11 }, 3);
 		EntityPlayer * ep4 = (EntityPlayer *)entities[{ "player", 3 }].base();
 		ep4->player = &players[3];
 		listeners.push_back([this](const InputManager& inmn) {
@@ -447,11 +447,11 @@ public:
 
 		//Setup level
 		odin::make_platform(this, "plat01", 30, {-240 ,-144}); // bottom floor
-		odin::make_platform(this, "plat02", 6, { -48,-90 }); // center lower platform
+		//odin::make_platform(this, "plat02", 6, { -48,-90 }); // center lower platform
 		odin::make_platform(this, "plat03", 4, { -32,-40 }); // center mid-lower platform
 
 		odin::make_platform(this, "plat04", 6, { -240,90 }); // left upper
-		odin::make_platform(this, "plat05", 6, { 160,90}); // right upper
+		odin::make_platform(this, "plat05", 6, { 144,90}); // right upper
 		odin::make_platform(this, "plat06", 6, { -48,68 }); // center upper
 
 		odin::make_platform(this, "plat07", 3, { -148,-60 }); // right center
@@ -461,6 +461,25 @@ public:
 
 		odin::make_platform(this, "plat11", 4, { -240, -20 }); // left mid upper
 		odin::make_platform(this, "plat12", 4, { 176, -20 }); // right mid upper
+
+		odin::make_platform(this, "plat13", 3, { -240, -90 }); // left mid upper
+		odin::make_platform(this, "plat14", 3, { 192, -90 }); // right mid upper
+
+		odin::make_platform(this, "barr01", 1, { -72, -128 },GROUND2); // barrel stack bottom left
+		odin::make_platform(this, "barr02", 1, { -64, -112 }, GROUND2); // barrel
+		odin::make_platform(this, "barr03", 1, { -56, -128 }, GROUND2); // barrel
+		 
+		odin::make_platform(this, "barr04", 1, { 56, -128 }, GROUND2); // barrel stack bottom right
+		odin::make_platform(this, "barr05", 1, { 48, -112 }, GROUND2); // barrel
+		odin::make_platform(this, "barr06", 1, { 40, -128 }, GROUND2); // barrel
+
+		odin::make_platform(this, "barr07", 1, {-16, 84 }, GROUND2); // barrel stack top center
+		odin::make_platform(this, "barr08", 1, { -8, 116  }, GROUND2); // barrel top
+		odin::make_platform(this, "barr09", 1, { -16, 100 }, GROUND2); // barrel mid row
+		odin::make_platform(this, "barr10", 1, { 0, 100 }, GROUND2); // barrel
+		odin::make_platform(this, "barr11", 1, { -8, 84 }, GROUND2); // barrel bottom row
+		odin::make_platform(this, "barr12", 1, { 8, 84 }, GROUND2); // barrel
+		odin::make_platform(this, "barr13", 1, { -24, 84 }, GROUND2); // barrel
 
 		// Set the physics bounds for the left,right wall and floor surfaces
 		b2BodyDef floorDef;
@@ -500,10 +519,10 @@ public:
 		fix->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 		fix->SetFilterData(wallFilter);
 
-
 		//load common events and play music
 		pAudioEngine->loadEvent("event:/Music/EnergeticTheme");
 		pAudioEngine->loadEvent("event:/Desperado/Shoot");
+		pAudioEngine->loadEvent("event:/Desperado/Die");
 
 		pAudioEngine->playEvent("event:/Music/EnergeticTheme");
         #ifdef _DEBUG

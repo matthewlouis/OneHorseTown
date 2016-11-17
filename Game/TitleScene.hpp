@@ -130,12 +130,13 @@ public:
 
 	void pause(unsigned ticks) override {
 		glUniform(uFadeOut, 0.0f);
+		pAudioEngine->stopEvent("event:/Music/IntroTheme");
 		Scene::pause(ticks);
 	}
 
 	void resume(unsigned ticks) override {
 		Scene::resume(ticks);
-
+		pAudioEngine->playEvent("event:/Music/IntroTheme");
 		//reset all conditions for intro
 		reset(ticks);
 	}
@@ -172,7 +173,7 @@ public:
 		   std::cout << "Entity " << promptID << " already exists.\n";
 
 		listeners.push_back([this](const InputManager& inmn) {
-			if (inmn.wasKeyPressed(SDL_CONTROLLER_BUTTON_START) || inmn.wasKeyPressed(SDLK_RETURN)) {
+			if (inmn.wasKeyPressed(SDLK_RETURN) || inmn.gamepads.wasButtonPressed(0, SDL_CONTROLLER_BUTTON_START)) {
 				buttonPressed = true;
 			}
 		});
@@ -184,6 +185,12 @@ public:
 			pAudioEngine->loadBank(audioBankName + ".strings.bank",
 				FMOD_STUDIO_LOAD_BANK_NORMAL);
 		}
+		//load menu sound and music
+		pAudioEngine->loadEvent("event:/UI/Menu Select");
+		pAudioEngine->loadEvent("event:/Music/IntroTheme");
+		
+		//play music
+		pAudioEngine->playEvent("event:/Music/IntroTheme");
 	}
 
 	void exit(unsigned ticks)
@@ -252,6 +259,7 @@ public:
 			if (!fading) {
 				fading = true;
 				startedTicks = ticks;
+				pAudioEngine->playEvent("event:/UI/Menu Select");
 			}
 
 			ON_TIME = OFF_TIME = 4;

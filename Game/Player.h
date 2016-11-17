@@ -49,6 +49,20 @@ public:
 	int bulletCount = 3;
 	int killCount = 0;
 	bool alive = true;
+	
+	struct SoundEvent {
+		bool playEvent = false;
+		std::string event = "";
+
+		SoundEvent() {
+			playEvent = false;
+			this->event = "";
+		}
+
+		SoundEvent(bool playEvent, std::string event) :
+			playEvent(playEvent),
+			event(event) {}
+	}soundEvent;
 
 	bool active = false;
 
