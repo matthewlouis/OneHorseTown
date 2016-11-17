@@ -118,7 +118,7 @@ namespace odin
 			//idle 10 frame, run 10 frame, jump 3 frame, shoot 3 frame (one armed, one armless)	
 //get_components< AnimatorComponent >( pScene ).add( eid, { 10, 10, 3, 3, 10, 10, 3, 3 } );
 
-			ntt.pAnimator = pScene->newAnimator({ 10, 10, 3, 3, 10, 10, 3, 3 });
+			ntt.pAnimator = pScene->newAnimator({ 10, 10, 3, 3, 10, 10, 3, 3, 2, 10 });
 
 			//Set up arm
 																//5 x shoot animation at 4 frames per anim
