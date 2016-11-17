@@ -137,7 +137,7 @@ public:
 		   std::cout << "Entity " << promptID << " already exists.\n";
 
 		listeners.push_back([this](const InputManager& inmn) {
-			if (inmn.wasKeyPressed(SDL_CONTROLLER_BUTTON_START) || inmn.wasKeyPressed(SDLK_RETURN)) {
+			if (inmn.wasKeyPressed(SDLK_RETURN) || inmn.gamepads.isButtonDown(0, SDL_CONTROLLER_BUTTON_START)) {
 				buttonPressed = true;
 			}
 		});

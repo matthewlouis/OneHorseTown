@@ -219,7 +219,7 @@ namespace odin
 				ntt.pDrawable = pScene->newGraphics(
 					GraphicalComponent::makeRect(platform.x, platform.y, { 1,1,1 }));
 
-				ntt.pDrawable->texture = GROUND1;
+				ntt.pDrawable->texture = text;
 				//makeRect(scene, { id, i }, { 1, 1 }, pos, 0, { 1,1,1 }, GROUND1);
 
 				pos.x += platform.x / 2;
