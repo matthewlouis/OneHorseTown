@@ -64,6 +64,9 @@ public:
     const char* name = "<no name>";
 
     virtual void onDestroy( Entity2& ) {}
+
+    virtual void onEvent( int ) {}
+
 } g_DEFAULT_ENTITY_BASE;
 
 class MyContactListener : public b2ContactListener
@@ -81,17 +84,23 @@ public:
         {
             deadEntities.push_back( (EntityBase*) bodyA->GetUserData() );
             if ( bodyB->GetUserData() )
-                deadEntities.push_back( (EntityBase*) bodyB->GetUserData() );
+            {
+                auto pNtt = (EntityBase*) bodyB->GetUserData();
+                deadEntities.push_back( pNtt );
+                //pNtt->onEvent( 1 );
+            }
         }
 
         if ( bodyB->IsBullet() )
         {
             deadEntities.push_back( (EntityBase*) bodyB->GetUserData() );
             if ( bodyA->GetUserData() )
-                deadEntities.push_back( (EntityBase*) bodyA->GetUserData() );
-        }	
-
-
+            {
+                auto pNtt = (EntityBase*) bodyA->GetUserData();
+                deadEntities.push_back( pNtt );
+                //pNtt->onEvent( 1 );
+            }
+        }
     }
 
     void EndContact(b2Contact* contact) {
@@ -103,7 +112,7 @@ struct Entity2
 {
     friend class LevelScene;
     
-    using SelfPointer = std::unique_ptr< EntityBase >;
+    using BasePointer = std::unique_ptr< EntityBase >;
 
     glm::vec2 position = { 0, 0 };
     float     rotation = 0;
@@ -129,7 +138,7 @@ struct Entity2
         , pBody( move.pBody )
         , pDrawable( move.pDrawable )
         , pAnimator( move.pAnimator )
-        , _self( std::move( move._self ) )
+        , _base( std::move( move._base ) )
     {
         move.pBody     = nullptr;
         move.pDrawable = nullptr;
@@ -146,29 +155,29 @@ struct Entity2
         std::swap( pBody, move.pBody );
         std::swap( pDrawable, move.pDrawable);
         std::swap( pAnimator, move.pAnimator );
-        std::swap( _self, move._self );
+        std::swap( _base, move._base );
         return *this;
     }
 
     void setBase( std::nullptr_t )
     {
-        _self = nullptr;
+        _base = nullptr;
     }
 
-    void setBase( SelfPointer&& self )
+    void setBase( BasePointer&& self )
     {
-        _self = std::move( self );
+        _base = std::move( self );
     }
 
     template< typename EntityClass >
     void setBase( EntityClass self )
     {
-        _self = std::make_unique< EntityClass >( std::move( self ) );
+        _base = std::make_unique< EntityClass >( std::move( self ) );
     }
 
     void reset()
     {
-        _self = nullptr;
+        _base = nullptr;
         pBody = nullptr;
         pDrawable = nullptr;
         pAnimator = nullptr;
@@ -182,17 +191,17 @@ struct Entity2
 
     EntityBase* base()
     {
-        return _self.get();
+        return _base.get();
     }
 
     EntityBase* operator ->()
     {
-        return _self ? _self.get() : &g_DEFAULT_ENTITY_BASE;
+        return _base ? _base.get() : &g_DEFAULT_ENTITY_BASE;
     }
 
 private:
 
-    SelfPointer _self = nullptr;
+    BasePointer _base = nullptr;
 };
 
 
@@ -212,6 +221,14 @@ public:
     void onDestroy( Entity2& ntt ) override
     {
         std::cout << "Destroying player " << playerIndex << std::endl;
+    }
+
+    void onEvent( int e ) override
+    {
+        if ( e == 1 )
+        {
+            std::cout << "Hit player " << playerIndex << std::endl;
+        }
     }
 };
 
@@ -399,7 +416,7 @@ public:
 
         for ( auto x : entities )
         {
-            decltype(auto) ntt = x.value;
+            Entity2& ntt = x.value;
             if ( auto body = ntt.pBody )
             {
                 Vec2 pos = body->GetPosition();
@@ -413,7 +430,7 @@ public:
 
         for ( auto x : entities )
         {
-            decltype(auto) ntt = x.value;
+            Entity2& ntt = x.value;
             if ( auto animator = ntt.pAnimator )
             {
                 animator->incrementFrame();
@@ -475,7 +492,7 @@ public:
 
         for ( auto x : entities )
         {
-            decltype(auto) ntt = x.value;
+            Entity2& ntt = x.value;
             if ( auto drawable = ntt.pDrawable )
             {
                 if ( !drawable->visible )
@@ -533,7 +550,7 @@ public:
 
 	// Casts a ray from position in the direction given.
 	// returns eid, normal to the collision, and distance of collision
-	std::tuple<EntityId, Vec2, float> resolveBulletCollision(Vec2 position, Vec2 direction);
+	std::tuple<EntityBase*, Vec2, float> resolveBulletCollision(Vec2 position, Vec2 direction);
 };
 
 /*struct EntityView
@@ -603,10 +620,10 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     if ( !entities.search( eid ) )
         return;
 
-    decltype(auto) ntt = entities[ eid ];
+    Entity2& ntt = entities[ eid ];
 
 	//arm
-    decltype(auto) arm_ntt = entities[ { "playes", (uint16_t)pindex } ];
+    Entity2& arm_ntt = entities[ { "playes", (uint16_t)pindex } ];
 	GraphicalComponent& arm_gfx = *arm_ntt.pDrawable;
 	AnimatorComponent& arm_anim = *arm_ntt.pAnimator;
 
@@ -618,7 +635,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 		players[pindex].init(&gfx, &anim, &body, &arm_gfx, &arm_anim, arm_ntt.pBody);
 
     Vec2 vel = body.GetLinearVelocity();
-    float maxSpeed = 5.5f;
+    float maxSpeed = 7.5f;
     float actionLeft = mngr.isKeyDown(SDLK_LEFT) ? 1.f : 0.f;
     float actionRight = mngr.isKeyDown(SDLK_RIGHT) ? 1.f : 0.f;
 
@@ -632,7 +649,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 		arm_gfx.direction = odin::RIGHT;
 	}
 
-    Vec2 aimDir = mngr.gamepads.joystickDir( pindex );
+    Vec2 aimDir = mngr.gamepads.leftAxisXY( pindex );
     aimDir.y = -aimDir.y;
 
     if ( glm::length( aimDir.glmvec2 ) < 0.25f )
@@ -644,19 +661,18 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
     if ( actionLeft == 0 && actionRight == 0 && aimDir.x == 0 )
     {
         //pFixt->SetFriction( 2 );
-        vel.x = tween<float>(vel.x, 0, 12 * (1 / 60.0f));
+        vel.x = tween<float>(vel.x, 0, 16 * (1 / 60.0f));
     }
-    else
+    else if ( actionLeft || actionRight || glm::length( aimDir.glmvec2 ) > 0.55f )
     {
         //pFixt->SetFriction( 0 );
-        vel.x += aimDir.x * (20 + 1) * (1 / 60.0); // for use w/gamepad
+        vel.x += aimDir.x * (20 + 5) * (1 / 60.0); // for use w/gamepad
 
-        vel.x -= actionLeft * (20 + 1) * (1 / 60.0f);
-        vel.x += actionRight * (20 + 1) * (1 / 60.0f);
+        vel.x -= actionLeft * (20 + 5) * (1 / 60.0f);
+        vel.x += actionRight * (20 + 5) * (1 / 60.0f);
         vel.x = glm::clamp(vel.x, -maxSpeed, +maxSpeed);
     }
 
-	
 	if (mngr.wasKeyPressed(SDLK_UP)) {
 		vel.y = 11;
 	}
@@ -686,8 +702,10 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 
     }
 
+    //float rTrigger = mngr.gamepads.rightTrigger( pindex );
+
     // Handle Shoot input on button B
-    if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B))
+    if ( mngr.gamepads.didRightTriggerCross( pindex, 1 ) || mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B) )
     {
 		arm_anim.play = true;
 		arm_anim.currentFrame = 1;
@@ -700,7 +718,6 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 	
     //for testing audio
 	if ( pindex == 0 && mngr.wasKeyPressed(SDLK_SPACE)) {
-		playSound("Audio/FX/Shot.wav", 127);
 		arm_anim.play = true;
 		arm_anim.currentFrame = 1;
 		fireBullet( ntt.position, aimDirection);
@@ -720,7 +737,7 @@ inline void LevelScene::player_input( const InputManager& mngr, EntityId eid, in
 
 // Casts ray from position in specified direction
 // returns eid, normal to the collision, and distance from position
-std::tuple<EntityId, Vec2, float> LevelScene::resolveBulletCollision(Vec2 position, Vec2 direction) {
+std::tuple<EntityBase*, Vec2, float> LevelScene::resolveBulletCollision(Vec2 position, Vec2 direction) {
 	// buffer value
 	float delta = 0.001;
 	
@@ -737,7 +754,7 @@ std::tuple<EntityId, Vec2, float> LevelScene::resolveBulletCollision(Vec2 positi
 	float closestFraction = 1; //start with end of line as p2
 	b2Vec2 intersectionNormal(0, 0);
 
-	EntityId eid;
+    EntityBase* pEntityBase = nullptr;
 
     for ( b2Body* body = b2world.GetBodyList(); body; body = body->GetNext() )
     {
@@ -754,17 +771,19 @@ std::tuple<EntityId, Vec2, float> LevelScene::resolveBulletCollision(Vec2 positi
             {
 				closestFraction = output.fraction;
 				intersectionNormal = output.normal;
+                pEntityBase = (EntityBase*) body->GetUserData();
 				//eid = x.key;
 			}
 		}
 		
 	}
-	return std::make_tuple( eid, intersectionNormal, (closestFraction * bulletRange) * 10 );
+	return std::make_tuple( pEntityBase, intersectionNormal, (closestFraction * bulletRange) * 10 );
 
 }
 
 inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
 {
+    playSound("Audio/FX/Shot.wav", 127);
 
 	float length = 100.f;
 	float rotation = 0;
@@ -781,7 +800,7 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
     pAudioEngine->playEvent("event:/Desperado/Shoot");
 
 	// id of the entity hit, normal to the collision, distance to target
-	std::tuple<EntityId, Vec2, float> collisionData;
+	std::tuple<EntityBase*, Vec2, float> collisionData;
 	
 	// Determine the offset and rotation of the bullet graphic based on the aim direction
     glm::vec2 pos = position;
@@ -837,13 +856,18 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
 		break;
 	}
 
+    auto nttBase = std::get<0>( collisionData );
+
+    if ( nttBase != nullptr )
+        nttBase->onEvent( 1 );
+
     EntityId bid("bulleq", _bulletCount);
 
-    decltype(auto) bullet = entities[ bid ];
+    Entity2& bullet = entities[ bid ];
     bullet.position = position;
     bullet.setBase( EntityBase {} );
 
-    //bullet.pDrawable = newGraphics( GraphicalComponent::makeRect( 1, 1, { 0, 0, 0 } ) );
+    bullet.pDrawable = newGraphics( GraphicalComponent::makeRect( 1, 1, { 0, 0, 0 } ) );
 
     glm::vec2 off = offset;
 
@@ -862,7 +886,7 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction)
 
     EntityId eid("bullet", _bulletCount);
 
-    decltype(auto) bullet2 = entities[ eid ];
+    Entity2& bullet2 = entities[ eid ];
     bullet2.position = Vec2( position + offset );
     bullet2.rotation = rotation;
 
