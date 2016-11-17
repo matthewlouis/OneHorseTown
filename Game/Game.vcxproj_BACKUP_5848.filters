@@ -25,8 +25,12 @@
     <ClInclude Include="Memory.h" />
     <ClInclude Include="OpenCLKernel.h" />
     <ClInclude Include="TypedAllocator.hpp" />
+<<<<<<< HEAD
     <ClInclude Include="Player.h" />
+=======
+    <ClInclude Include="Player.hpp" />
     <ClInclude Include="TitleScene.hpp" />
+>>>>>>> develop
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Game.rc" />

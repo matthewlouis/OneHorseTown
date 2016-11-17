@@ -99,8 +99,16 @@ public:
         particles.reserve( 50 );
     }
 
-    Particle* emitt()
+    Particle* emitt( int n = 1 )
     {
+        if ( n < 1 )
+            return nullptr;
+
+        particles.reserve( particles.size() + n );
+        size_t first = particles.size();
+
+        while ( n-- > 0 )
+        {
         float length = apply_variance( velocityMagnitude, velocityMagnitudeVariance );
         float angle = apply_variance( velocityAngle, velocityAngleVariance );
 
@@ -115,8 +123,9 @@ public:
             position, vel );
 
         particles.push_back( particle );
+        }
 
-        return &particles.back();
+        return &particles[ first ];
     }
 
     void spawn( float timeStep )
@@ -125,8 +134,7 @@ public:
         numToEmitt *= spawnRate * timeStep * 10;
         numToEmitt = glm::round( numToEmitt );
 
-        while ( numToEmitt-- > 0 )
-            emitt();
+        emitt( (int) numToEmitt );
     }
 
     void update( float timeStep )
@@ -219,28 +227,39 @@ class TestScene
 {
 public:
 
-	EntityFactory* factory;
+    class EntityPlayerType
+        : public EntityPlayer
+    {
+    public:
+        TestScene* pScene;
 
-	//EntityView* players;
-	//EntityView* player_arms;
+        EntityPlayerType( int index = -1, TestScene* scene = 0 )
+            : EntityPlayer( index )
+            , pScene( scene )
+        {
+        }
+
+        void onDestroy( Entity2& ntt ) override
+        {
+            if ( pScene == nullptr )
+                return;
+            pScene->_spawnParticle( ntt.position );
+        }
+    };
 	int numberPlayers;
 
 	float _scale;
 
     std::vector< ParticleEmitter > emitters;
 
-    OpenCLKernel< Particle*, float > updater;
+    //OpenCLKernel< Particle*, float > updater;
 
 	TestScene( int width, int height, float scale, int numberPlayers = 1 )
 		: LevelScene( width, height, "Audio/Banks/MasterBank" )
-        , factory( EntityFactory::instance() )
         , numberPlayers( numberPlayers )
 		, _scale( scale )
-        , updater( "ParticleSystem.cl" )
+        //, updater( "ParticleSystem.cl" )
 	{
-        srand((unsigned)time(NULL));
-        //players = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
-        //player_arms = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
 	}
 
     #define PARTICLE_TAG "playez"
@@ -254,8 +273,8 @@ public:
         emitter.colorVariance = { 0.1, 0, 0, 0 };
         emitter.lifetime = 3;
         emitter.lifetimeVariance = 0.3;
-        emitter.velocityMagnitude = 40;
-        emitter.velocityMagnitudeVariance = 30;
+        emitter.velocityMagnitude = 35;
+        emitter.velocityMagnitudeVariance = 34;
         emitter.velocityAngle = 0;
         emitter.velocityAngleVariance = glm::pi< float >();
 
@@ -263,32 +282,20 @@ public:
             p.color.w -= timeStep / 3;
         };
 
-        for ( size_t i = 0; i < 50; ++i )
-            emitter.emitt();
+        emitter.emitt( 100 );
 
         emitters.push_back( emitter );
+	}
+
+	void exit(unsigned ticks) override {
+		LevelScene::exit(ticks);
+		gameOver = false;
+		Player::deadPlayers = 0;
 	}
 
     void update( unsigned ticks )
     {
         LevelScene::update( ticks );
-
-        //iterate through all the arms and place them relative to the player using offsets
-        /*for (int i = 0; i < numberPlayers; ++i) {
-
-            if ( !entities.search( players[ i ] ) )
-                continue;
-
-            Vec2 armPosition = entities[ players[i] ].pBody->GetPosition();
-
-            //current state determines the arm offset
-            int currentState = entities[ player_arms[i] ].pAnimator->animState;
-
-            armPosition.y += armOffsets[currentState].y;
-            armPosition.x += entities[ players[i] ].pDrawable->direction * armOffsets[currentState].x;
-
-            entities[ player_arms[i] ].pBody->SetTransform(armPosition, 0);
-        }*/
 
         for ( auto& em : emitters )
         {
@@ -342,10 +349,6 @@ public:
 	void init( unsigned ticks )
     {
         LevelScene::init( ticks );
-
-        _contactListener.func = [this]( Entity2* ntt ) {
-            _spawnParticle( ntt->position );
-        };
 
         odin::load_texture< GLubyte[4] >( NULL_TEXTURE, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF } );
 		odin::load_texture(GROUND1, "Textures/ground.png");
@@ -433,6 +436,7 @@ public:
 		//players[3] = EntityView({ "player", 3 }, this);
 
         //odin::make_horse( this, "horse", {0.0f, 5.f} );
+
 
 		//Setup level
 		odin::make_platform(this, "plat01", 30, {-240 ,-144}); // bottom floor
