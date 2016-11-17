@@ -109,17 +109,17 @@ public:
 
         while ( n-- > 0 )
         {
-            float length = apply_variance( velocityMagnitude, velocityMagnitudeVariance );
-            float angle = apply_variance( velocityAngle, velocityAngleVariance );
+        float length = apply_variance( velocityMagnitude, velocityMagnitudeVariance );
+        float angle = apply_variance( velocityAngle, velocityAngleVariance );
 
-            glm::vec2 vel = {
-                length * glm::cos( angle ),
-                length * glm::sin( angle )
-            };
+        glm::vec2 vel = {
+            length * glm::cos( angle ),
+            length * glm::sin( angle )
+        };
 
             particles.push_back( Particle(
-                apply_variance( lifetime, lifetimeVariance ),
-                apply_variance( color, colorVariance ),
+            apply_variance( lifetime, lifetimeVariance ),
+            apply_variance( color, colorVariance ),
                 position, vel ) );
         }
 
@@ -297,6 +297,7 @@ public:
 		LevelScene::exit(ticks);
 		gameOver = false;
 		Player::deadPlayers = 0;
+		pAudioEngine->stopAllEvents();
 	}
 
     void update( unsigned ticks )

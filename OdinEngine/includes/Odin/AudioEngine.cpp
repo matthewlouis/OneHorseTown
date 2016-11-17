@@ -255,6 +255,13 @@ namespace odin {
 		fmodErrorCheck(tFoundIt->second->stop(eMode));
 	}
 
+	//Stops all events.
+	void AudioEngine::stopAllEvents() {
+		for (auto eventIt = _sgpImplementation->mEvents.begin(); eventIt != _sgpImplementation->mEvents.end(); eventIt++) {
+			fmodErrorCheck(eventIt->second->stop(FMOD_STUDIO_STOP_ALLOWFADEOUT));
+		}
+	}
+
 	//stops all channels
 	void AudioEngine::stopAllChannels() {
 		//iterate through all channels in our map and attempt to stop them

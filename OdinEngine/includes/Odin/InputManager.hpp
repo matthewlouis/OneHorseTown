@@ -132,6 +132,15 @@ namespace odin
             return -1; // controller wasn't previously connected.
         }
 
+		// Returns true if ANYONE pressed a given button
+		bool didAnyonePressButton(SDL_GameControllerButton button) const{
+			bool pressed = false;
+			for (int i = 0; i < MAX_PLAYERS; ++i) {
+				pressed | currButtons[i][button];
+			}
+			return pressed;
+		}
+
         // Returns true if a specific button on a specific controller just
         // changed from being unpressed to pressed.
         bool wasButtonPressed( PlayerIndex idx, SDL_GameControllerButton button ) const
