@@ -47,6 +47,8 @@ public:
 	bool fadedOut = false;
 	bool fading = false;
 	bool goingBackToTitle = false;
+	uint32 timeAtStartScreen = 0;
+	float fadetest = 0;
 
 	GLuint program;
 	GLint uMatrix, uColor, uTexture, uFacingDirection,
@@ -77,6 +79,8 @@ public:
 		float fadeAmount = (float)timePassed / fadeLength;
 		fadeAmount = fadeAmount > 1.0f ? 1.0 : fadeAmount; //clamp if greater than 1;
 
+		fadetest = fadeAmount;
+
 		glUniform(uFadeOut, fadeAmount);
 
 		if (fadeAmount >= 1.0f) {
@@ -95,6 +99,8 @@ public:
 		float fadeAmount = 1.0f - (float)timePassed / fadeLength;
 		fadeAmount = fadeAmount < 0.0f ? 0.0 : fadeAmount; //clamp if greater than 1;
 
+		fadetest = fadeAmount;
+
 		glUniform(uFadeOut, fadeAmount);
 
 		if (fadeAmount <= 0.0f) {
@@ -103,6 +109,35 @@ public:
 		else {
 			return false;
 		}
+	}
+
+	//reset to initial state
+	void reset(unsigned ticks) {
+		timeAtStartScreen = ticks;
+		buttonPressed = false;
+		introStarted = false;
+		currentSlide = 0;
+		fadedOut = false;
+		fading = false;
+		goingBackToTitle = false;
+		background->texture = TITLE;
+		OFF_TIME = 40;
+		ON_TIME = 55;
+		promptOn = true;
+		offFrame = onFrame = 0;
+		glUniform(uFadeOut, 0.0f);
+	}
+
+	void pause(unsigned ticks) override {
+		glUniform(uFadeOut, 0.0f);
+		Scene::pause(ticks);
+	}
+
+	void resume(unsigned ticks) override {
+		Scene::resume(ticks);
+
+		//reset all conditions for intro
+		reset(ticks);
 	}
 
 	void init(unsigned ticks)
@@ -155,18 +190,17 @@ public:
 	{
 		Scene::exit(ticks);
 
+		/* Using 1 bank for all audio so don't unload
 		if (audioBankName != "")
 		{
 			pAudioEngine->unloadBank(audioBankName + ".bank");
 			pAudioEngine->unloadBank(audioBankName + ".strings.bank");
-		}
+		}*/
 	}
 
 	void update(unsigned ticks)
 	{
-		static int timeAtStartScreen = ticks;
-
-		if (ticks - timeAtStartScreen > TIME_BEFORE_INTRO) {
+		if (ticks - timeAtStartScreen > TIME_BEFORE_INTRO && !buttonPressed) {
 			introStarted = true;
 		}
 
@@ -179,7 +213,7 @@ public:
 			promptOn = false;
 
 			if (SDL_GetTicks() - slideStartTime > slideTimes[currentSlide]) { //if enough time has passed
-				
+
 				static unsigned int fadeStartTime = ticks;
 				if (!fading) {
 					fadeStartTime = ticks;
@@ -215,14 +249,20 @@ public:
 
 		if (buttonPressed && !introStarted) {
 			static int startedTicks = ticks;
+			if (!fading) {
+				fading = true;
+				startedTicks = ticks;
+			}
+
 			ON_TIME = OFF_TIME = 4;
 			
 			if (fadeout(startedTicks, ticks, 2000)) {
+				fading = false;
+
                 auto level = new TestScene( width, height, SCALE, 4); //1 player
                 level->pInputManager = pInputManager;
                 level->pAudioEngine = pAudioEngine;
                 level->pSceneManager = pSceneManager;
-
                 pSceneManager->pushScene( level );
                 buttonPressed = false;
 				//this->expired = true;
@@ -237,14 +277,7 @@ public:
 
 			if (fadeout(startedTicks, ticks, 500)) {
 				//reset everything to original state to go back to title
-				currentSlide = 0;
-				introStarted = false;
-				background->texture = TITLE;
-				timeAtStartScreen = ticks;
-				glUniform(uFadeOut, 0.0f);
-				buttonPressed = false;
-				goingBackToTitle = false;
-				fading = false;
+				reset(ticks);
 			}
 		}
 

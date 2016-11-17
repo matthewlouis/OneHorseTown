@@ -291,6 +291,7 @@ public:
 		LevelScene::exit(ticks);
 		gameOver = false;
 		Player::deadPlayers = 0;
+		pAudioEngine->stopAllEvents();
 	}
 
     void update( unsigned ticks )
@@ -499,7 +500,7 @@ public:
 		pAudioEngine->loadEvent("event:/Desperado/Shoot");
 
 		pAudioEngine->playEvent("event:/Music/EnergeticTheme");
-        pAudioEngine->toggleMute(); //mute audio
+        //pAudioEngine->toggleMute(); //mute audio
 	}
 
 };
