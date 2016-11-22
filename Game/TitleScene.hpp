@@ -124,6 +124,7 @@ public:
 		OFF_TIME = 40;
 		ON_TIME = 55;
 		promptOn = true;
+		gfxComponents[promptID].color.w = 1;
 		offFrame = onFrame = 0;
 		glUniform(uFadeOut, 0.0f);
 	}
@@ -230,6 +231,7 @@ public:
 				//check if slide has faded out, if so change the slide
 				if (!fadedOut && fadeout(fadeStartTime, ticks, fadeTime)) {
 					fadedOut = true;
+					gfxComponents[promptID].color.w = 0;
 
 					if (currentSlide > 12) {
 						background->texture = TITLE;
