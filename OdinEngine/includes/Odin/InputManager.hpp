@@ -39,14 +39,20 @@ namespace odin
         using PlayerList = std::array< SDL_JoystickID, MAX_PLAYERS >;
 
         using ButtonStates = std::array< std::bitset< SDL_CONTROLLER_BUTTON_MAX >, MAX_PLAYERS >;
-		using AxisStates = std::array< glm::vec2, MAX_PLAYERS >;
+        using AxisStates = std::array< glm::vec2, MAX_PLAYERS >;
+        //using TiggerStates = std::array< float, MAX_PLAYERS >;
 		
 		ControllerMap controllers; // Maps joystick ids to game controllers.
         PlayerList    players;     // Stores the joystick id of each player.
 
         ButtonStates  currButtons; // Represents the current down state of each button on each controller.
         ButtonStates  prevButtons; // Represents the previous down state of each button on each controller.
-		AxisStates	  currAxis;    // Represents the current axis state possition for each controller		
+		AxisStates	  leftAxis;
+        AxisStates    rightAxis;
+        AxisStates    triggerAxis;
+        //AxisStates    prevLeftAxis;
+        //AxisStates    prevRightAxis;
+        AxisStates    prevTriggerAxis;
 
         ControllerManager()
             : controllers( { {-1, nullptr} }, MAX_PLAYERS )
@@ -158,19 +164,59 @@ namespace odin
 		// Returns the x axis for the current controller based on the player index
 		float joystickAxisX( PlayerIndex idx ) const
 		{
-			return currAxis[ idx ].x;
+			return leftAxis[ idx ].x;
 		}
 
 		// Returns the y axis for the current controller based on the player index
 		float joystickAxisY( PlayerIndex idx ) const
 		{
-			return currAxis[ idx ].y;
+			return leftAxis[ idx ].y;
 		}
 
 		glm::vec2 joystickDir( PlayerIndex idx ) const
 		{
-			return currAxis[ idx ];
+			return leftAxis[ idx ];
 		}
+
+        glm::vec2 leftAxisXY( PlayerIndex idx ) const
+        {
+            return leftAxis[ idx ];
+        }
+
+        glm::vec2 rightAxisXY( PlayerIndex idx ) const
+        {
+            return rightAxis[ idx ];
+        }
+
+        float leftTrigger( PlayerIndex idx ) const
+        {
+            return triggerAxis[ idx ].x;
+        }
+
+        float rightTrigger( PlayerIndex idx ) const
+        {
+            return triggerAxis[ idx ].y;
+        }
+
+        bool didLeftTriggerCross( PlayerIndex idx, float threshold ) const
+        {
+            float thr = std::abs( threshold );
+
+            if ( threshold > 0 )
+                return (triggerAxis[ idx ].x >= thr && prevTriggerAxis[ idx ].x < thr);
+
+            return (triggerAxis[ idx ].x <= thr && prevTriggerAxis[ idx ].x > thr);
+        }
+
+        bool didRightTriggerCross( PlayerIndex idx, float threshold ) const
+        {
+            float thr = std::abs( threshold );
+
+            if ( threshold > 0 )
+                return (triggerAxis[ idx ].y >= thr && prevTriggerAxis[ idx ].y < thr);
+
+            return (triggerAxis[ idx ].y <= thr && prevTriggerAxis[ idx ].y > thr);
+        }
 
     };
 
@@ -352,6 +398,10 @@ namespace odin
                        gamepads.currButtons.end(),
                        gamepads.prevButtons.begin() );
 
+            //gamepads.prevLeftAxis = gamepads.leftAxis;
+            //gamepads.prevRightAxis = gamepads.rightAxis;
+            gamepads.prevTriggerAxis = gamepads.triggerAxis;
+
             SDL_Event event;
             while ( SDL_PollEvent( &event ) )
             {
@@ -388,10 +438,19 @@ namespace odin
 					SDL_ControllerAxisEvent& caxis = event.caxis;
                     SDL_JoyAxisEvent& jaxis = event.jaxis;
 
+					int playerNo = gamepads.findPlayerIndex( caxis.which );
+
                     if ( jaxis.axis < 2 )
                     {
-					    int playerNo = gamepads.findPlayerIndex( caxis.which );
-                        gamepads.currAxis[ playerNo ][ jaxis.axis ] = jaxis.value / 32767.f;
+                        gamepads.leftAxis[ playerNo ][ jaxis.axis ] = jaxis.value / 32767.f;
+                    }
+                    else if ( jaxis.axis < 4 )
+                    {
+                        gamepads.rightAxis[ playerNo ][ jaxis.axis % 2 ] = jaxis.value / 32767.f;
+                    }
+                    else if ( jaxis.axis < 6 )
+                    {
+                        gamepads.triggerAxis[ playerNo ][ jaxis.axis % 2 ] = jaxis.value / 32767.f;
                     }
 					break;
 				}

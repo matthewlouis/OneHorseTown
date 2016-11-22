@@ -117,12 +117,10 @@ public:
             length * glm::sin( angle )
         };
 
-        Particle particle(
+            particles.push_back( Particle(
             apply_variance( lifetime, lifetimeVariance ),
             apply_variance( color, colorVariance ),
-            position, vel );
-
-        particles.push_back( particle );
+                position, vel ) );
         }
 
         return &particles[ first ];
@@ -132,9 +130,8 @@ public:
     {
         float numToEmitt = std::rand() / float( RAND_MAX );
         numToEmitt *= spawnRate * timeStep * 10;
-        numToEmitt = glm::round( numToEmitt );
 
-        emitt( (int) numToEmitt );
+        emitt( (int) glm::round( numToEmitt ) );
     }
 
     void update( float timeStep )
@@ -231,6 +228,7 @@ public:
         : public EntityPlayer
     {
     public:
+
         TestScene* pScene;
 
         EntityPlayerType( int index = -1, TestScene* scene = 0 )
@@ -239,11 +237,21 @@ public:
         {
         }
 
-        void onDestroy( Entity2& ntt ) override
+        //void onDestroy( Entity2& ntt ) override
+        //{
+        //    EntityPlayer::onDestroy( ntt );
+        //    if ( pScene != nullptr )
+        //        pScene->_spawnParticle( ntt.position );
+        //}
+
+        void onEvent( int e ) override
         {
-            if ( pScene == nullptr )
-                return;
-            pScene->_spawnParticle( ntt.position );
+            EntityPlayer::onEvent( e );
+            if ( e == 1 && player )
+            {
+                player->alive = false;
+                pScene->_spawnParticle( pScene->entities[ { "player", (unsigned short) playerIndex } ].position );
+            }
         }
     };
 	int numberPlayers;
@@ -255,14 +263,12 @@ public:
     //OpenCLKernel< Particle*, float > updater;
 
 	TestScene( int width, int height, float scale, int numberPlayers = 1 )
-		: LevelScene( width, height, "Audio/Banks/MasterBank" )
+		: LevelScene( width, height, "Audio/Banks/MasterBank", numberPlayers )
         , numberPlayers( numberPlayers )
 		, _scale( scale )
         //, updater( "ParticleSystem.cl" )
 	{
 	}
-
-    #define PARTICLE_TAG "playez"
 
     void _spawnParticle( Vec2 position )
 	{
@@ -273,8 +279,8 @@ public:
         emitter.colorVariance = { 0.1, 0, 0, 0 };
         emitter.lifetime = 3;
         emitter.lifetimeVariance = 0.3;
-        emitter.velocityMagnitude = 35;
-        emitter.velocityMagnitudeVariance = 34;
+        emitter.velocityMagnitude = 60;
+        emitter.velocityMagnitudeVariance = 55;
         emitter.velocityAngle = 0;
         emitter.velocityAngleVariance = glm::pi< float >();
 
@@ -282,9 +288,9 @@ public:
             p.color.w -= timeStep / 3;
         };
 
-        emitter.emitt( 100 );
+        emitter.emitt( 500 );
 
-        emitters.push_back( emitter );
+        emitters.push_back( std::move( emitter ) );
 	}
 
 	void exit(unsigned ticks) override {
@@ -361,7 +367,7 @@ public:
 		odin::load_texture(BULLET_TEXTURE, "Textures/bullet.png");
 		odin::load_texture(WIN_TEXTURE, "Textures/win.png");
 
-        decltype(auto) bg = entities[ EntityId( 0 ) ];
+        Entity2& bg = entities[ EntityId( 0 ) ];
         bg.pDrawable = newGraphics( GraphicalComponent::makeRect( width, height ) );
 		bg.pDrawable->texture = BACKGROUND;
 
@@ -519,7 +525,9 @@ public:
 		pAudioEngine->loadEvent("event:/Desperado/Die");
 
 		pAudioEngine->playEvent("event:/Music/EnergeticTheme");
-        //pAudioEngine->toggleMute(); //mute audio
+        #ifdef _DEBUG
+        pAudioEngine->toggleMute(); //mute audio
+        #endif
 	}
 
 };
