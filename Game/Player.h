@@ -48,6 +48,7 @@ public:
 	//TODO: keeping track of ammunition
 	int bulletCount = 3;
 	int killCount = 0;
+	int lives = 3;
 	bool alive = true;
 	
 	struct SoundEvent {
@@ -243,6 +244,13 @@ public:
 		}
 		else {
 			arm_gfx->visible = false;
+		}
+	}
+
+	//called when player is killed
+	void died() {
+		if (--lives <= 0) {
+			alive = false;
 		}
 	}
 

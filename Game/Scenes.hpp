@@ -363,6 +363,8 @@ public:
 	Player*		winningPlayer;
 	bool		gameOver = false;
 	Uint32		gameOverStartTicks;
+	bool	    startingGame = true;
+	Uint32		startingGameStartTicks;
 
 	LevelScene(int width, int height, std::string audioBank = "", int numberPlayers = MAX_PLAYERS)
 		: Scene(width, height)
@@ -398,15 +400,28 @@ public:
 				FMOD_STUDIO_LOAD_BANK_NORMAL);
         }
 
+		//dim screen
+		EntityId dimScreenid("wreadd", 0);
+		decltype(auto) dimScreen = entities[dimScreenid];
+		dimScreen.position = Vec2(0, 0);
+		dimScreen.pDrawable = newGraphics(GraphicalComponent::makeRect(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, { 255.f, 255.f, 255.f }, 0.5f));
+		dimScreen.pDrawable->texture = BLACK;
+
+		//ready text creation
+		EntityId readyid("wready", 0);
+		decltype(auto) ready = entities[readyid];
+		ready.position = Vec2(0, 0);
+		ready.pDrawable = newGraphics(GraphicalComponent::makeRect(256, 64, { 255.f, 255.f, 255.f }, 1.0f));
+		ready.pDrawable->texture = READY_TEXTURE;
+		ready.pAnimator = newAnimator(AnimatorComponent({ 16, 16 }));
+		ready.pAnimator->loop = false;
 
 		//win screen creation (starts with alpha = 0)
 		EntityId wineid("wintex", 0);
 		decltype(auto) wintex = entities[wineid];
 		wintex.position = Vec2(0, 0);
-
 		wintex.pDrawable = newGraphics(GraphicalComponent::makeRect(64, 64, { 255.f, 255.f, 255.f }, 0.0f));
 		wintex.pDrawable->texture = WIN_TEXTURE;
-
 		wintex.pAnimator = newAnimator(AnimatorComponent({ 1, 1 }));
 
 		listeners.push_back([this](const InputManager& inmn) {
@@ -423,6 +438,7 @@ public:
 
 	void resume(unsigned ticks)
     {
+		startingGameStartTicks = ticks;
 		Scene::resume(ticks);
         //context_allocator::push( _localAllocator );
     }
@@ -461,14 +477,17 @@ public:
     {
 		Scene::update(ticks);
 
+		//play any sound events players have triggered
 		for (Player& p : players) {
 			p.update();
 			if (p.soundEvent.playEvent) { //if there is a sound to play
 				pAudioEngine->playEvent(p.soundEvent.event); //play it
 				p.soundEvent = {}; //reset soundevent
+			}
 		}
-		}
+		
 
+		//game over zoom in and win text display
 		if (gameOver) {
 
 			if (ticks - gameOverStartTicks > 600) {
@@ -504,23 +523,44 @@ public:
 
 		}
 
+		//setting player position so players appear in corners on first draw
+		for (auto x : entities)
+		{
+			Entity2& ntt = x.value;
+			if (auto body = ntt.pBody)
+			{
+				Vec2 pos = body->GetPosition();
+				ntt.position = glm::round(glm::vec2(pos) * 10.0f);
+				ntt.rotation = body->GetAngle();
+			}
+		}
+
+
+		//if starting game, don't go any further: we want to halt gameplay
+		if (startingGame) {
+			AnimatorComponent *ac = entities["wready"].pAnimator;
+			ac->incrementFrame();
+			if (ac->animState == 0 && ac->currentFrame >= ac->maxFrames - 1) { //if READY displayed and animation finished
+				ac->switchAnimState(1); //change to DRAW animation state
+			}
+			else if (ac->animState == 1 && ac->currentFrame == 6) {//DRAW has appeared
+				pAudioEngine->playEvent("event:/Desperado/Draw");
+			}
+			else if(ac->currentFrame >= ac->maxFrames - 1){ //in DRAW state and animation finished
+				startingGame = false;
+				entities.remove("wready");
+				entities.remove("wreadd");
+			}
+			return;
+		}
+
+		//poll input events
 		for (auto& lstn : listeners)
 			lstn(*pInputManager);
 
         float timeStep = Scene::ticksDiff / 1000.f;
 		b2world.Step(timeStep, 8, 3);
 
-
-		for (auto x : entities)
-        {
-            Entity2& ntt = x.value;
-            if ( auto body = ntt.pBody )
-            {
-                Vec2 pos = body->GetPosition();
-				ntt.position = glm::round(glm::vec2(pos) * 10.0f);
-                ntt.rotation = body->GetAngle();
-            }
-        }
 
         std::vector< EntityId > deadEntities;
 		deadEntities.reserve(_contactListener.deadEntities.size());
@@ -591,6 +631,8 @@ public:
 		energyLevel = Player::deadPlayers * 0.4f;
 		energyLevel = energyLevel > 1.0f ? 1.0f : energyLevel;
 		pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", energyLevel);
+
+
 
     }
 
@@ -909,14 +951,13 @@ std::tuple<EntityBase*, Vec2, float> LevelScene::resolveBulletCollision(Vec2 pos
 
 inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction, int pIndex)
 {
-    playSound("Audio/FX/Shot.wav", 127);
-
 	float length = 100.f;
 	float rotation = 0;
 	Vec2 offset = { 0,0 };
 
 	//play sound using multithreaded audio buffer copying
-	playSound("Audio/FX/Shot.wav", 127);
+	if(!pAudioEngine->getMute()) //if not muted
+		playSound("Audio/FX/Shot.wav", 127);
 	//play sound using FMOD
     //pAudioEngine->playEvent("event:/Desperado/Shoot");
 

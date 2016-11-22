@@ -366,6 +366,7 @@ public:
 		odin::load_texture(HORSE_TEXTURE, "Textures/horse_dense.png");
 		odin::load_texture(BULLET_TEXTURE, "Textures/bullet.png");
 		odin::load_texture(WIN_TEXTURE, "Textures/win.png");
+		odin::load_texture(READY_TEXTURE, "Textures/readytext.png");
 
         Entity2& bg = entities[ EntityId( 0 ) ];
         bg.pDrawable = newGraphics( GraphicalComponent::makeRect( width, height ) );
@@ -523,10 +524,13 @@ public:
 		pAudioEngine->loadEvent("event:/Music/EnergeticTheme");
 		pAudioEngine->loadEvent("event:/Desperado/Shoot");
 		pAudioEngine->loadEvent("event:/Desperado/Die");
+		pAudioEngine->loadEvent("event:/Desperado/Ready");
+		pAudioEngine->loadEvent("event:/Desperado/Draw");
 
 		pAudioEngine->playEvent("event:/Music/EnergeticTheme");
+		pAudioEngine->playEvent("event:/Desperado/Ready");
         #ifdef _DEBUG
-        pAudioEngine->toggleMute(); //mute audio
+        //pAudioEngine->toggleMute(); //mute audio
         #endif
 	}
 

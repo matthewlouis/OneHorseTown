@@ -179,6 +179,11 @@ public:
 			}
 		});
 
+		listeners.push_back([this](const InputManager& inmn) {
+			if (inmn.wasKeyPressed(SDLK_m))
+				pAudioEngine->toggleMute();
+		});
+
 		if (audioBankName != "")
 		{
 			pAudioEngine->loadBank(audioBankName + ".bank",
