@@ -458,7 +458,9 @@ public:
 		Scene::exit(ticks);
 		pAudioEngine->stopAllEvents();
 		pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0);
+		pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "GameOver", 0.0);
 		energyLevel = 0;
+		Player::deadPlayers = 0;
 
 		/*Using 1 bank for all scene now so do NOT unload
 		if (audioBankName != "")
