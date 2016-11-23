@@ -337,7 +337,7 @@ public:
 
     GLuint program;
     GLint uMatrix, uColor, uTexture, uFacingDirection,
-        uCurrentFrame, uCurrentAnim, uMaxFrame, uMaxAnim;
+        uCurrentFrame, uCurrentAnim, uMaxFrame, uMaxAnim, uSilhoutte, uInteractive;
 
     //for simulating energy - alpha presentation
     float energyLevel = 0;
@@ -380,6 +380,8 @@ public:
 		, uCurrentAnim(glGetUniformLocation(program, "uCurrentAnim"))
 		, uMaxFrame(glGetUniformLocation(program, "uMaxFrames"))
 		, uMaxAnim(glGetUniformLocation(program, "uTotalAnim"))
+		, uSilhoutte(glGetUniformLocation(program, "uSilhoutte"))
+		, uInteractive(glGetUniformLocation(program, "uInteractive"))
     {
     }
 
@@ -400,18 +402,20 @@ public:
 				FMOD_STUDIO_LOAD_BANK_NORMAL);
         }
 
-		//dim screen
+		/*dim screen - may not need now that background animates
 		EntityId dimScreenid("wreadd", 0);
 		decltype(auto) dimScreen = entities[dimScreenid];
 		dimScreen.position = Vec2(0, 0);
 		dimScreen.pDrawable = newGraphics(GraphicalComponent::makeRect(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, { 255.f, 255.f, 255.f }, 0.5f));
 		dimScreen.pDrawable->texture = BLACK;
+		*/
 
 		//ready text creation
 		EntityId readyid("wready", 0);
 		decltype(auto) ready = entities[readyid];
 		ready.position = Vec2(0, 0);
 		ready.pDrawable = newGraphics(GraphicalComponent::makeRect(256, 64, { 255.f, 255.f, 255.f }, 1.0f));
+		ready.pDrawable->interactive = false;
 		ready.pDrawable->texture = READY_TEXTURE;
 		ready.pAnimator = newAnimator(AnimatorComponent({ 16, 16 }));
 		ready.pAnimator->loop = false;
@@ -537,20 +541,33 @@ public:
 
 
 		//if starting game, don't go any further: we want to halt gameplay
+		//READY DRAW section 
 		if (startingGame) {
 			AnimatorComponent *ac = entities["wready"].pAnimator;
 			ac->incrementFrame();
+
+			if(ac->currentFrame % 3 == 1)
+				entities[EntityId(0)].pAnimator->incrementFrame(); //next background frame
+
 			if (ac->animState == 0 && ac->currentFrame >= ac->maxFrames - 1) { //if READY displayed and animation finished
 				ac->switchAnimState(1); //change to DRAW animation state
 			}
-			else if (ac->animState == 1 && ac->currentFrame == 6) {//DRAW has appeared
-				pAudioEngine->playEvent("event:/Desperado/Draw");
+			else if (ac->animState == 1){
+				if(ac->currentFrame >= 6)
+					entities[EntityId(0)].pAnimator->incrementFrame(); //next background frame
+
+				if (ac->currentFrame == 6) {//DRAW has appeared
+					pAudioEngine->playEvent("event:/Desperado/Draw");
+				}
+				else if (ac->currentFrame >= ac->maxFrames - 1) {
+					startingGame = false;
+					entities.remove("wready");
+				}
 			}
-			else if(ac->currentFrame >= ac->maxFrames - 1){ //in DRAW state and animation finished
-				startingGame = false;
-				entities.remove("wready");
-				entities.remove("wreadd");
-			}
+
+			float silhouette = (float)(entities[EntityId(0)].pAnimator->currentFrame) / (entities[EntityId(0)].pAnimator->maxFrames - 1);
+			glUniform(uSilhoutte, silhouette);
+
 			return;
 		}
 
@@ -665,6 +682,7 @@ public:
                 glUniform( uColor, drawable->color );
                 glUniform( uTexture, drawable->texture );
                 glUniform( uFacingDirection, drawable->direction );
+				glUniform( uInteractive, drawable->interactive );
 
                 if ( auto anim = ntt.pAnimator )
                 {

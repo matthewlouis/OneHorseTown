@@ -164,10 +164,12 @@ public:
 		background = gfxComponents.add(
 			EntityId(0), GraphicalComponent::makeRect(width, height));
 		background->texture = TITLE;
+		background->interactive = false;
 		
 		promptID = EntityId(1);
 		auto prompt = gfxComponents.add(promptID, GraphicalComponent::makeRect(120, 9));
 		prompt->texture = PRESS_BUTTON;
+		prompt->interactive = false;
 
 		Vec2 pos = { 160, -55 };
 		if (!entities.add(promptID, Entity(pos, 0)))

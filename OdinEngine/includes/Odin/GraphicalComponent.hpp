@@ -51,6 +51,8 @@ namespace odin
         GLuint     vertexBuffer = 0;
         GLuint     programId = 0;
 
+		bool	   interactive = true;
+
 		FacingDirection  direction = RIGHT;
 		bool visible = true;
 
@@ -102,6 +104,7 @@ namespace odin
             , programId( move.programId )
 			, direction (move.direction)
             , visible( move.visible )
+			, interactive(move.interactive)
         {
             move.pData = nullptr;
             move.count = 0;
@@ -111,6 +114,7 @@ namespace odin
             move.programId = 0;
 			move.direction = RIGHT;
             move.visible = false;
+			move.interactive = true;
         }
 
         GraphicalComponent& operator =( GraphicalComponent&& move )
@@ -125,6 +129,7 @@ namespace odin
             swap( programId, move.programId );
 			swap(direction, move.direction);
 			swap(visible, move.visible);
+			swap(interactive, move.interactive);
             return *this;
         }
 
