@@ -18,6 +18,10 @@
 #include <bitset>
 #include <memory>
 
+//for clocking assembly
+#include <tchar.h>
+#include <windows.h>
+
 #include "ContextAllocator.hpp"
 #include "TypedAllocator.hpp"
 
@@ -365,6 +369,8 @@ public:
 	Uint32		gameOverStartTicks;
 	bool	    startingGame = true;
 	Uint32		startingGameStartTicks;
+	float	    silhouette; //for adjusting character colors
+	bool	    usingASM = true;
 
 	LevelScene(int width, int height, std::string audioBank = "", int numberPlayers = MAX_PLAYERS)
 		: Scene(width, height)
@@ -436,6 +442,12 @@ public:
 		listeners.push_back([this](const InputManager& inmn) {
 			if (inmn.wasKeyPressed(SDLK_h)) {
 				entities["wintex"].position.x += 10;
+			}
+		});
+		listeners.push_back([this](const InputManager& inmn) {
+			if (inmn.wasKeyPressed(SDLK_1)) {
+				usingASM = !usingASM;
+				printf("\nNow using: %s", usingASM ? "ASM" : "C++");
 			}
 		});
 	}
@@ -565,8 +577,8 @@ public:
 				}
 			}
 
-			float silhouette = (float)(entities[EntityId(0)].pAnimator->currentFrame) / (entities[EntityId(0)].pAnimator->maxFrames - 1);
-			glUniform(uSilhoutte, silhouette);
+			silhouette = (float)(entities[EntityId(0)].pAnimator->currentFrame) / (entities[EntityId(0)].pAnimator->maxFrames - 1);
+			glUniform(uSilhoutte, 1.0f);
 
 			return;
 		}
@@ -653,6 +665,38 @@ public:
 
     }
 
+
+	//silhouettes a sprite using c++
+	glm::vec4 inline silhouetteCPP(const glm::vec4* color, bool interactive, float* silhouette) {
+		static long printCount = 0;
+		if (!interactive)
+			return *color;
+
+		return glm::vec4(color->r * *silhouette, color->g * *silhouette, color->b * *silhouette, color->a);
+	}
+
+	//silhouettes a sprite using ASM
+	glm::vec4 inline silhouetteASM(const glm::vec4* color, bool interactive, float* silhouette) {
+		if (!interactive)
+			return *color;
+
+		glm::vec4 silCol;
+		__m128 col = _mm_set_ps(color->a, *silhouette, *silhouette, *silhouette);  //silhouette color (keeps alpha value)
+		
+		__asm
+		{
+			mov eax, color			  //loads the color vector into CPU register
+
+			movups xmm0, [eax]        //move to xmm0 so we have sse access   
+			mulps xmm0, col           // multiply the two vectors getting the new silhouetted color
+			movups [silCol], xmm0     //store new color
+		}
+
+		return silCol; //return the processed color
+
+	}
+
+
     void draw()
     {
         using namespace glm;
@@ -675,11 +719,14 @@ public:
                 if ( !drawable->visible )
                     continue;
 
-                mat4 mtx = cameraMatrix * translate( {}, vec3( ntt.position, 0 ) );
+				mat4 mtx = cameraMatrix * translate( {}, vec3( ntt.position, 0 ) );
                 mtx = rotate( mtx, ntt.rotation, vec3( 0, 0, 1 ) );
 
                 glUniform( uMatrix, mtx );
-                glUniform( uColor, drawable->color );
+
+                glUniform( uColor, usingASM? silhouetteASM(&drawable->color, drawable->interactive, &silhouette) : silhouetteCPP(&drawable->color, drawable->interactive, &silhouette));
+				
+
                 glUniform( uTexture, drawable->texture );
                 glUniform( uFacingDirection, drawable->direction );
 				glUniform( uInteractive, drawable->interactive );
@@ -730,6 +777,7 @@ public:
 	// returns eid, normal to the collision, and distance of collision
 	std::tuple<EntityBase*, Vec2, float> resolveBulletCollision(Vec2 position, Vec2 direction);
 };
+
 
 /*struct EntityView
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-const int PIXEL_SIZE = 3;
+const int PIXEL_SIZE = 2;
 
 // sega genesis resolution 320x224
 const float VIRTUAL_WIDTH = 480;

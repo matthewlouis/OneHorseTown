@@ -49,3 +49,6 @@ BaseGameEngine.VC.opendb
 8551Game.VC.opendb
 *.opensdf
 OdinEngine/Release/OdinEngine.lib
+Game/Release/Game.res
+Release/Game.iobj
+Release/Game.ipdb
