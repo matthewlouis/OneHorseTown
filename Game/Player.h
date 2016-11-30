@@ -33,6 +33,7 @@ public:
 	AnimatorComponent* arm_anim;
     b2Body* arm_psx;
 	Vec2 armOffsets[5];
+	int delay = 0; // Arm lowering delay
 
 	//player
 	GraphicalComponent* gfx;
@@ -282,7 +283,10 @@ public:
 			arm_psx->SetTransform(armPosition, 0);
 		}
 		else {
-			arm_gfx->visible = false;
+			if (delay == 0)
+				arm_gfx->visible = false;
+			else
+				delay--;
 		}
 	}
 

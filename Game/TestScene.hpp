@@ -7,6 +7,7 @@
 #include "Scenes.hpp"
 
 #include <functional>
+#include <future>
 
 #include "OpenCLKernel.h"
 
@@ -99,6 +100,46 @@ public:
         particles.reserve( 50 );
     }
 
+    ParticleEmitter( const ParticleEmitter& copy ) = delete;
+    ParticleEmitter& operator =( const ParticleEmitter& copy ) = delete;
+
+    ParticleEmitter( ParticleEmitter&& move )
+        : active( move.active )
+        , position( move.position )
+        , spawnRate( move.spawnRate )
+        , velocityMagnitude( move.velocityMagnitude )
+        , velocityMagnitudeVariance( move.velocityMagnitudeVariance )
+        , velocityAngle( move.velocityAngle )
+        , velocityAngleVariance( move.velocityAngleVariance )
+        , lifetime( move.lifetime )
+        , lifetimeVariance( move.lifetimeVariance )
+        , color( move.color )
+        , colorVariance( move.colorVariance )
+        , particles( std::move( move.particles ) )
+        , fnUpdate( std::move( move.fnUpdate ) )
+    {
+    }
+
+    ParticleEmitter& operator =( ParticleEmitter&& move )
+    {
+        active = move.active;
+        position = move.position;
+        spawnRate = move.spawnRate;
+        velocityMagnitude = move.velocityMagnitude;
+        velocityMagnitudeVariance = move.velocityMagnitudeVariance;
+        velocityAngle = move.velocityAngle;
+        velocityAngleVariance = move.velocityAngleVariance;
+        lifetime = move.lifetime;
+        lifetimeVariance = move.lifetimeVariance;
+        color = move.color;
+        colorVariance = move.colorVariance;
+        particles = std::move( move.particles );
+        fnUpdate = std::move( move.fnUpdate );
+        return *this;
+    }
+
+    ~ParticleEmitter() = default;
+
     Particle* emitt( int n = 1 )
     {
         if ( n < 1 )
@@ -109,13 +150,13 @@ public:
 
         while ( n-- > 0 )
         {
-        float length = apply_variance( velocityMagnitude, velocityMagnitudeVariance );
-        float angle = apply_variance( velocityAngle, velocityAngleVariance );
+            float length = apply_variance( velocityMagnitude, velocityMagnitudeVariance );
+            float angle = apply_variance( velocityAngle, velocityAngleVariance );
 
-        glm::vec2 vel = {
-            length * glm::cos( angle ),
-            length * glm::sin( angle )
-        };
+            glm::vec2 vel = {
+                length * glm::cos( angle ),
+                length * glm::sin( angle )
+            };
 
             particles.push_back( Particle(
             apply_variance( lifetime, lifetimeVariance ),
@@ -260,13 +301,19 @@ public:
 
     std::vector< ParticleEmitter > emitters;
 
-    //OpenCLKernel< Particle*, float > updater;
+    OpenCLKernel< Particle*, float > updater0;
+    //OpenCLKernel< Particle*, float > updater1;
+    //OpenCLKernel< Particle*, float > updater2;
+    //OpenCLKernel< Particle*, float > updater3;
 
 	TestScene( int width, int height, float scale, int numberPlayers = 1 )
 		: LevelScene( width, height, "Audio/Banks/MasterBank", numberPlayers )
         , numberPlayers( numberPlayers )
 		, _scale( scale )
-        //, updater( "ParticleSystem.cl" )
+        , updater0( "ParticleSystem.cl" )
+        //, updater1( "ParticleSystem.cl" )
+        //, updater2( "ParticleSystem.cl" )
+        //, updater3( "ParticleSystem.cl" )
 	{
 	}
 
@@ -275,10 +322,10 @@ public:
         ParticleEmitter emitter( position );
         emitter.active = false;
         //emitter.spawnRate = 10;
-        emitter.color = { 0.8, 0, 0, 1 };
-        emitter.colorVariance = { 0.1, 0, 0, 0 };
-        emitter.lifetime = 3;
-        emitter.lifetimeVariance = 0.3;
+        emitter.color = { 0.8, 0, 0, 0.9 };
+        emitter.colorVariance = { 0.1, 0, 0, 0.1 };
+        emitter.lifetime = 2.5;
+        emitter.lifetimeVariance = 1;
         emitter.velocityMagnitude = 60;
         emitter.velocityMagnitudeVariance = 55;
         emitter.velocityAngle = 0;
@@ -300,17 +347,62 @@ public:
 		pAudioEngine->stopAllEvents();
 	}
 
+    //void updateEmitter( OpenCLKernel< Particle*, float >& updater, ParticleEmitter& em, float t )
+    //{
+    //    updater.globalWorkSize[ 0 ] = em.particles.size();
+    //    updater( em.particles, t );
+    //    em.update2( t );
+    //}
+
     void update( unsigned ticks )
     {
         LevelScene::update( ticks );
 
+        /*for ( int i = 0; i < emitters.size(); i += 4 )
+        {
+            int chunk_size = emitters.size() - i;
+
+            std::thread* threads[ 4 ];
+
+            switch ( chunk_size )
+            {
+            default: threads[ 3 ] = new std::thread( [this, i]() {
+                updateEmitter( updater3, emitters[ i + 3 ], Scene::ticksDiff / 1000.f );
+            } );
+            case 3: threads[ 2 ] = new std::thread( [this, i]() {
+                updateEmitter( updater2, emitters[ i + 2 ], Scene::ticksDiff / 1000.f );
+            } );
+            case 2: threads[ 1 ] = new std::thread( [this, i]() {
+                updateEmitter( updater1, emitters[ i + 1 ], Scene::ticksDiff / 1000.f );
+            } );
+            case 1: threads[ 0 ] = new std::thread( [this, i]() {
+                updateEmitter( updater0, emitters[ i + 0 ], Scene::ticksDiff / 1000.f );
+            } );
+            }
+
+            for ( int i = 0; i < std::min( chunk_size - 1, 4 ); ++i )
+            {
+                threads[ i ]->join();
+                delete threads[ i ];
+            }
+        }*/
+
+        std::vector< std::future< void > > futures;
+        futures.reserve( emitters.size() );
+
+        float tDiff = Scene::ticksDiff / 1000.f;
         for ( auto& em : emitters )
         {
-            //updater.globalWorkSize[ 0 ] = em.particles.size();
-            //updater( em.particles, Scene::ticksDiff / 1000.f );
-            //em.update2( Scene::ticksDiff / 1000.f );
-            em.update( Scene::ticksDiff / 1000.f );
+            futures.push_back( std::async( [&] { em.update( tDiff ); } ) );
+            //updater0.settings.globalWorkSize[ 0 ] = em.particles.size();
+            //futures.push_back( updater0( em.particles, tDiff ) );
         }
+
+        for ( auto& fut : futures )
+            fut.get();
+
+        //for ( auto& em : emitters )
+        //    em.update2( tDiff );
         
         auto itr = std::remove_if( emitters.begin(), emitters.end(),
             []( const ParticleEmitter& em ) {
@@ -343,6 +435,9 @@ public:
         {
             for ( Particle& p : emitter.particles )
             {
+                if ( p.isExpired() )
+                    continue;
+
                 mat4 mtx = camera.getCameraMatrix()
                     * translate( {}, vec3( p.position.x, p.position.y, 0 ) );
 
