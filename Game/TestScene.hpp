@@ -461,10 +461,18 @@ public:
 		odin::load_texture(HORSE_TEXTURE, "Textures/horse_dense.png");
 		odin::load_texture(BULLET_TEXTURE, "Textures/bullet.png");
 		odin::load_texture(WIN_TEXTURE, "Textures/win.png");
+		odin::load_texture(READY_TEXTURE, "Textures/readytext.png");
+
+		//background animation
+		odin::load_texture(BACKGROUND_ANIM, "Textures/sunrisebg.png");
 
         Entity2& bg = entities[ EntityId( 0 ) ];
         bg.pDrawable = newGraphics( GraphicalComponent::makeRect( width, height ) );
-		bg.pDrawable->texture = BACKGROUND;
+		bg.pDrawable->texture = BACKGROUND_ANIM;
+		bg.pDrawable->interactive = false;
+		bg.pAnimator = newAnimator(AnimatorComponent({ 9 }));
+		bg.pAnimator->loop = false;
+		bg.pAnimator->currentFrame = 0;
 
         listeners.push_back( [this]( const InputManager& inmn ) {
             if ( inmn.wasKeyPressed( SDLK_BACKSPACE ) )
@@ -501,7 +509,7 @@ public:
 		* resolution can use the data.
 		*/
 		// create player 1
-        odin::make_player( this, {"player", 0}, {-22, 11}, 0 );
+        odin::make_player( this, {"player", 0}, {-22, 11.4f}, 0 );
 		EntityPlayer * ep1 = (EntityPlayer *) entities[{"player", 0}].base();
 		ep1->player = &players[0];
         listeners.push_back( [this]( const InputManager& inmn ) {
@@ -511,7 +519,7 @@ public:
 
 
 		// create player 2
-		odin::make_player(this, { "player", 1 }, { 22, 11 },1);
+		odin::make_player(this, { "player", 1 }, { 22, 11.4f },1);
 		EntityPlayer * ep2 = (EntityPlayer *)entities[{ "player", 1 }].base();
 	    ep2->player = &players[1];
 		listeners.push_back([this](const InputManager& inmn) {
@@ -520,7 +528,7 @@ public:
 
 		//players[1] = EntityView({ "player", 1 }, this);
 		// create player 3
-		odin::make_player(this, { "player", 2 }, { 22, -11 }, 2);
+		odin::make_player(this, { "player", 2 }, { 22, -12 }, 2);
 		EntityPlayer * ep3 = (EntityPlayer *)entities[{ "player", 2 }].base();
 		ep3->player = &players[2];
 		listeners.push_back([this](const InputManager& inmn) {
@@ -529,7 +537,7 @@ public:
 		//players[2] = EntityView({ "player", 2 }, this);
 
 		// create player 4
-		odin::make_player(this, { "player", 3 }, { -22, -11 }, 3);
+		odin::make_player(this, { "player", 3 }, { -22, -12 }, 3);
 		EntityPlayer * ep4 = (EntityPlayer *)entities[{ "player", 3 }].base();
 		ep4->player = &players[3];
 		listeners.push_back([this](const InputManager& inmn) {
@@ -618,10 +626,13 @@ public:
 		pAudioEngine->loadEvent("event:/Music/EnergeticTheme");
 		pAudioEngine->loadEvent("event:/Desperado/Shoot");
 		pAudioEngine->loadEvent("event:/Desperado/Die");
+		pAudioEngine->loadEvent("event:/Desperado/Ready");
+		pAudioEngine->loadEvent("event:/Desperado/Draw");
 
 		pAudioEngine->playEvent("event:/Music/EnergeticTheme");
+		pAudioEngine->playEvent("event:/Desperado/Ready");
         #ifdef _DEBUG
-        pAudioEngine->toggleMute(); //mute audio
+        //pAudioEngine->toggleMute(); //mute audio
         #endif
 	}
 

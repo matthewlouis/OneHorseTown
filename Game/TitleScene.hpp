@@ -124,6 +124,7 @@ public:
 		OFF_TIME = 40;
 		ON_TIME = 55;
 		promptOn = true;
+		gfxComponents[promptID].color.w = 1;
 		offFrame = onFrame = 0;
 		glUniform(uFadeOut, 0.0f);
 	}
@@ -163,10 +164,12 @@ public:
 		background = gfxComponents.add(
 			EntityId(0), GraphicalComponent::makeRect(width, height));
 		background->texture = TITLE;
+		background->interactive = false;
 		
 		promptID = EntityId(1);
 		auto prompt = gfxComponents.add(promptID, GraphicalComponent::makeRect(120, 9));
 		prompt->texture = PRESS_BUTTON;
+		prompt->interactive = false;
 
 		Vec2 pos = { 160, -55 };
 		if (!entities.add(promptID, Entity(pos, 0)))
@@ -176,6 +179,11 @@ public:
 			if (inmn.wasKeyPressed(SDLK_RETURN) || inmn.gamepads.wasButtonPressed(0, SDL_CONTROLLER_BUTTON_START)) {
 				buttonPressed = true;
 			}
+		});
+
+		listeners.push_back([this](const InputManager& inmn) {
+			if (inmn.wasKeyPressed(SDLK_m))
+				pAudioEngine->toggleMute();
 		});
 
 		if (audioBankName != "")
@@ -230,6 +238,7 @@ public:
 				//check if slide has faded out, if so change the slide
 				if (!fadedOut && fadeout(fadeStartTime, ticks, fadeTime)) {
 					fadedOut = true;
+					gfxComponents[promptID].color.w = 0;
 
 					if (currentSlide > 12) {
 						background->texture = TITLE;

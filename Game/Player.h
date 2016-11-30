@@ -33,6 +33,7 @@ public:
 	AnimatorComponent* arm_anim;
     b2Body* arm_psx;
 	Vec2 armOffsets[5];
+	int delay = 0; // Arm lowering delay
 
 	//player
 	GraphicalComponent* gfx;
@@ -48,6 +49,7 @@ public:
 	//TODO: keeping track of ammunition
 	int bulletCount = 3;
 	int killCount = 0;
+	int lives = 3;
 	bool alive = true;
 	
 	struct SoundEvent {
@@ -242,7 +244,17 @@ public:
 			arm_psx->SetTransform(armPosition, 0);
 		}
 		else {
-			arm_gfx->visible = false;
+			if (delay == 0)
+				arm_gfx->visible = false;
+			else
+				delay--;
+		}
+	}
+
+	//called when player is killed
+	void died() {
+		if (--lives <= 0) {
+			alive = false;
 		}
 	}
 
