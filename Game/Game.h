@@ -36,6 +36,11 @@ public:
     static constexpr double TGT_FRAME_TIME_S = 1 / 60.0;
     static constexpr unsigned TGT_FRAME_TIME_MS = unsigned( TGT_FRAME_TIME_S * 1000 );
 
+	//OpenGL post processing globals
+	GLuint postTexture;
+	GLuint program_postproc, attribute_v_coord_postproc, uniform_fbo_texture;
+
+
 	Game( int width, int height, SDL_Window* window )
 		: _width( width )
 		, _height( height )
@@ -53,7 +58,11 @@ public:
         title->pSceneManager = &sceneManager;
 
 		sceneManager.pushScene( title );
-        //sceneManager.pushScene( level );
+
+		///load shaders and set attributes/uniforms
+		program_postproc = load_shaders("Shaders/postv.glsl", "Shaders/postf.glsl");
+		attribute_v_coord_postproc = glGetAttribLocation(program_postproc, "v_coord");
+		uniform_fbo_texture = glGetUniformLocation(program_postproc, "fbo_texture");
 	}
 
     void tick()
@@ -67,10 +76,9 @@ public:
 
         audioEngine.update();
 
-
         glBindFramebuffer( GL_FRAMEBUFFER, 0 );
         glViewport( 0, 0, _width, _height );
-        glClear( GL_COLOR_BUFFER_BIT );// | GL_DEPTH_BUFFER_BIT );
+        glClear( GL_COLOR_BUFFER_BIT );
 
         if ( Scene* top = sceneManager.topScene() )
         {
@@ -82,11 +90,9 @@ public:
             glDrawBuffers( 1, &drawbuf );
 
             glBlitFramebuffer(
-            //glBlitNamedFramebuffer(
-            //    top->framebuffer.frame, 0,
                 0, 0, top->width, top->height,
                 0, 0, _width, _height,
-                GL_COLOR_BUFFER_BIT,// | GL_DEPTH_BUFFER_BIT,
+                GL_COLOR_BUFFER_BIT,
                 GL_NEAREST );
         }
 

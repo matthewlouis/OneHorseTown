@@ -138,7 +138,10 @@ public:
 				EntityBullet * eb = (EntityBullet *)bodyA->GetUserData();
 				eb->player->countKill();
 				eb->player->soundEvent = { true, "event:/Desperado/Die" };
-        }
+				
+				if (Player::deadPlayers >= 3) //if last player
+					eb->player->focus = true;
+			}
 		}
 
 		if (bodyB->IsBullet())
@@ -157,8 +160,11 @@ public:
 				eb->player->countKill();
 				deadEntities.push_back((EntityBase*)bodyB->GetUserData());
 				eb->player->soundEvent = { true, "event:/Desperado/Die" };
-        }
-    }
+
+				if (Player::deadPlayers >= 3) //if last player
+					eb->player->focus = true;
+			}
+		}
 	}
 
     void EndContact(b2Contact* contact) {
@@ -364,7 +370,7 @@ public:
 
 	int			numberPlayers;
 	Player      players[MAX_PLAYERS];
-	Player*		winningPlayer;
+	Player		*winningPlayer, *lastToDiePlayer;
 	bool		gameOver = false;
 	Uint32		gameOverStartTicks;
 	bool	    startingGame = true;
@@ -649,6 +655,9 @@ public:
 			entities["wintex"].pDrawable->color = glm::vec4(255, 255, 255, 1);
 
 			for (int i = 0; i < numberPlayers; i++) {
+				if (players[i].focus) //last player
+					lastToDiePlayer = &players[i];
+
 				if (players[i].alive) {
 					winningPlayer = &players[i];
 					printf("\n****GAME OVER and Player %d won!", i + 1);

@@ -600,7 +600,9 @@ GL_APICALL void         GL_APIENTRY glUniform4iv (GLint location, GLsizei count,
 GL_APICALL void         GL_APIENTRY glUniformMatrix2fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
 GL_APICALL void         GL_APIENTRY glUniformMatrix3fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
 GL_APICALL void         GL_APIENTRY glUniformMatrix4fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
-GL_APICALL void         GL_APIENTRY glUseProgram (GLuint program);
+GL_APICALL void         GL_APIENTRY 
+
+(GLuint program);
 GL_APICALL void         GL_APIENTRY glValidateProgram (GLuint program);
 GL_APICALL void         GL_APIENTRY glVertexAttrib1f (GLuint indx, GLfloat x);
 GL_APICALL void         GL_APIENTRY glVertexAttrib1fv (GLuint indx, const GLfloat* values);

@@ -1,5 +1,9 @@
 #pragma once
 #include "TextureManager.hpp"
+#include <SDL\SDL.h>
+#include <GL\GLU.h>
+#include <cstdio>
+#include "glhelp.h"
 
 namespace odin {
 

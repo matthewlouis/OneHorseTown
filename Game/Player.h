@@ -50,6 +50,9 @@ public:
 	int killCount = 0;
 	int lives = 3;
 	bool alive = true;
+
+	//for director focus
+	bool focus = false;
 	
 	struct SoundEvent {
 		bool playEvent = false;

@@ -355,6 +355,7 @@ public:
 			glBindVertexArray(gfx.vertexArray);
 			glDrawArrays(GL_TRIANGLES, 0, gfx.count);
 		}
+		//Scene::endDraw(); //for post processing
 	}
 
 	void add(EntityId eid, GraphicalComponent gfx)

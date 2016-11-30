@@ -8,7 +8,7 @@ uniform float	  uFadeOut; //value between 0.0 and 1.0 to determine fade out amou
 uniform float	  uSilhoutte;
 uniform bool	  uInteractive;
 
-out vec4 out_Color;
+layout(location = 0) out vec4 out_Color;
 
 void main()
 {
