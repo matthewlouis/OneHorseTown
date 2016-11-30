@@ -823,7 +823,7 @@ inline void LevelScene::player_input(const InputManager& mngr, EntityId eid, int
     //float rTrigger = mngr.gamepads.rightTrigger( pindex );
 
     // Handle Shoot input on button B
-    if ( mngr.gamepads.didRightTriggerCross( pindex, 0.9 ) || mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B) )
+    if ( mngr.gamepads.didRightTriggerCross( pindex, 0.85 ) || mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B) )
     {
 		arm_anim.play = true;
 		arm_anim.currentFrame = 1;
