@@ -25,6 +25,8 @@
 // Macros to speed up rendering
 #define PI 3.1415926f
 #define SIN45 0.7071f
+#define BULLET_PADDING 17
+#define BULLET_PADDING_ANGLED 12
 
 using odin::Entity;
 using odin::EntityId;
@@ -887,8 +889,10 @@ inline void LevelScene::player_input(const InputManager& mngr, EntityId eid, int
     // Handle Shoot input on button B
     if ( mngr.gamepads.didRightTriggerCross( pindex, 0.9 ) || mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B) )
     {
-		arm_anim.play = true;
-		arm_anim.currentFrame = 1;
+		//arm_anim.play = true;
+		//arm_anim.currentFrame = 1;
+		players[pindex].aiming = true;
+		players[pindex].delay = 15;
 		fireBullet(ntt.position, aimDirection, pindex);
     }
     if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_B))
@@ -992,47 +996,47 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction,
 		collisionData = resolveBulletCollision(pos, { -1,1 });
 		length = std::get<2>(collisionData);
 		rotation = -PI / 4;
-		offset = { SIN45 * -length / 2, SIN45 * length / 2 };
+		offset = { SIN45 * -length / 2 - BULLET_PADDING_ANGLED, SIN45 * length / 2 + BULLET_PADDING_ANGLED };
 		break;
 	case odin::NORTH_EAST:
 		collisionData = resolveBulletCollision(pos, { 1,1 });
 		length = std::get<2>(collisionData);
 		rotation = PI / 4;
-		offset = { SIN45 * length / 2, SIN45 * length / 2 };
+		offset = { SIN45 * length / 2 + BULLET_PADDING_ANGLED, SIN45 * length / 2 + BULLET_PADDING_ANGLED };
 		break;
 	case odin::SOUTH_WEST:
 		collisionData = resolveBulletCollision(pos, { -1,-1 });
 		length = std::get<2>(collisionData);
 		rotation = PI / 4;
-		offset = { SIN45 * -length / 2, SIN45 * -length / 2 };
+		offset = { SIN45 * -length / 2 - BULLET_PADDING_ANGLED, SIN45 * -length / 2 - BULLET_PADDING_ANGLED  + 7};
 		break;
 	case odin::SOUTH_EAST:
 		collisionData = resolveBulletCollision(pos, { 1,-1 });
 		length = std::get<2>(collisionData);
 		rotation = -PI / 4;
-		offset = { SIN45 * length / 2, SIN45 * -length / 2 };
+		offset = { SIN45 * length / 2 + BULLET_PADDING_ANGLED, SIN45 * -length / 2 - BULLET_PADDING_ANGLED + 7};
 		break;
 	case odin::NORTH:
 		collisionData = resolveBulletCollision(pos, { 0,1 });
 		length = std::get<2>(collisionData);
 		rotation = PI / 2;
-		offset = { 0, length / 2 };
+		offset = { 4, length / 2 + BULLET_PADDING};
 		break;
 	case odin::SOUTH:
 		collisionData = resolveBulletCollision(pos, { 0, -1 });
 		length = std::get<2>(collisionData);
 		rotation = -PI / 2;
-		offset = { 0, -length / 2 };
+		offset = { 4, -length / 2 - BULLET_PADDING };
 		break;
 	case odin::WEST:
 		collisionData = resolveBulletCollision(pos, { -1,0 });
 		length = std::get<2>(collisionData);
-		offset = { -length / 2, 0 };
+		offset = { -length / 2 - BULLET_PADDING, 4 };
 		break;
 	case odin::EAST:
 		collisionData = resolveBulletCollision(pos, { 1,0 });
 		length = std::get<2>(collisionData);
-		offset = { length / 2, 0 };
+		offset = { length / 2 + BULLET_PADDING, 4 };
 		break;
 	default:
 		break;
