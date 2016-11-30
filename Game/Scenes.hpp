@@ -129,11 +129,14 @@ public:
 
 		if (bodyA->IsBullet())
         {
-			deadEntities.push_back((EntityBase*)bodyA->GetUserData());
+			EntityBullet * eb = (EntityBullet *)bodyA->GetUserData();
+			eb->player->killCount++;
+
 			if (bodyB->GetUserData()) {
 				EntityPlayer* ep = (EntityPlayer *)bodyB->GetUserData();
+
 				ep->player->alive = false;
-				deadEntities.push_back((EntityBase*)bodyB->GetUserData());
+				//deadEntities.push_back((EntityBase*)bodyB->GetUserData());
 
 				EntityBullet * eb = (EntityBullet *)bodyA->GetUserData();
 				eb->player->countKill();
@@ -142,6 +145,7 @@ public:
 				if (Player::deadPlayers >= 3) //if last player
 					eb->player->focus = true;
 			}
+			deadEntities.push_back((EntityBase*)bodyA->GetUserData());
 		}
 
 		if (bodyB->IsBullet())
@@ -150,20 +154,19 @@ public:
 
 			eb->player->killCount++;
 
-			deadEntities.push_back((EntityBase*)bodyB->GetUserData());
 			if (bodyA->GetUserData()) {
 				auto ep = (EntityPlayer *)bodyA->GetUserData();
 				ep->player->alive = false;
-				deadEntities.push_back((EntityBase*)bodyA->GetUserData());
+				//deadEntities.push_back((EntityBase*)bodyA->GetUserData());
 
 				EntityBullet * eb = (EntityBullet *)bodyB->GetUserData();
 				eb->player->countKill();
-				deadEntities.push_back((EntityBase*)bodyB->GetUserData());
 				eb->player->soundEvent = { true, "event:/Desperado/Die" };
 
 				if (Player::deadPlayers >= 3) //if last player
 					eb->player->focus = true;
 			}
+			deadEntities.push_back((EntityBase*)bodyB->GetUserData());
 		}
 	}
 
@@ -857,6 +860,9 @@ inline void LevelScene::player_input(const InputManager& mngr, EntityId eid, int
 
     Entity2& ntt = entities[ eid ];
 
+	if (!players[pindex].alive)
+		return;
+
 	//arm
     Entity2& arm_ntt = entities[ { "playes", (uint16_t)pindex } ];
 	GraphicalComponent& arm_gfx = *arm_ntt.pDrawable;
@@ -963,7 +969,7 @@ inline void LevelScene::player_input(const InputManager& mngr, EntityId eid, int
 	if ( pindex == 0 && mngr.wasKeyPressed(SDLK_SPACE)) {
 		arm_anim.play = true;
 		arm_anim.currentFrame = 1;
-		fireBullet(ntt.position, aimDirection, -1);
+		fireBullet(ntt.position, aimDirection, pindex);
 	}
     if (mngr.wasKeyPressed(SDLK_1))
         pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0); //low energy test

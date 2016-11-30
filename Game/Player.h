@@ -181,7 +181,12 @@ public:
 
 		switch (currentState) {
 			case IDLE:
-				if (vel.y > FALL_THRESHOLD || vel.y < -FALL_THRESHOLD) {
+				if (!alive) {
+					anim->switchAnimState(HIT);
+					anim->loop = false;
+					currentState = HIT;
+				}
+				else if (vel.y > FALL_THRESHOLD || vel.y < -FALL_THRESHOLD) {
 					anim->switchAnimState(IN_AIR);
 					anim->loop = false;
 					currentState = IN_AIR;
@@ -193,7 +198,12 @@ public:
 				}
 				break;
 			case RUNNING:
-				if (vel.y > FALL_THRESHOLD || vel.y < -FALL_THRESHOLD) {
+				if (!alive) {
+					anim->switchAnimState(HIT);
+					anim->loop = false;
+					currentState = HIT;
+				}
+				else if (vel.y > FALL_THRESHOLD || vel.y < -FALL_THRESHOLD) {
 					anim->switchAnimState(IN_AIR);
 					anim->loop = false;
 					currentState = IN_AIR;
@@ -207,12 +217,20 @@ public:
 			case IDLE_SHOOTING:
 				break;
 			case IN_AIR:
+
 				if (vel.y < -FALL_THRESHOLD)
 					falling = true;
 
+				if (!alive) {
+					anim->switchAnimState(HIT);
+					anim->loop = false;
+					currentState = HIT;
+				}
+
+
 				if (falling && vel.y <= FALL_THRESHOLD && vel.y >= -FALL_THRESHOLD) {
 					falling = false;
-					
+
 					if (abs(vel.x) < FALL_THRESHOLD) {
 						anim->switchAnimState(IDLE);
 						currentState = IDLE;
@@ -227,7 +245,25 @@ public:
 					
 					anim->loop = true;
 				}
+				break;
+			case HIT:
+				if (falling && vel.y <= FALL_THRESHOLD && vel.y >= -FALL_THRESHOLD) {
+					falling = false;
+					currentState = DEAD;
+					anim->switchAnimState(DEAD);
+					anim->loop = false;
+					anim->play = true;
+				}
 
+			   if (!falling && anim->currentFrame == 1) { //if done playing
+					currentState = DEAD;
+					anim->switchAnimState(DEAD);
+					anim->loop = false;
+					anim->play = true;
+				}
+				break;
+			case DEAD:
+				anim->loop = false;
 				break;
 		}
 
