@@ -156,6 +156,7 @@ public:
 		background->texture = TITLE;
 		background->interactive = false;
 		
+		//adding the 12 slide animation sprite sheet (1 frame per slide)
 		backgroundAnim = animComponents.add(EntityId(0), AnimatorComponent::AnimatorComponent({ 1,1,1,1,1,1,1,1,1,1,1,1,1 }));
 		backgroundAnim->switchAnimState(currentSlide);
 		
