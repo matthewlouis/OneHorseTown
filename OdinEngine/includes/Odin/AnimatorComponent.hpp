@@ -12,7 +12,7 @@ namespace odin
 	};
     struct AnimatorComponent
     {
-        static constexpr size_t MAX_ANIMATIONS = 10;
+        static constexpr size_t MAX_ANIMATIONS = 16;
 
 		bool play = true; //play animation
 		bool loop = true; //loop animation

@@ -13,6 +13,7 @@ public:
 	EntityMap< Entity >             entities;
 
 	EntityMap< GraphicalComponent > gfxComponents;
+	EntityMap< AnimatorComponent > animComponents;
 
 	b2ThreadPool                    b2thd;
 	b2World                         b2world = { { 0.f, -9.81f }, &b2thd };
@@ -26,7 +27,7 @@ public:
 
     odin::SceneManager* pSceneManager;
 
-	OHT_DEFINE_COMPONENTS(entities, gfxComponents, fsxComponents);
+	OHT_DEFINE_COMPONENTS(entities, gfxComponents, animComponents, fsxComponents);
 
 	//SDL_Renderer* renderer;
 
@@ -43,6 +44,7 @@ public:
 	int currentSlide = 0;
 	int slideTimes[14] = { 0, 3000, 3000, 1500, 1500, 2500, 700, 700, 700, 2000, 500, 500, 500, 500 };
 	GraphicalComponent* background;
+	AnimatorComponent* backgroundAnim;
 	int fadeTime = 250;
 	bool fadedOut = false;
 	bool fading = false;
@@ -148,23 +150,15 @@ public:
 
 		odin::load_texture(TITLE, "Textures/title.png");
 		odin::load_texture(PRESS_BUTTON, "Textures/pressbutton.png");
-		odin::load_texture(INTRO_1, "Textures/Intro/1.png");
-		odin::load_texture(INTRO_2, "Textures/Intro/2.png");
-		odin::load_texture(INTRO_3A, "Textures/Intro/3a.png");
-		odin::load_texture(INTRO_3B, "Textures/Intro/3b.png");
-		odin::load_texture(INTRO_4, "Textures/Intro/4.png");
-		odin::load_texture(INTRO_5A, "Textures/Intro/5a.png");
-		odin::load_texture(INTRO_5B, "Textures/Intro/5b.png");
-		odin::load_texture(INTRO_5C, "Textures/Intro/5c.png");
-		odin::load_texture(INTRO_5D, "Textures/Intro/5d.png");
-		odin::load_texture(INTRO_6, "Textures/Intro/6.png");
-		odin::load_texture(INTRO_7, "Textures/Intro/7.png");
-		odin::load_texture(INTRO_8, "Textures/Intro/8.png");
 
 		background = gfxComponents.add(
 			EntityId(0), GraphicalComponent::makeRect(width, height));
 		background->texture = TITLE;
 		background->interactive = false;
+		
+		backgroundAnim = animComponents.add(EntityId(0), AnimatorComponent::AnimatorComponent({ 1,1,1,1,1,1,1,1,1,1,1,1,1 }));
+		backgroundAnim->switchAnimState(currentSlide);
+		
 		
 		promptID = EntityId(1);
 		auto prompt = gfxComponents.add(promptID, GraphicalComponent::makeRect(120, 9));
@@ -240,12 +234,12 @@ public:
 					fadedOut = true;
 					gfxComponents[promptID].color.w = 0;
 
-					if (currentSlide > 12) {
-						background->texture = TITLE;
+					if (currentSlide >= 12) {
 						currentSlide = 0;
+						backgroundAnim->switchAnimState(currentSlide);
 					}
 					else {
-						background->texture = INTRO_1 + currentSlide++;
+						backgroundAnim->switchAnimState(++currentSlide);
 					}			
 					fadeStartTime = ticks; //reset fade start to do fade-in
 				}
@@ -295,6 +289,32 @@ public:
 			if (fadeout(startedTicks, ticks, 500)) {
 				//reset everything to original state to go back to title
 				reset(ticks);
+			}
+		}
+
+		for (auto x : animComponents)
+		{
+			x.value.incrementFrame();
+			auto& texAdjust = entities[x.key].texAdjust;
+
+			texAdjust[0] = x.value.animState;
+			texAdjust[1] = x.value.currentFrame;
+			texAdjust[2] = x.value.maxFrames;
+			texAdjust[3] = x.value.totalAnim;
+			switch (x.value.type)
+			{
+				// Handle fading animation
+			case odin::AnimationType::FADEOUT:
+				if (x.value.currentFrame == x.value.maxFrames - 1) {
+					gfxComponents.remove(x.key);
+					animComponents.remove(x.key);
+					entities.remove(x.key);
+				}
+				else {
+					gfxComponents[x.key].color = { 1,1,1, 1.f - (float)x.value.currentFrame / (float)x.value.maxFrames };
+				}
+			default:
+				break;
 			}
 		}
 
