@@ -25,7 +25,8 @@ namespace odin
 
         int animLengths[ MAX_ANIMATIONS ]; //array of length values - index == anim loop, val == length of loop in frames if 0, not animated
 
-        int _frameDelay = 0; //how many draws before changing animation frame
+		int frameDelay = 3;
+        int _currentDelay = 0; //how many draws before changing animation frame
 
         AnimatorComponent() = default;
         ~AnimatorComponent() = default;
@@ -41,10 +42,10 @@ namespace odin
         //increment current frame to draw
         void incrementFrame() 
         {
-            if ( play && _frameDelay++ > 3 )
+            if ( play && _currentDelay++ > frameDelay )
             {
                 ++currentFrame %= animLengths[ animState ];
-                _frameDelay = 0;
+                _currentDelay = 0;
 				if (!loop && currentFrame == animLengths[animState] - 1) {
 					play = false; //if not looped, then stop after playing once
 				}

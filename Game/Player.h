@@ -182,20 +182,24 @@ public:
 
 		switch (currentState) {
 			case IDLE:
+				anim->frameDelay = 16;
 				if (!alive) {
 					anim->switchAnimState(HIT);
 					anim->loop = false;
 					currentState = HIT;
+					anim->frameDelay = 3;
 				}
 				else if (vel.y > FALL_THRESHOLD || vel.y < -FALL_THRESHOLD) {
 					anim->switchAnimState(IN_AIR);
 					anim->loop = false;
 					currentState = IN_AIR;
+					anim->frameDelay = 3;
 				}
 				else if (abs(vel.x) > FALL_THRESHOLD) {
 					anim->switchAnimState(RUNNING);
 					anim->loop = true;
 					currentState = RUNNING;
+					anim->frameDelay = 3;
 				}
 				break;
 			case RUNNING:

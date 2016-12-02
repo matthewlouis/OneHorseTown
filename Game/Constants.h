@@ -22,4 +22,4 @@ enum AXIS_DIRECTION { N, NE, E, SE, S, SW, W, NW };
 
 const int MAX_PLAYERS = 4;
 
-const float CAMERA_MOVE_AMOUNT = 10.0f;
+const float CAMERA_MOVE_AMOUNT = 20.0f;
