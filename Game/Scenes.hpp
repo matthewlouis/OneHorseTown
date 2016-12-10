@@ -113,7 +113,14 @@ public:
     {
         if ( e == 1 )
         {
+			player->alive = false;
+			Player::deadPlayers++;
             std::cout << "Hit player " << playerIndex << std::endl;
+
+			player->soundEvent = { true, "event:/Desperado/Die" };
+
+			if (Player::deadPlayers >= 3) //if last player
+				player->focus = true;
         }
     }
 };
@@ -125,12 +132,14 @@ public:
     std::vector< EntityBase* > deadEntities;
 
     void BeginContact(b2Contact* contact) {
-
+		
         auto bodyA = contact->GetFixtureA()->GetBody();
         auto bodyB = contact->GetFixtureB()->GetBody();
 
+
 		if (bodyA->IsBullet())
         {
+			/*
 			EntityBullet * eb = (EntityBullet *)bodyA->GetUserData();
 			eb->player->killCount++;
 
@@ -142,17 +151,19 @@ public:
 
 				EntityBullet * eb = (EntityBullet *)bodyA->GetUserData();
 				eb->player->countKill();
+				std::printf("\n*kill bodyA bullet*\n");
+
 				eb->player->soundEvent = { true, "event:/Desperado/Die" };
 				
 				if (Player::deadPlayers >= 3) //if last player
 					eb->player->focus = true;
-			}
+			}*/
 			deadEntities.push_back((EntityBase*)bodyA->GetUserData());
 		}
 
 		if (bodyB->IsBullet())
         {
-			EntityBullet * eb = (EntityBullet *)bodyB->GetUserData();
+			/*EntityBullet * eb = (EntityBullet *)bodyB->GetUserData();
 
 			eb->player->killCount++;
 
@@ -163,11 +174,12 @@ public:
 
 				EntityBullet * eb = (EntityBullet *)bodyB->GetUserData();
 				eb->player->countKill();
+
 				eb->player->soundEvent = { true, "event:/Desperado/Die" };
 
 				if (Player::deadPlayers >= 3) //if last player
 					eb->player->focus = true;
-			}
+			}*/
 			deadEntities.push_back((EntityBase*)bodyB->GetUserData());
 		}
 	}
@@ -376,6 +388,8 @@ public:
 	int			numberPlayers;
 	Player      players[MAX_PLAYERS];
 	Player		*winningPlayer, *lastToDiePlayer;
+	int			timeOnDeadPlayer;
+
 	bool		gameOver = false;
 	Uint32		gameOverStartTicks;
 	bool	    startingGame = true;
@@ -518,38 +532,66 @@ public:
 
 		//game over zoom in and win text display
 		if (gameOver) {
-
-			if (ticks - gameOverStartTicks > 600) {
-				entities["wintex"].pAnimator->switchAnimState(1);
-			}
-			float maxscale = 4.0f;
-			float scale = camera.getScale();
-			if (scale < maxscale) {
-				scale += 0.1f;
-			}
-
-			glm::vec2 focusPos = { winningPlayer->psx->GetPosition().x * 10 * maxscale, winningPlayer->psx->GetPosition().y * 10 * maxscale };
 			glm::vec2 cameraPos = camera.getPosition();
+			float scale = camera.getScale();
+			float maxscale = 5.0f;
+			int delayAmount = 200;
 
-			if (focusPos.x <= cameraPos.x - 10) {
-				cameraPos.x -= CAMERA_MOVE_AMOUNT;
+			if (gameOverStartTicks == 0) {
+				lastToDiePlayer->anim->frameDelay = 0;
+				lastToDiePlayer->anim->incrementFrame();
+
+				scale = maxscale;
+				cameraPos = { lastToDiePlayer->psx->GetPosition().x * 10 * scale, lastToDiePlayer->psx->GetPosition().y * 10 * scale };
+
+				//if player is dead on ground, and blood pool animation is playing
+				//then reduce slowdown
+				if (lastToDiePlayer->currentState == PlayerState::DEAD) {
+					if (lastToDiePlayer->anim->currentFrame >= 5) {
+						gameOverStartTicks = SDL_GetTicks();
+					}
+				}
 			}
-			else if(focusPos.x > cameraPos.x + 10){
-				cameraPos.x += CAMERA_MOVE_AMOUNT;
+			else if (ticks - gameOverStartTicks > 1000) {
+				delayAmount = 0;
+
+				entities["wintex"].pDrawable->color.a = 1.0f;
+				entities["wintex"].pAnimator->switchAnimState(0);
+
+				scale = camera.getScale();
+				if (scale < maxscale) {
+					scale += 0.1f;
+				}
+
+				glm::vec2 focusPos = { winningPlayer->psx->GetPosition().x * 10 * maxscale, winningPlayer->psx->GetPosition().y * 10 * maxscale };
+				cameraPos = camera.getPosition();
+
+				if (focusPos.x < cameraPos.x - CAMERA_MOVE_AMOUNT) {
+					cameraPos.x -= CAMERA_MOVE_AMOUNT;
+				}
+				else if (focusPos.x > cameraPos.x + CAMERA_MOVE_AMOUNT) {
+					cameraPos.x += CAMERA_MOVE_AMOUNT;
+				}
+
+				if (focusPos.y < cameraPos.y - CAMERA_MOVE_AMOUNT) {
+					cameraPos.y -= CAMERA_MOVE_AMOUNT;
+				}
+				else if (focusPos.y > cameraPos.y + CAMERA_MOVE_AMOUNT) {
+					cameraPos.y += CAMERA_MOVE_AMOUNT;
+				}
 			}
 
-			if (focusPos.y <= cameraPos.y - 10) {
-				cameraPos.y -= CAMERA_MOVE_AMOUNT;
-			}
-			else if(focusPos.y > cameraPos.y + 10) {
-				cameraPos.y += CAMERA_MOVE_AMOUNT;
-			}
+			if(ticks - gameOverStartTicks > 2000)
+				entities["wintex"].pAnimator->switchAnimState(1);
+			
+			printf("Cam pos: %f, %f scale: %f", cameraPos.x, cameraPos.y, scale);
 
-			camera.setPosition(cameraPos);
+			camera.setPosition(cameraPos, true);
 			camera.setScale(scale);
 
 			entities["wintex"].position = glm::vec2(cameraPos.x / scale, cameraPos.y / scale);
 
+			SDL_Delay(delayAmount);
 		}
 
 		//setting player position so players appear in corners on first draw
@@ -658,8 +700,8 @@ public:
 		if (!gameOver && Player::deadPlayers >= numberPlayers - 1) {
 			gameOver = true;
 			pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "GameOver", 1.0f);
-			gameOverStartTicks = SDL_GetTicks();
-			entities["wintex"].pDrawable->color = glm::vec4(255, 255, 255, 1);
+			timeOnDeadPlayer = SDL_GetTicks();
+			//entities["wintex"].pDrawable->color = glm::vec4(255, 255, 255, 1);
 
 			for (int i = 0; i < numberPlayers; i++) {
 				if (players[i].focus) //last player
