@@ -61,6 +61,7 @@ enum EntityTypes {
 	BULLET = 1 << 3,
 	PLAYER_ARM = 1 << 4,
     PARTICLE = 1 << 5,
+	DEAD_ENTITY = 1 << 6
 };
 
 
@@ -244,7 +245,7 @@ namespace odin
 			bodyDef.angle = 0;
 			bodyDef.type = b2_staticBody;
 
-			auto pb = PhysicalComponent::makeRect(platform.getPhysicsDim().x*length - 1, platform.getPhysicsDim().y, pScene->b2world, bodyDef, 1.0, PLATFORM, HORSE | PLAYER | BULLET);
+			auto pb = PhysicalComponent::makeRect(platform.getPhysicsDim().x*length - 1, platform.getPhysicsDim().y, pScene->b2world, bodyDef, 1.0, PLATFORM,  PLAYER | BULLET | DEAD_ENTITY);
 			ntt.pBody = pb.pBody;
 			pb.pBody = nullptr;
 		}

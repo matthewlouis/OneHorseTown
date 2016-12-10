@@ -593,7 +593,7 @@ public:
 		boundingShape.Set({ -24, -14.5 }, { 24, -14.5 }); //floor plane
 
 		wallFilter.categoryBits = PLATFORM;
-		wallFilter.maskBits = PLAYER | HORSE | BULLET;
+		wallFilter.maskBits = PLAYER | HORSE | BULLET | DEAD;
 
         b2Body* floorBody = entities[ "floor" ].pBody = newBody( floorDef );
 

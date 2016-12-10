@@ -119,6 +119,15 @@ public:
 
 			player->soundEvent = { true, "event:/Desperado/Die" };
 
+			//changes the category of the physics component
+			//matt: don't know enough about box2d to know if there's an easier way to do this
+			//but only happens 3 times, so shouldn't be too much overhead.
+			b2Fixture* fixt = player->psx->GetFixtureList();
+			b2Filter filt = fixt->GetFilterData();
+			filt.categoryBits = DEAD_ENTITY;
+			filt.maskBits = PLATFORM;
+			fixt->SetFilterData(filt);
+
 			if (Player::deadPlayers >= 3) //if last player
 				player->focus = true;
         }
