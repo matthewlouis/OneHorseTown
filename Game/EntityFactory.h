@@ -14,13 +14,15 @@ using odin::Scene;
 // All the possible textures
 enum Textures {
 	NULL_TEXTURE,
-	PLAYER_TEXTURE,
+	PLAYER1_TEXTURE,
+	PLAYER2_TEXTURE,
+	PLAYER3_TEXTURE,
+	PLAYER4_TEXTURE,
 	ARM_TEXTURE,
 	CRATE1,
 	CRATE2,
 	GROUND1,
-	GROUND2,
-	HORSE_TEXTURE,
+	BARREL,
 	BACKGROUND,
 	TITLE,
 	PRESS_BUTTON,
@@ -98,7 +100,22 @@ namespace odin
 			ntt.setBase(typename T::EntityPlayerType{ playerNum, pScene });
 
 			ntt.pDrawable = pScene->newGraphics(GraphicalComponent::makeRect(playerDim.x, playerDim.y));
-			ntt.pDrawable->texture = PLAYER;
+
+			//assign different color spritesheet for each player
+			switch (playerNum) {
+			case 0:
+				ntt.pDrawable->texture = PLAYER1_TEXTURE;
+				break;
+			case 1:
+				ntt.pDrawable->texture = PLAYER2_TEXTURE;
+				break;
+			case 2:
+				ntt.pDrawable->texture = PLAYER3_TEXTURE;
+				break;
+			case 3:
+				ntt.pDrawable->texture = PLAYER4_TEXTURE;
+				break;
+			}
 
 			decltype(auto) nttarm = pScene->entities[{ "playes", playerNum }];
 

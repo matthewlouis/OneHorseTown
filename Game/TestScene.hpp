@@ -454,11 +454,13 @@ public:
 
         odin::load_texture< GLubyte[4] >( NULL_TEXTURE, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF } );
 		odin::load_texture(GROUND1, "Textures/ground.png");
-		odin::load_texture(GROUND2, "Textures/ground2.png");
-		odin::load_texture(PLAYER_TEXTURE, "Textures/CowboySS.png");
+		odin::load_texture(BARREL, "Textures/barrel.png");
+		odin::load_texture(PLAYER1_TEXTURE, "Textures/CowboySS.png");
+		odin::load_texture(PLAYER2_TEXTURE, "Textures/cowboy_r.png");
+		odin::load_texture(PLAYER3_TEXTURE, "Textures/cowboy_g.png");
+		odin::load_texture(PLAYER4_TEXTURE, "Textures/cowboy_b.png");
 		odin::load_texture(ARM_TEXTURE, "Textures/ArmSS.png");
 		odin::load_texture(BACKGROUND, "Textures/background.png");
-		odin::load_texture(HORSE_TEXTURE, "Textures/horse_dense.png");
 		odin::load_texture(BULLET_TEXTURE, "Textures/bullet.png");
 		odin::load_texture(WIN_TEXTURE, "Textures/win.png");
 		odin::load_texture(READY_TEXTURE, "Textures/readytext.png");
@@ -568,21 +570,21 @@ public:
 		odin::make_platform(this, "plat13", 3, { -240, -90 }); // left mid upper
 		odin::make_platform(this, "plat14", 3, { 192, -90 }); // right mid upper
 
-		odin::make_platform(this, "barr01", 1, { -72, -128 },GROUND2); // barrel stack bottom left
-		odin::make_platform(this, "barr02", 1, { -64, -112 }, GROUND2); // barrel
-		odin::make_platform(this, "barr03", 1, { -56, -128 }, GROUND2); // barrel
+		odin::make_platform(this, "barr01", 1, { -72, -128 },BARREL); // barrel stack bottom left
+		odin::make_platform(this, "barr02", 1, { -64, -112 }, BARREL); // barrel
+		odin::make_platform(this, "barr03", 1, { -56, -128 }, BARREL); // barrel
 		 
-		odin::make_platform(this, "barr04", 1, { 56, -128 }, GROUND2); // barrel stack bottom right
-		odin::make_platform(this, "barr05", 1, { 48, -112 }, GROUND2); // barrel
-		odin::make_platform(this, "barr06", 1, { 40, -128 }, GROUND2); // barrel
+		odin::make_platform(this, "barr04", 1, { 56, -128 }, BARREL); // barrel stack bottom right
+		odin::make_platform(this, "barr05", 1, { 48, -112 }, BARREL); // barrel
+		odin::make_platform(this, "barr06", 1, { 40, -128 }, BARREL); // barrel
 
-		odin::make_platform(this, "barr07", 1, {-16, 84 }, GROUND2); // barrel stack top center
-		odin::make_platform(this, "barr08", 1, { -8, 116  }, GROUND2); // barrel top
-		odin::make_platform(this, "barr09", 1, { -16, 100 }, GROUND2); // barrel mid row
-		odin::make_platform(this, "barr10", 1, { 0, 100 }, GROUND2); // barrel
-		odin::make_platform(this, "barr11", 1, { -8, 84 }, GROUND2); // barrel bottom row
-		odin::make_platform(this, "barr12", 1, { 8, 84 }, GROUND2); // barrel
-		odin::make_platform(this, "barr13", 1, { -24, 84 }, GROUND2); // barrel
+		odin::make_platform(this, "barr07", 1, {-16, 84 }, BARREL); // barrel stack top center
+		odin::make_platform(this, "barr08", 1, { -8, 116  }, BARREL); // barrel top
+		odin::make_platform(this, "barr09", 1, { -16, 100 }, BARREL); // barrel mid row
+		odin::make_platform(this, "barr10", 1, { 0, 100 }, BARREL); // barrel
+		odin::make_platform(this, "barr11", 1, { -8, 84 }, BARREL); // barrel bottom row
+		odin::make_platform(this, "barr12", 1, { 8, 84 }, BARREL); // barrel
+		odin::make_platform(this, "barr13", 1, { -24, 84 }, BARREL); // barrel
 
 		// Set the physics bounds for the left,right wall and floor surfaces
 		b2BodyDef floorDef;
