@@ -136,6 +136,7 @@ public:
         auto bodyA = contact->GetFixtureA()->GetBody();
         auto bodyB = contact->GetFixtureB()->GetBody();
 
+
 		if (bodyA->IsBullet())
         {
 			/*

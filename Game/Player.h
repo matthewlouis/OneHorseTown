@@ -252,7 +252,7 @@ public:
 				}
 				break;
 			case HIT:
-				if (falling && vel.y <= FALL_THRESHOLD && vel.y >= -FALL_THRESHOLD) {
+				if (falling && vel.y == 0) {
 					falling = false;
 					currentState = DEAD;
 					anim->switchAnimState(DEAD);
@@ -260,7 +260,7 @@ public:
 					anim->play = true;
 				}
 
-			   if (!falling && anim->currentFrame == 1) { //if done playing
+			   if (!falling && vel.y == 0 && anim->currentFrame == 1) { //if done playing
 					currentState = DEAD;
 					anim->switchAnimState(DEAD);
 					anim->loop = false;
