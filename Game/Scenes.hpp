@@ -541,13 +541,15 @@ public:
 				lastToDiePlayer->anim->frameDelay = 0;
 				lastToDiePlayer->anim->incrementFrame();
 
-				scale = 5.0f;
+				scale = maxscale;
 				cameraPos = { lastToDiePlayer->psx->GetPosition().x * 10 * scale, lastToDiePlayer->psx->GetPosition().y * 10 * scale };
-				printf("x %f y %f", cameraPos.x, cameraPos.y);
 
-
-				if (lastToDiePlayer->currentState == PlayerState::DEAD && lastToDiePlayer->anim->currentFrame >= 6) {
-					gameOverStartTicks = SDL_GetTicks();
+				//if player is dead on ground, and blood pool animation is playing
+				//then reduce slowdown
+				if (lastToDiePlayer->currentState == PlayerState::DEAD) {
+					if (lastToDiePlayer->anim->currentFrame >= 5) {
+						gameOverStartTicks = SDL_GetTicks();
+					}
 				}
 			}
 			else if (ticks - gameOverStartTicks > 1000) {
@@ -582,8 +584,9 @@ public:
 			if(ticks - gameOverStartTicks > 2000)
 				entities["wintex"].pAnimator->switchAnimState(1);
 			
+			printf("Cam pos: %f, %f scale: %f", cameraPos.x, cameraPos.y, scale);
 
-			camera.setPosition(cameraPos);
+			camera.setPosition(cameraPos, true);
 			camera.setScale(scale);
 
 			entities["wintex"].position = glm::vec2(cameraPos.x / scale, cameraPos.y / scale);

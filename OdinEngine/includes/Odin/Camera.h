@@ -17,7 +17,12 @@ namespace odin {
 
 		void update();
 
-		void setPosition(const glm::vec2& newPosition) { _position = newPosition; _requiresMatrixUpdate = true; }
+		void setPosition(const glm::vec2& newPosition, bool updateOriginalPos = false ) { 
+			_position = newPosition; 
+			_requiresMatrixUpdate = true; 
+			if (updateOriginalPos)
+				_origPosition = newPosition;
+		}
 		void setScale(float newScale) { _scale = newScale; _requiresMatrixUpdate = true; }
 
 		glm::vec2 getPosition() { return _position; }
