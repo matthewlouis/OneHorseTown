@@ -122,11 +122,10 @@ public:
 			//changes the category of the physics component
 			//matt: don't know enough about box2d to know if there's an easier way to do this
 			//but only happens 3 times, so shouldn't be too much overhead.
-			b2Fixture* fixt = player->psx->GetFixtureList();
-			b2Filter filt = fixt->GetFilterData();
-			filt.categoryBits = DEAD_ENTITY;
-			filt.maskBits = PLATFORM;
-			fixt->SetFilterData(filt);
+			b2Filter filter = b2Filter();
+			filter.categoryBits = DEAD_ENTITY;
+			filter.maskBits = PLATFORM;
+			player->psx->GetFixtureList()->SetFilterData(filter);
 
 			if (Player::deadPlayers >= 3) //if last player
 				player->focus = true;
@@ -707,21 +706,12 @@ public:
 
 
 		if (!gameOver && Player::deadPlayers >= numberPlayers - 1) {
-			gameOver = true;
-			pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "GameOver", 1.0f);
-			timeOnDeadPlayer = SDL_GetTicks();
-			//entities["wintex"].pDrawable->color = glm::vec4(255, 255, 255, 1);
-
-			for (int i = 0; i < numberPlayers; i++) {
-				if (players[i].focus) //last player
-					lastToDiePlayer = &players[i];
-
-				if (players[i].alive) {
-					winningPlayer = &players[i];
-					printf("\n****GAME OVER and Player %d won!", i + 1);
-				}
+			Player::deadPlayers = 0;
+			for each (Player& p in players)
+			{
+				p.respawn();
 			}
-
+			//gameOverSequence();
 		}
 
 		energyLevel = Player::deadPlayers * 0.4f;
@@ -732,6 +722,23 @@ public:
 
     }
 
+
+	void gameOverSequence() {
+		gameOver = true;
+		pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "GameOver", 1.0f);
+		timeOnDeadPlayer = SDL_GetTicks();
+		//entities["wintex"].pDrawable->color = glm::vec4(255, 255, 255, 1);
+
+		for (int i = 0; i < numberPlayers; i++) {
+			if (players[i].focus) //last player
+				lastToDiePlayer = &players[i];
+
+			if (players[i].alive) {
+				winningPlayer = &players[i];
+				printf("\n****GAME OVER and Player %d won!", i + 1);
+			}
+		}
+	}
 
 	//silhouettes a sprite using c++
 	glm::vec4 inline silhouetteCPP(const glm::vec4* color, bool interactive, float* silhouette) {

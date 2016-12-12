@@ -5,6 +5,7 @@
 #include <Odin\AnimatorComponent.hpp>
 #include <Odin\PhysicalComponent.hpp>
 #include <glm\glm.hpp>
+#include "EntityFactory.h"
 
 using odin::Entity;
 using odin::EntityId;
@@ -45,6 +46,12 @@ public:
 	bool shooting = false;
 	bool aiming = false;
 	int doubleJump = 0;
+
+	// respawn timer
+	int respawning = -1;
+
+	// Spawn point
+	b2Vec2 spawnPoint;
 
 	//TODO: keeping track of ammunition
 	int bulletCount = 3;
@@ -95,6 +102,8 @@ public:
 		armOffsets[2] = Vec2(0.75, 0.475);
 		armOffsets[3] = Vec2(0.6, 0.275);
 		armOffsets[4] = Vec2(0.25, 0.05);
+
+		spawnPoint = psx->GetPosition();
 
 		active = true;
 	}
@@ -176,6 +185,14 @@ public:
 	void update() {
 		if (!active)
 			return;
+
+		if (respawning > 0) {
+			--respawning;
+		}
+		else if (respawning == 0) {
+			--respawning;
+			respawn();
+		}
 
 		//Determine Player state
 		Vec2 vel = psx->GetLinearVelocity();
@@ -304,6 +321,23 @@ public:
 	void countKill() {
 		killCount++;
 		Player::deadPlayers++;
+	}
+
+	void respawn() {
+		if (alive)
+			return;
+		
+		currentState = IDLE;
+		anim->switchAnimState(IDLE);
+		active = true;
+		alive = true;
+
+		b2Filter filter = b2Filter();
+		filter.categoryBits = PLAYER;
+		filter.maskBits = PLATFORM | BULLET | PLAYER;
+		psx->GetFixtureList()->SetFilterData(filter);
+
+		psx->SetTransform(spawnPoint, 0);
 	}
 
 };
