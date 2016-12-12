@@ -7,6 +7,7 @@
 #include "Scenes.hpp"
 
 #include <functional>
+#include <future>
 
 #include "OpenCLKernel.h"
 
@@ -99,34 +100,79 @@ public:
         particles.reserve( 50 );
     }
 
-    Particle* emitt()
+    ParticleEmitter( const ParticleEmitter& copy ) = delete;
+    ParticleEmitter& operator =( const ParticleEmitter& copy ) = delete;
+
+    ParticleEmitter( ParticleEmitter&& move )
+        : active( move.active )
+        , position( move.position )
+        , spawnRate( move.spawnRate )
+        , velocityMagnitude( move.velocityMagnitude )
+        , velocityMagnitudeVariance( move.velocityMagnitudeVariance )
+        , velocityAngle( move.velocityAngle )
+        , velocityAngleVariance( move.velocityAngleVariance )
+        , lifetime( move.lifetime )
+        , lifetimeVariance( move.lifetimeVariance )
+        , color( move.color )
+        , colorVariance( move.colorVariance )
+        , particles( std::move( move.particles ) )
+        , fnUpdate( std::move( move.fnUpdate ) )
     {
-        float length = apply_variance( velocityMagnitude, velocityMagnitudeVariance );
-        float angle = apply_variance( velocityAngle, velocityAngleVariance );
+    }
 
-        glm::vec2 vel = {
-            length * glm::cos( angle ),
-            length * glm::sin( angle )
-        };
+    ParticleEmitter& operator =( ParticleEmitter&& move )
+    {
+        active = move.active;
+        position = move.position;
+        spawnRate = move.spawnRate;
+        velocityMagnitude = move.velocityMagnitude;
+        velocityMagnitudeVariance = move.velocityMagnitudeVariance;
+        velocityAngle = move.velocityAngle;
+        velocityAngleVariance = move.velocityAngleVariance;
+        lifetime = move.lifetime;
+        lifetimeVariance = move.lifetimeVariance;
+        color = move.color;
+        colorVariance = move.colorVariance;
+        particles = std::move( move.particles );
+        fnUpdate = std::move( move.fnUpdate );
+        return *this;
+    }
 
-        Particle particle(
+    ~ParticleEmitter() = default;
+
+    Particle* emitt( int n = 1 )
+    {
+        if ( n < 1 )
+            return nullptr;
+
+        particles.reserve( particles.size() + n );
+        size_t first = particles.size();
+
+        while ( n-- > 0 )
+        {
+            float length = apply_variance( velocityMagnitude, velocityMagnitudeVariance );
+            float angle = apply_variance( velocityAngle, velocityAngleVariance );
+
+            glm::vec2 vel = {
+                length * glm::cos( angle ),
+                length * glm::sin( angle )
+            };
+
+            particles.push_back( Particle(
             apply_variance( lifetime, lifetimeVariance ),
             apply_variance( color, colorVariance ),
-            position, vel );
+                position, vel ) );
+        }
 
-        particles.push_back( particle );
-
-        return &particles.back();
+        return &particles[ first ];
     }
 
     void spawn( float timeStep )
     {
         float numToEmitt = std::rand() / float( RAND_MAX );
         numToEmitt *= spawnRate * timeStep * 10;
-        numToEmitt = glm::round( numToEmitt );
 
-        while ( numToEmitt-- > 0 )
-            emitt();
+        emitt( (int) glm::round( numToEmitt ) );
     }
 
     void update( float timeStep )
@@ -219,43 +265,73 @@ class TestScene
 {
 public:
 
-	EntityFactory* factory;
+    class EntityPlayerType
+        : public EntityPlayer
+    {
+    public:
 
-	//EntityView* players;
-	//EntityView* player_arms;
-	int numberPlayers;
+        TestScene* pScene;
 
-	float _scale;
+        EntityPlayerType( int index = -1, TestScene* scene = 0 )
+            : EntityPlayer( index )
+            , pScene( scene )
+        {
+        }
+
+        //void onDestroy( Entity2& ntt ) override
+        //{
+        //    EntityPlayer::onDestroy( ntt );
+        //    if ( pScene != nullptr )
+        //        pScene->_spawnParticle( ntt.position );
+        //}
+
+        void onEvent( int e ) override
+        {
+            EntityPlayer::onEvent( e );
+            if ( e == 1 && player )
+            {
+                player->alive = false;
+                EntityId eid { "player", (uint16_t) playerIndex };
+                pScene->_spawnParticle( pScene->entities[ eid ].position );
+            }
+        }
+    };
 
     std::vector< ParticleEmitter > emitters;
 
-    OpenCLKernel< Particle*, float > updater;
+    OpenCLKernel< Particle*, float > updater0;
+    //OpenCLKernel< Particle*, float > updater1;
+    //OpenCLKernel< Particle*, float > updater2;
+    //OpenCLKernel< Particle*, float > updater3;
 
-	TestScene( int width, int height, float scale, int numberPlayers = 1 )
-		: LevelScene( width, height, "Audio/Banks/MasterBank" )
-        , factory( EntityFactory::instance() )
-        , numberPlayers( numberPlayers )
-		, _scale( scale )
-        , updater( "ParticleSystem.cl" )
+    std::array< int, MAX_PLAYERS > controllerRedirect;
+
+	TestScene( int width, int height,
+               std::array< int, MAX_PLAYERS > playerDat )
+		: LevelScene( width, height, "Audio/Banks/MasterBank",
+                      MAX_PLAYERS - std::count(
+                          begin( playerDat ),
+                          end( playerDat ),
+                          -1 ) )
+        , updater0( "ParticleSystem.cl" )
+        //, updater1( "ParticleSystem.cl" )
+        //, updater2( "ParticleSystem.cl" )
+        //, updater3( "ParticleSystem.cl" )
+        , controllerRedirect( playerDat )
 	{
-        srand((unsigned)time(NULL));
-        //players = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
-        //player_arms = (EntityView*)malloc(sizeof(EntityView) * numberPlayers);
 	}
-
-    #define PARTICLE_TAG "playez"
 
     void _spawnParticle( Vec2 position )
 	{
         ParticleEmitter emitter( position );
         emitter.active = false;
         //emitter.spawnRate = 10;
-        emitter.color = { 0.8, 0, 0, 1 };
-        emitter.colorVariance = { 0.1, 0, 0, 0 };
-        emitter.lifetime = 3;
-        emitter.lifetimeVariance = 0.3;
-        emitter.velocityMagnitude = 40;
-        emitter.velocityMagnitudeVariance = 30;
+        emitter.color = { 0.8, 0, 0, 0.9 };
+        emitter.colorVariance = { 0.1, 0, 0, 0.1 };
+        emitter.lifetime = 2.5;
+        emitter.lifetimeVariance = 1;
+        emitter.velocityMagnitude = 60;
+        emitter.velocityMagnitudeVariance = 55;
         emitter.velocityAngle = 0;
         emitter.velocityAngleVariance = glm::pi< float >();
 
@@ -263,40 +339,74 @@ public:
             p.color.w -= timeStep / 3;
         };
 
-        for ( size_t i = 0; i < 50; ++i )
-            emitter.emitt();
+        emitter.emitt( 500 );
 
-        emitters.push_back( emitter );
+        emitters.push_back( std::move( emitter ) );
 	}
+
+	void exit(unsigned ticks) override {
+		LevelScene::exit(ticks);
+		gameOver = false;
+		Player::deadPlayers = 0;
+		pAudioEngine->stopAllEvents();
+	}
+
+    //void updateEmitter( OpenCLKernel< Particle*, float >& updater, ParticleEmitter& em, float t )
+    //{
+    //    updater.globalWorkSize[ 0 ] = em.particles.size();
+    //    updater( em.particles, t );
+    //    em.update2( t );
+    //}
 
     void update( unsigned ticks )
     {
         LevelScene::update( ticks );
 
-        //iterate through all the arms and place them relative to the player using offsets
-        /*for (int i = 0; i < numberPlayers; ++i) {
+        /*for ( int i = 0; i < emitters.size(); i += 4 )
+        {
+            int chunk_size = emitters.size() - i;
 
-            if ( !entities.search( players[ i ] ) )
-                continue;
+            std::thread* threads[ 4 ];
 
-            Vec2 armPosition = entities[ players[i] ].pBody->GetPosition();
+            switch ( chunk_size )
+            {
+            default: threads[ 3 ] = new std::thread( [this, i]() {
+                updateEmitter( updater3, emitters[ i + 3 ], Scene::ticksDiff / 1000.f );
+            } );
+            case 3: threads[ 2 ] = new std::thread( [this, i]() {
+                updateEmitter( updater2, emitters[ i + 2 ], Scene::ticksDiff / 1000.f );
+            } );
+            case 2: threads[ 1 ] = new std::thread( [this, i]() {
+                updateEmitter( updater1, emitters[ i + 1 ], Scene::ticksDiff / 1000.f );
+            } );
+            case 1: threads[ 0 ] = new std::thread( [this, i]() {
+                updateEmitter( updater0, emitters[ i + 0 ], Scene::ticksDiff / 1000.f );
+            } );
+            }
 
-            //current state determines the arm offset
-            int currentState = entities[ player_arms[i] ].pAnimator->animState;
-
-            armPosition.y += armOffsets[currentState].y;
-            armPosition.x += entities[ players[i] ].pDrawable->direction * armOffsets[currentState].x;
-
-            entities[ player_arms[i] ].pBody->SetTransform(armPosition, 0);
+            for ( int i = 0; i < std::min( chunk_size - 1, 4 ); ++i )
+            {
+                threads[ i ]->join();
+                delete threads[ i ];
+            }
         }*/
 
+        std::vector< std::future< void > > futures;
+        futures.reserve( emitters.size() );
+
+        float tDiff = Scene::ticksDiff / 1000.f;
         for ( auto& em : emitters )
         {
-            //updater.globalWorkSize[ 0 ] = em.particles.size();
-            //updater( em.particles, Scene::ticksDiff / 1000.f );
-            //em.update2( Scene::ticksDiff / 1000.f );
-            em.update( Scene::ticksDiff / 1000.f );
+            futures.push_back( std::async( [&] { em.update( tDiff ); } ) );
+            //updater0.settings.globalWorkSize[ 0 ] = em.particles.size();
+            //futures.push_back( updater0( em.particles, tDiff ) );
         }
+
+        for ( auto& fut : futures )
+            fut.get();
+
+        //for ( auto& em : emitters )
+        //    em.update2( tDiff );
         
         auto itr = std::remove_if( emitters.begin(), emitters.end(),
             []( const ParticleEmitter& em ) {
@@ -329,6 +439,9 @@ public:
         {
             for ( Particle& p : emitter.particles )
             {
+                if ( p.isExpired() )
+                    continue;
+
                 mat4 mtx = camera.getCameraMatrix()
                     * translate( {}, vec3( p.position.x, p.position.y, 0 ) );
 
@@ -343,10 +456,6 @@ public:
     {
         LevelScene::init( ticks );
 
-        _contactListener.func = [this]( Entity2* ntt ) {
-            _spawnParticle( ntt->position );
-        };
-
         odin::load_texture< GLubyte[4] >( NULL_TEXTURE, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF } );
 		odin::load_texture(GROUND1, "Textures/ground.png");
 		odin::load_texture(GROUND2, "Textures/ground2.png");
@@ -355,10 +464,19 @@ public:
 		odin::load_texture(BACKGROUND, "Textures/background.png");
 		odin::load_texture(HORSE_TEXTURE, "Textures/horse_dense.png");
 		odin::load_texture(BULLET_TEXTURE, "Textures/bullet.png");
+		odin::load_texture(WIN_TEXTURE, "Textures/win.png");
+		odin::load_texture(READY_TEXTURE, "Textures/readytext.png");
 
-        decltype(auto) bg = entities[ EntityId( 0 ) ];
+		//background animation
+		odin::load_texture(BACKGROUND_ANIM, "Textures/sunrisebg.png");
+
+        Entity2& bg = entities[ EntityId( 0 ) ];
         bg.pDrawable = newGraphics( GraphicalComponent::makeRect( width, height ) );
-		bg.pDrawable->texture = BACKGROUND;
+		bg.pDrawable->texture = BACKGROUND_ANIM;
+		bg.pDrawable->interactive = false;
+		bg.pAnimator = newAnimator(AnimatorComponent({ 9 }));
+		bg.pAnimator->loop = false;
+		bg.pAnimator->currentFrame = 0;
 
         listeners.push_back( [this]( const InputManager& inmn ) {
             if ( inmn.wasKeyPressed( SDLK_BACKSPACE ) )
@@ -389,44 +507,99 @@ public:
 				camera.shake();
 		});
 
+
+		/*
+		* Create Players. EntitityPlayers need to be updated to store player information so collision
+		* resolution can use the data.
+		*/
 		// create player 1
-        odin::make_player( this, {"player", 0}, {0, -2}, 0 );
-        listeners.push_back( [this]( const InputManager& inmn ) {
-            return player_input( inmn, {"player", 0}, 0 );
-        } );
-		//players[0] = EntityView({ "player", 0 }, this);
+
+        Vec2 startingPositions[] {
+            { -22, 11.4f },
+            { 22, 11.4f },
+            { 22, -12 },
+            { -22, -12 }
+        };
+
+        int i = 0;
+        for ( int pno : controllerRedirect )
+        {
+            if ( pno != -1 )
+            {
+                uint16_t pidx = pno;
+                odin::make_player( this, {"player", pidx}, startingPositions[ i ], pidx );
+                EntityPlayer* ep = (EntityPlayer*) entities[ {"player", pidx} ].base();
+                ep->player = &players[ pidx ];
+                listeners.push_back( [this, pidx]( const InputManager& inmn ) {
+                    return player_input( inmn, {"player", pidx}, pidx );
+                } );
+            }
+            ++i;
+        }
+
+  //      if ( controllerRedirect[ 0 ] != -1 )
+  //      {
+  //          uint16_t cidx = controllerRedirect[ 0 ];
+
+  //      odin::make_player( this, {"player", cidx}, {-22, 11.4f}, cidx );
+		//EntityPlayer * ep1 = (EntityPlayer *) entities[{"player", cidx}].base();
+		//ep1->player = &players[cidx];
+  //      listeners.push_back( [this, cidx]( const InputManager& inmn ) {
+  //          return player_input( inmn, {"player", cidx}, cidx );
+  //      } );
+  //      }
+		////players[0] = EntityView({ "player", 0 }, this);
 
 
-		// create player 2
-		odin::make_player(this, { "player", 1 }, { 0, -2 },1);
-		listeners.push_back([this](const InputManager& inmn) {
-			return player_input(inmn, { "player", 1 }, 1);
-		});
+		//// create player 2
+  //      if ( controllerRedirect[ 1 ] != -1 )
+  //      {
+  //          uint16_t cidx = controllerRedirect[ 1 ];
+		//odin::make_player(this, { "player", cidx }, { 22, 11.4f },cidx);
+		//EntityPlayer * ep2 = (EntityPlayer *)entities[{ "player", cidx }].base();
+	 //   ep2->player = &players[cidx];
+		//listeners.push_back([this, cidx](const InputManager& inmn) {
+		//	return player_input(inmn, { "player", cidx }, cidx);
+		//});
+  //      }
 
-		//players[1] = EntityView({ "player", 1 }, this);
-		// create player 3
-		odin::make_player(this, { "player", 2 }, { 0, -2 }, 2);
-		listeners.push_back([this](const InputManager& inmn) {
-			return player_input(inmn, { "player", 2 }, 2);
-		});
-		//players[2] = EntityView({ "player", 2 }, this);
+		////players[1] = EntityView({ "player", 1 }, this);
+		//// create player 3
+  //      if ( controllerRedirect[ 2 ] != -1 )
+  //      {
+  //          uint16_t cidx = controllerRedirect[ 2 ];
+		//odin::make_player(this, { "player", cidx }, { 22, -12 }, cidx);
+		//EntityPlayer * ep3 = (EntityPlayer *)entities[{ "player", cidx }].base();
+		//ep3->player = &players[cidx];
+		//listeners.push_back([this, cidx](const InputManager& inmn) {
+		//	return player_input(inmn, { "player", cidx }, cidx);
+		//});
+  //      }
+		////players[2] = EntityView({ "player", 2 }, this);
 
-		// create player 4
-		odin::make_player(this, { "player", 3 }, { 0, -2 }, 3);
-		listeners.push_back([this](const InputManager& inmn) {
-			return player_input(inmn, { "player", 3 }, 3);
-		});
+		//// create player 4
+  //      if ( controllerRedirect[ 3 ] != -1 )
+  //      {
+  //          uint16_t cidx = controllerRedirect[ 3 ];
+		//odin::make_player(this, { "player", cidx }, { -22, -12 }, cidx);
+		//EntityPlayer * ep4 = (EntityPlayer *)entities[{ "player", cidx }].base();
+		//ep4->player = &players[cidx];
+		//listeners.push_back([this, cidx](const InputManager& inmn) {
+		//	return player_input(inmn, { "player", cidx }, cidx);
+		//});
+  //      }
 		//players[3] = EntityView({ "player", 3 }, this);
 
         //odin::make_horse( this, "horse", {0.0f, 5.f} );
 
+
 		//Setup level
 		odin::make_platform(this, "plat01", 30, {-240 ,-144}); // bottom floor
-		odin::make_platform(this, "plat02", 6, { -48,-90 }); // center lower platform
+		//odin::make_platform(this, "plat02", 6, { -48,-90 }); // center lower platform
 		odin::make_platform(this, "plat03", 4, { -32,-40 }); // center mid-lower platform
 
 		odin::make_platform(this, "plat04", 6, { -240,90 }); // left upper
-		odin::make_platform(this, "plat05", 6, { 160,90}); // right upper
+		odin::make_platform(this, "plat05", 6, { 144,90}); // right upper
 		odin::make_platform(this, "plat06", 6, { -48,68 }); // center upper
 
 		odin::make_platform(this, "plat07", 3, { -148,-60 }); // right center
@@ -436,6 +609,25 @@ public:
 
 		odin::make_platform(this, "plat11", 4, { -240, -20 }); // left mid upper
 		odin::make_platform(this, "plat12", 4, { 176, -20 }); // right mid upper
+
+		odin::make_platform(this, "plat13", 3, { -240, -90 }); // left mid upper
+		odin::make_platform(this, "plat14", 3, { 192, -90 }); // right mid upper
+
+		odin::make_platform(this, "barr01", 1, { -72, -128 },GROUND2); // barrel stack bottom left
+		odin::make_platform(this, "barr02", 1, { -64, -112 }, GROUND2); // barrel
+		odin::make_platform(this, "barr03", 1, { -56, -128 }, GROUND2); // barrel
+		 
+		odin::make_platform(this, "barr04", 1, { 56, -128 }, GROUND2); // barrel stack bottom right
+		odin::make_platform(this, "barr05", 1, { 48, -112 }, GROUND2); // barrel
+		odin::make_platform(this, "barr06", 1, { 40, -128 }, GROUND2); // barrel
+
+		odin::make_platform(this, "barr07", 1, {-16, 84 }, GROUND2); // barrel stack top center
+		odin::make_platform(this, "barr08", 1, { -8, 116  }, GROUND2); // barrel top
+		odin::make_platform(this, "barr09", 1, { -16, 100 }, GROUND2); // barrel mid row
+		odin::make_platform(this, "barr10", 1, { 0, 100 }, GROUND2); // barrel
+		odin::make_platform(this, "barr11", 1, { -8, 84 }, GROUND2); // barrel bottom row
+		odin::make_platform(this, "barr12", 1, { 8, 84 }, GROUND2); // barrel
+		odin::make_platform(this, "barr13", 1, { -24, 84 }, GROUND2); // barrel
 
 		// Set the physics bounds for the left,right wall and floor surfaces
 		b2BodyDef floorDef;
@@ -475,13 +667,18 @@ public:
 		fix->SetFriction(odin::PhysicalComponent::DEFAULT_FRICTION);
 		fix->SetFilterData(wallFilter);
 
-
 		//load common events and play music
 		pAudioEngine->loadEvent("event:/Music/EnergeticTheme");
 		pAudioEngine->loadEvent("event:/Desperado/Shoot");
+		pAudioEngine->loadEvent("event:/Desperado/Die");
+		pAudioEngine->loadEvent("event:/Desperado/Ready");
+		pAudioEngine->loadEvent("event:/Desperado/Draw");
 
 		pAudioEngine->playEvent("event:/Music/EnergeticTheme");
-        pAudioEngine->toggleMute(); //mute audio
+		pAudioEngine->playEvent("event:/Desperado/Ready");
+        #ifdef _DEBUG
+        //pAudioEngine->toggleMute(); //mute audio
+        #endif
 	}
 
 };

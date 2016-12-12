@@ -6,6 +6,9 @@
     </ClCompile>
     <ClCompile Include="EntityFactory.cpp" />
     <ClCompile Include="ContextAllocator.cpp" />
+    <ClCompile Include="Player.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Constants.h">
@@ -22,7 +25,9 @@
     <ClInclude Include="Memory.h" />
     <ClInclude Include="OpenCLKernel.h" />
     <ClInclude Include="TypedAllocator.hpp" />
-    <ClInclude Include="Player.hpp" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="TitleScene.hpp" />
+    <ClInclude Include="LobbyScene.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Game.rc" />

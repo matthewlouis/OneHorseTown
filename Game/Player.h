@@ -11,7 +11,7 @@ using odin::EntityId;
 using odin::GraphicalComponent;
 using odin::PhysicalComponent;
 using odin::AnimatorComponent;
-using odin::Scene;
+//using odin::Scene;
 
 enum PlayerState {
 	IDLE = 0,
@@ -26,12 +26,14 @@ enum PlayerState {
 
 class Player {
 public:
+	static int deadPlayers;
 	const float FALL_THRESHOLD = 0.1f;
 	//arm
 	GraphicalComponent* arm_gfx;
 	AnimatorComponent* arm_anim;
     b2Body* arm_psx;
 	Vec2 armOffsets[5];
+	int delay = 0; // Arm lowering delay
 
 	//player
 	GraphicalComponent* gfx;
@@ -42,9 +44,27 @@ public:
 	bool falling = false;
 	bool shooting = false;
 	bool aiming = false;
+	int doubleJump = 0;
 
 	//TODO: keeping track of ammunition
 	int bulletCount = 3;
+	int killCount = 0;
+	int lives = 3;
+	bool alive = true;
+	
+	struct SoundEvent {
+		bool playEvent = false;
+		std::string event = "";
+
+		SoundEvent() {
+			playEvent = false;
+			this->event = "";
+		}
+
+		SoundEvent(bool playEvent, std::string event) :
+			playEvent(playEvent),
+			event(event) {}
+	}soundEvent;
 
 	bool active = false;
 
@@ -56,6 +76,7 @@ public:
                b2Body *arm_psx) {
 		if (active)
 			return;
+
 		this->gfx = gfx;
 		this->anim = anim;
 		this->arm_gfx = arm_gfx;
@@ -153,7 +174,6 @@ public:
 		if (!active)
 			return;
 
-		printf("\nAiming: %d", aiming);
 		//Determine Player state
 		Vec2 vel = psx->GetLinearVelocity();
 
@@ -194,11 +214,13 @@ public:
 					if (abs(vel.x) < FALL_THRESHOLD) {
 						anim->switchAnimState(IDLE);
 						currentState = IDLE;
+						doubleJump = 0;
 					}
 					else {
 						anim->switchAnimState(RUNNING);
 						anim->currentFrame = 4;
 						currentState = RUNNING;
+						doubleJump = 0;
 					}
 					
 					anim->loop = true;
@@ -222,8 +244,23 @@ public:
 			arm_psx->SetTransform(armPosition, 0);
 		}
 		else {
-			arm_gfx->visible = false;
+			if (delay == 0)
+				arm_gfx->visible = false;
+			else
+				delay--;
 		}
+	}
+
+	//called when player is killed
+	void died() {
+		if (--lives <= 0) {
+			alive = false;
+		}
+	}
+
+	void countKill() {
+		killCount++;
+		Player::deadPlayers++;
 	}
 
 };

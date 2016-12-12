@@ -21,3 +21,5 @@ const float SCALE = VIRTUAL_WIDTH / 2;
 enum AXIS_DIRECTION { N, NE, E, SE, S, SW, W, NW };
 
 const int MAX_PLAYERS = 4;
+
+const float CAMERA_MOVE_AMOUNT = 10.0f;

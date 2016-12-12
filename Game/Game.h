@@ -5,6 +5,7 @@
 #include "Constants.h"
 #include <Odin/SceneManager.hpp>
 #include "TestScene.hpp"
+#include "TitleScene.hpp"
 #include <Odin\AudioEngine.h>
 
 using odin::Entity;
@@ -46,16 +47,13 @@ public:
         //auto scene = new TestScene( _width, _height, SCALE * PIXEL_SIZE );
 
 		//note TestScene now takes number of players
-        auto level = new TestScene( _width / PIXEL_SIZE, _height / PIXEL_SIZE, SCALE, 4); //1 player
-        level->pInputManager = &inputManager;
-        level->pAudioEngine = &audioEngine;
-
-		auto title = new TitleScene(_width / PIXEL_SIZE, _height / PIXEL_SIZE);
+		auto title = new TitleScene( _width / PIXEL_SIZE, _height / PIXEL_SIZE, "Audio/Banks/MasterBank");
 		title->pInputManager = &inputManager;
 		title->pAudioEngine = &audioEngine;
+        title->pSceneManager = &sceneManager;
 
-        sceneManager.pushScene( level );
 		sceneManager.pushScene( title );
+        //sceneManager.pushScene( level );
 	}
 
     void tick()
@@ -72,7 +70,7 @@ public:
 
         glBindFramebuffer( GL_FRAMEBUFFER, 0 );
         glViewport( 0, 0, _width, _height );
-        glClear( GL_COLOR_BUFFER_BIT );// | GL_DEPTH_BUFFER_BIT );
+        glClear( GL_COLOR_BUFFER_BIT );
 
         if ( Scene* top = sceneManager.topScene() )
         {
@@ -84,11 +82,9 @@ public:
             glDrawBuffers( 1, &drawbuf );
 
             glBlitFramebuffer(
-            //glBlitNamedFramebuffer(
-            //    top->framebuffer.frame, 0,
                 0, 0, top->width, top->height,
                 0, 0, _width, _height,
-                GL_COLOR_BUFFER_BIT,// | GL_DEPTH_BUFFER_BIT,
+                GL_COLOR_BUFFER_BIT,
                 GL_NEAREST );
         }
 

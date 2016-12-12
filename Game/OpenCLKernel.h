@@ -14,6 +14,7 @@
 #include <fstream>
 #include <sstream>
 #include <mutex>
+#include <future>
 
 template< typename T >
 struct InArray : Array< T >
@@ -69,11 +70,22 @@ namespace detail
         const cl_device_id* devices,
         cl_uint             numDevices,
         std::string*        pFirstKernel = nullptr );
+
+    struct SettingsType
+    {
+        int    workDim = -1; // Negative workDim means pass NULL as localWorkSize.
+        size_t globalWorkSize[ 3 ] = { 1, 1, 1 };
+        size_t localWorkSize[ 3 ] = { 1, 1, 1 };
+    };
 }
 
 template< typename... Args >
 class OpenCLKernel
 {
+public:
+
+    detail::SettingsType settings;
+
 private:
 
     static constexpr size_t NUM_ARGS = sizeof...( Args );
@@ -136,20 +148,14 @@ public:
     }
 
     OpenCLKernel( const OpenCLKernel& copy )
-        : _numDevices( copy._numDevices )
+        : settings( copy.settings )
+        , _numDevices( copy._numDevices )
         , _context( clRetainContext( copy._context ) )
         , _program( clRetainProgram( copy._program ) )
         , _kernel( clCloneKernel( copy._kernel ) )
-        , workDim( copy.workDim )
     {
         for ( size_t i = 0; i < _numDevices; ++i )
             _queues[ i ] = clRetainCommandQueue( copy._queues[ i ] );
-
-        for ( int i = 0; i < 3; ++i )
-        {
-            globalWorkSize[ i ] = copy.globalWorkSize[ i ];
-            localWorkSize[ i ] = copy.localWorkSize[ i ];
-        }
     }
 
     ~OpenCLKernel()
@@ -167,38 +173,49 @@ public:
 
     #pragma endregion
 
-    int    workDim = -1; // Negative workDim means pass NULL as localWorkSize.
-    size_t globalWorkSize[ 3 ] = { 1, 1, 1 };
-    size_t localWorkSize[ 3 ] = { 1, 1, 1 };
-
-    void operator ()( typename ClMemBridge< Args >::type... args )
+    std::future< void > operator ()( typename ClMemBridge< Args >::type... args )
     {
-        //std::lock_guard< std::mutex > lck( _mutex );
+        // Make sure we copy the current settings before returning.
+        return std::async( [this, s = settings]( auto&&... args ) {
+            _call( s, args... );
+        }, args... );
+    }
+
+private:
+    #pragma region private
+
+    void _call( detail::SettingsType s, typename ClMemBridge< Args >::type... args )
+    {
+        std::lock_guard< std::mutex > lck( _mutex );
 
         _setArgs( 0, args... );
 
         cl_int   err;
-        cl_event waitFinish;
+        cl_event waitFinish[ MAX_DEVICES ];
 
-        err = clEnqueueNDRangeKernel(
-            _queues[ 0 ], _kernel,
-            std::abs( workDim ), nullptr /* global_work_offset */,
-            globalWorkSize,
-            (workDim > 0 ? localWorkSize : nullptr),
-            0, nullptr, &waitFinish );
+        // This code hasn't been tested with more than one device.
+        // Note: Not available in my testing environment.
+        for ( int i = 0; i < _numDevices; ++i )
+        {
+            err = clEnqueueNDRangeKernel(
+                _queues[ i ], _kernel,
+                std::abs( s.workDim ),
+                nullptr /* global_work_offset */,
+                s.globalWorkSize,
+                (s.workDim > 0 ? s.localWorkSize : nullptr),
+                0, nullptr, waitFinish + i );
 
-        if ( err )
-            return;
-        err = clWaitForEvents( 1, &waitFinish );
+            if ( err )
+                throw err;
+        }
+
+        err = clWaitForEvents( _numDevices, waitFinish );
 
         _readArgs( 0, args... );
 
         for ( int i = 0; i < NUM_ARGS; ++i )
             _memBuffers[ i ] = nullptr;
     }
-
-private:
-    #pragma region private
 
     template< typename Arg, typename... Rest >
     void _setArgs( size_t idx, Arg arg, Rest... rest )
