@@ -334,11 +334,13 @@ public:
 
     void deleteComponent( GraphicalComponent* gfx )
     {
+        if ( gfx ) gfx->~GraphicalComponent();
         DEALLOC( graphics, gfx );
     }
 
     void deleteComponent( AnimatorComponent* anim )
     {
+        if ( anim ) anim->~AnimatorComponent();
         DEALLOC( animations, anim );
     }
 
@@ -685,7 +687,7 @@ public:
 
         for ( auto x : entities )
         {
-            if ( auto pbase = x.value.base() )
+            if ( EntityBase* pbase = x.value.base() )
             {
                 for ( EntityBase* ebase : _contactListener.deadEntities )
                 {
@@ -945,7 +947,7 @@ inline void LevelScene::player_input(const InputManager& mngr, EntityId eid, int
 		arm_gfx.direction = odin::RIGHT;
 	}
 
-    Vec2 aimDir = mngr.gamepads.leftAxisXY( pindex );
+    Vec2 aimDir = mngr.gamepads.leftStick( pindex );
     aimDir.y = -aimDir.y;
 
     if ( glm::length( aimDir.glmvec2 ) < 0.25f )

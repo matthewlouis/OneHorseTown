@@ -12,32 +12,45 @@ namespace odin
 
     struct VertexAttribute
     {
-        GLuint  index;
+        //GLuint  index;
         GLenum  type;
         GLint   size;
         GLsizei width;
 
-        VertexAttribute( GLuint  index,
-                         GLenum  type,
-                         GLint   size,
-                         GLsizei width )
-            : index( index )
-            , type( type )
-            , size( size )
-            , width( width )
-        {
-        }
+        //VertexAttribute( GLuint  index,
+        //                 GLenum  type,
+        //                 GLint   size,
+        //                 GLsizei width )
+        //    : index( index )
+        //    , type( type )
+        //    , size( size )
+        //    , width( width )
+        //{
+        //}
     };
 
     template< typename Attr >
-    VertexAttribute make_vert_attr( GLuint index )
+    constexpr VertexAttribute make_vert_attr( /*GLuint index*/ )
     {
-        using value_type = typename Attr::value_type;
+        using value_type = std::conditional_t<
+            std::is_fundamental< Attr >::value,
+            Attr, typename Attr::value_type >;
 
-        return VertexAttribute( index,
+        return VertexAttribute {
+            //index,
             gl_type_constant< value_type >(),
-            sizeof(Attr) / sizeof(value_type),
-            sizeof(Attr) );
+            sizeof( Attr ) / sizeof( value_type ),
+            sizeof( Attr )
+        };
+    }
+
+    template< typename ValueT >
+    VertexAttribute Attribute( int size )
+    {
+        return VertexAttribute {
+            gl_type_constant< ValueT >(),
+            size, GLsizei( sizeof( ValueT ) * size )
+        };
     }
 
     struct GraphicalComponent
@@ -58,32 +71,34 @@ namespace odin
 
         GraphicalComponent() = default;
 
-        template< typename Vertex, typename... Attrs >
+        template< typename Vertex >
 		GraphicalComponent( const Vertex* pVertices,
 							int           count,
-							glm::vec4     color = { 1, 1, 1, 1 },
-                            Attrs&&...    attrs )
-            : pData( new char[ sizeof( Vertex ) * count ] )
-            , count( count )
+							glm::vec4     color,// = { 1, 1, 1, 1 },
+                            std::initializer_list< VertexAttribute > attrs )
+            //: pData( new char[ sizeof( Vertex ) * count ] )
+            : count( count )
             , color( color )
         {
             size_t size = sizeof( Vertex ) * count;
-            std::memcpy( pData, pVertices, size );
+            //std::memcpy( pData, pVertices, size );
 
             glGenVertexArrays( 1, &vertexArray );
             glBindVertexArray( vertexArray );
 
             glGenBuffers( 1, &vertexBuffer );
             glBindBuffer( GL_ARRAY_BUFFER, vertexBuffer );
-            glBufferData( GL_ARRAY_BUFFER, size, pData, GL_STATIC_DRAW );
+            glBufferData( GL_ARRAY_BUFFER, size, pVertices, GL_STATIC_DRAW );
 
             int offset = 0;
-            for ( VertexAttribute attr : { attrs... } )
+            int index = 0;
+            for ( VertexAttribute attr : attrs )
             {
-                glEnableVertexAttribArray( attr.index );
-                glVertexAttribPointer( attr.index, attr.size, attr.type,
+                glEnableVertexAttribArray( index );
+                glVertexAttribPointer( index, attr.size, attr.type,
                     GL_FALSE, sizeof( Vertex ), (void*) offset );
                 offset += attr.width;
+                ++index;
             }
         }
 
@@ -152,9 +167,12 @@ namespace odin
                 { -width / 2, -height / 2, 0, 0, y },
             };
             
-			return GraphicalComponent( vertices, 6, glm::vec4{ color, alpha },
-				make_vert_attr< glm::vec3 >( 0 ),
-				make_vert_attr< glm::vec2 >( 1 ) );
+			return GraphicalComponent( vertices, 6, glm::vec4{ color, alpha }, {
+                Attribute< float >( 3 ),
+                Attribute< float >( 2 )
+                //make_vert_attr< glm::vec3 >(),
+                //make_vert_attr< glm::vec2 >()
+            } );
         }
 
         static GraphicalComponent makeRightTri(
@@ -169,9 +187,10 @@ namespace odin
                 { +width / 2, -height / 2, 0, 1, 1 },
             };
 
-            return GraphicalComponent( vertices, 3, glm::vec4{ color, alpha },
-                        make_vert_attr< glm::vec3 >( 0 ),
-                        make_vert_attr< glm::vec2 >( 1 ) );
+            return GraphicalComponent( vertices, 3, glm::vec4{ color, alpha }, {
+                make_vert_attr< glm::vec3 >(),
+                make_vert_attr< glm::vec2 >()
+            } );
         }
 
         static GraphicalComponent makeEqTri(
@@ -187,9 +206,10 @@ namespace odin
                 { -length / 2, -h / 3, 0, 0, 1 },
             };
 
-			return GraphicalComponent( vertices, 3, glm::vec4{ color, alpha }, 
-				make_vert_attr< glm::vec3 >( 0 ),
-				make_vert_attr< glm::vec2 >( 1 ) );
+			return GraphicalComponent( vertices, 3, glm::vec4{ color, alpha }, {
+                make_vert_attr< glm::vec3 >(),
+                make_vert_attr< glm::vec2 >()
+            } );
         }
 
     };

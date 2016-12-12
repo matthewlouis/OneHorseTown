@@ -133,7 +133,8 @@ namespace odin
         }
 
 		// Returns true if ANYONE pressed a given button
-		bool didAnyonePressButton(SDL_GameControllerButton button) const{
+		bool didAnyonePressButton( SDL_GameControllerButton button ) const{
+#pragma message( "Warning: ControllerManager::didAnyonePressButton(SDL_GameControllerButton) always returns false" )
 			bool pressed = false;
 			for (int i = 0; i < MAX_PLAYERS; ++i) {
 				pressed | currButtons[i][button];
@@ -161,43 +162,36 @@ namespace odin
             return currButtons[ idx ][ button ];
         }
 
-		// Returns the x axis for the current controller based on the player index
-		float joystickAxisX( PlayerIndex idx ) const
-		{
-			return leftAxis[ idx ].x;
-		}
-
-		// Returns the y axis for the current controller based on the player index
-		float joystickAxisY( PlayerIndex idx ) const
-		{
-			return leftAxis[ idx ].y;
-		}
-
-		glm::vec2 joystickDir( PlayerIndex idx ) const
-		{
-			return leftAxis[ idx ];
-		}
-
-        glm::vec2 leftAxisXY( PlayerIndex idx ) const
+        // Returns the axis position of the left joystick on a specific controller.
+        glm::vec2 leftStick( PlayerIndex idx ) const
         {
             return leftAxis[ idx ];
         }
 
-        glm::vec2 rightAxisXY( PlayerIndex idx ) const
+        // Returns the axis position of the right joystick on a specific controller.
+        glm::vec2 rightStick( PlayerIndex idx ) const
         {
             return rightAxis[ idx ];
         }
 
+        // Returns the left trigger depression of a specific controller.
         float leftTrigger( PlayerIndex idx ) const
         {
             return triggerAxis[ idx ].x;
         }
 
+        // Returns the right trigger depression of a specific controller.
         float rightTrigger( PlayerIndex idx ) const
         {
             return triggerAxis[ idx ].y;
         }
 
+        // For a specific controller:
+        // If threshold is positive, returns true if the left trigger
+        // just crossed threshold in the pressed direction.
+        // If threshold is negative, returns true if the left trigger
+        // just crossed abs( threshold ) in the released direction.
+        // Otherwise returns false.
         bool didLeftTriggerCross( PlayerIndex idx, float threshold ) const
         {
             float thr = std::abs( threshold );
@@ -208,6 +202,12 @@ namespace odin
             return (triggerAxis[ idx ].x <= thr && prevTriggerAxis[ idx ].x > thr);
         }
 
+        // For a specific controller:
+        // If threshold is positive, returns true if the right trigger
+        // just crossed threshold in the pressed direction.
+        // If threshold is negative, returns true if the right trigger
+        // just crossed abs( threshold ) in the released direction.
+        // Otherwise returns false.
         bool didRightTriggerCross( PlayerIndex idx, float threshold ) const
         {
             float thr = std::abs( threshold );
@@ -416,13 +416,25 @@ namespace odin
                     if ( player_index == -1 )
                         printf( "Failed to register joystick location %i\n", joy_index );
                     else
-                        printf( "Registered joystick location %i to player %i\n", joy_index, player_index );
+                        printf( "Registered joystick id %i to player %i\n",
+                                gamepads.players[ player_index ], player_index );
                     //#endif
                     break;
                 }
+                //case SDL_CONTROLLERDEVICEREMAPPED:
                 case SDL_CONTROLLERDEVICEREMOVED:
                 {
                     SDL_JoystickID joy_id = event.cdevice.which;
+
+                    for ( auto x : gamepads.controllers )
+                    {
+                        if ( x.value && !SDL_GameControllerGetAttached( x.value ) )
+                        {
+                            joy_id = x.key;
+                            break;
+                        }
+                    }
+
                     int player_index = gamepads.removeController( joy_id );
 
                     //#ifdef _DEBUG
@@ -435,10 +447,11 @@ namespace odin
                 }
                 case SDL_CONTROLLERAXISMOTION:
 				{
-					SDL_ControllerAxisEvent& caxis = event.caxis;
                     SDL_JoyAxisEvent& jaxis = event.jaxis;
+					int playerNo = gamepads.findPlayerIndex( jaxis.which );
 
-					int playerNo = gamepads.findPlayerIndex( caxis.which );
+                    if ( playerNo == -1 )
+                        break;
 
                     if ( jaxis.axis < 2 )
                     {

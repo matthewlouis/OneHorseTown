@@ -1,6 +1,7 @@
 #pragma once
 
 #include "TestScene.hpp"
+#include "LobbyScene.hpp"
 
 class TitleScene
 	: public odin::Scene
@@ -271,11 +272,18 @@ public:
 			if (fadeout(startedTicks, ticks, 2000)) {
 				fading = false;
 
-                auto level = new TestScene( width, height, SCALE, 4); //1 player
-                level->pInputManager = pInputManager;
-                level->pAudioEngine = pAudioEngine;
-                level->pSceneManager = pSceneManager;
-                pSceneManager->pushScene( level );
+                auto lobby = new LobbyScene( width, height ) ; //1 player
+                lobby->pInputManager = pInputManager;
+                lobby->pAudioEngine = pAudioEngine;
+                lobby->pSceneManager = pSceneManager;
+                pSceneManager->pushScene( lobby );
+
+                //auto level = new TestScene( width, height, SCALE, 4); //1 player
+                //level->pInputManager = pInputManager;
+                //level->pAudioEngine = pAudioEngine;
+                //level->pSceneManager = pSceneManager;
+                //pSceneManager->pushScene( level );
+
                 buttonPressed = false;
 				//this->expired = true;
 			}
