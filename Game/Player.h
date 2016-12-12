@@ -27,6 +27,8 @@ enum PlayerState {
 class Player {
 public:
 	static int deadPlayers;
+	static int totalPlayers;
+
 	const float FALL_THRESHOLD = 0.1f;
 	//arm
 	GraphicalComponent* arm_gfx;
@@ -252,6 +254,7 @@ public:
 				}
 				break;
 			case HIT:
+				arm_gfx->color = glm::vec4(1,1,1,0);
 				if (falling && vel.y == 0) {
 					falling = false;
 					currentState = DEAD;
@@ -268,6 +271,7 @@ public:
 				}
 				break;
 			case DEAD:
+				arm_gfx->color = glm::vec4(1, 1, 1, 0);
 				anim->loop = false;
 				break;
 		}

@@ -128,7 +128,7 @@ public:
 			filt.maskBits = PLATFORM;
 			fixt->SetFilterData(filt);
 
-			if (Player::deadPlayers >= 3) //if last player
+			if (Player::deadPlayers >= Player::totalPlayers - 1) //if last player
 				player->focus = true;
         }
     }
@@ -595,8 +595,6 @@ public:
 			if(ticks - gameOverStartTicks > 2000)
 				entities["wintex"].pAnimator->switchAnimState(1);
 			
-			printf("Cam pos: %f, %f scale: %f", cameraPos.x, cameraPos.y, scale);
-
 			camera.setPosition(cameraPos, true);
 			camera.setScale(scale);
 
@@ -1007,6 +1005,8 @@ inline void LevelScene::player_input(const InputManager& mngr, EntityId eid, int
     {
 		//arm_anim.play = true;
 		//arm_anim.currentFrame = 1;
+		players[pindex].arm_anim->switchAnimState(1);
+		players[pindex].arm_anim->loop = false;
 		players[pindex].aiming = true;
 		players[pindex].delay = 15;
 		fireBullet(ntt.position, aimDirection, pindex);
