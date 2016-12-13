@@ -328,9 +328,6 @@ public:
 
 	void respawn() {
 
-		if (alive)
-			return;
-
 		reload();
 		Player::deadPlayers--;
 		respawning = 300;

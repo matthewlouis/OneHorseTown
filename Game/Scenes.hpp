@@ -722,8 +722,15 @@ public:
 			}
 			if (!gameOver) {
 				for each (Player& p in players)
-					p.respawn();
+					if(!p.alive) 
+						p.respawn();
 			}
+		}
+
+		if (drawDetected()) {
+			printf("IT'S A DRAW... MULLIGAN!");
+			for each (Player& p in players)
+				p.respawn();
 		}
 
 		int maxPoints = 0;
@@ -735,10 +742,17 @@ public:
 		energyLevel = energyLevel > 1.0f ? 1.0f : energyLevel;
 		pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", energyLevel);
 
-
-
     }
+	
+	bool drawDetected() {
+		int totalBullets = 0;
 
+		for each (Player& p in players)
+			if (p.alive)
+				totalBullets += p.bulletCount;
+
+		return totalBullets == 0 && Player::deadPlayers < numberPlayers - 1;
+	}
 
 	void gameOverSequence() {
 		gameOver = true;
