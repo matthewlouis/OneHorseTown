@@ -188,11 +188,13 @@ public:
 			return;
 
 		if (respawning > 0) {
-			--respawning;
-		}
-		else if (respawning == 0) {
-			--respawning;
-			respawn();
+			respawning--;
+			if ((respawning / 15) % 2 == 0) {
+				gfx->visible = true;
+			}
+			else {
+				gfx->visible = false;
+			}
 		}
 
 		//Determine Player state
@@ -331,7 +333,8 @@ public:
 
 		reload();
 		Player::deadPlayers--;
-		
+		respawning = 300;
+
 		currentState = IDLE;
 		anim->switchAnimState(IDLE);
 		active = true;
@@ -346,7 +349,6 @@ public:
 	}
 
 	int awardPoint() {
-		printf("POINTS = %d", points + 1);
 		return ++points;
 	}
 

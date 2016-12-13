@@ -113,6 +113,10 @@ public:
     {
         if ( e == 1 )
         {
+			// Grant immunity while respawning
+			if (player->respawning > 0) {
+				return;
+			}
 			player->alive = false;
 			Player::deadPlayers++;
             std::cout << "Hit player " << playerIndex << std::endl;
@@ -722,7 +726,12 @@ public:
 			}
 		}
 
-		energyLevel = Player::deadPlayers * 0.4f;
+		int maxPoints = 0;
+		for each (Player& p in players)
+			if (p.points > maxPoints)
+				maxPoints = p.points;
+
+		energyLevel = maxPoints * 0.4f;
 		energyLevel = energyLevel > 1.0f ? 1.0f : energyLevel;
 		pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", energyLevel);
 
@@ -1016,7 +1025,7 @@ inline void LevelScene::player_input(const InputManager& mngr, EntityId eid, int
     //float rTrigger = mngr.gamepads.rightTrigger( pindex );
 
     // Handle Shoot input on button B
-    if ( mngr.gamepads.didRightTriggerCross( pindex, 0.85 ) || mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B) )
+    if ( mngr.gamepads.didRightTriggerCross( pindex, 0.85 ) || mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_B) && players[pindex].respawning <= 0)
     {
 		//arm_anim.play = true;
 		//arm_anim.currentFrame = 1;
