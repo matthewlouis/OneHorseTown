@@ -27,6 +27,7 @@
     <ClInclude Include="TypedAllocator.hpp" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="TitleScene.hpp" />
+    <ClInclude Include="LobbyScene.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Game.rc" />

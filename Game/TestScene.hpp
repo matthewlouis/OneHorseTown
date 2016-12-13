@@ -291,13 +291,11 @@ public:
             if ( e == 1 && player && player->respawning <= 0)
             {
                 player->alive = false;
-                pScene->_spawnParticle( pScene->entities[ { "player", (unsigned short) playerIndex } ].position );
+                EntityId eid { "player", (uint16_t) playerIndex };
+                pScene->_spawnParticle( pScene->entities[ eid ].position );
             }
         }
     };
-	int numberPlayers;
-
-	float _scale;
 
     std::vector< ParticleEmitter > emitters;
 
@@ -306,14 +304,20 @@ public:
     //OpenCLKernel< Particle*, float > updater2;
     //OpenCLKernel< Particle*, float > updater3;
 
-	TestScene( int width, int height, float scale, int numberPlayers = 1 )
-		: LevelScene( width, height, "Audio/Banks/MasterBank", numberPlayers )
-        , numberPlayers( numberPlayers )
-		, _scale( scale )
+    std::array< int, MAX_PLAYERS > controllerRedirect;
+
+	TestScene( int width, int height,
+               std::array< int, MAX_PLAYERS > playerDat )
+		: LevelScene( width, height, "Audio/Banks/MasterBank",
+                      MAX_PLAYERS - std::count(
+                          begin( playerDat ),
+                          end( playerDat ),
+                          -1 ) )
         , updater0( "ParticleSystem.cl" )
         //, updater1( "ParticleSystem.cl" )
         //, updater2( "ParticleSystem.cl" )
         //, updater3( "ParticleSystem.cl" )
+        , controllerRedirect( playerDat )
 	{
 	}
 
@@ -511,40 +515,81 @@ public:
 		* resolution can use the data.
 		*/
 		// create player 1
-        odin::make_player( this, {"player", 0}, {-22, 11.4f}, 0 );
-		EntityPlayer * ep1 = (EntityPlayer *) entities[{"player", 0}].base();
-		ep1->player = &players[0];
-        listeners.push_back( [this]( const InputManager& inmn ) {
-            return player_input( inmn, {"player", 0}, 0 );
-        } );
-		//players[0] = EntityView({ "player", 0 }, this);
+
+        Vec2 startingPositions[] {
+            { -22, 11.4f },
+            { 22, 11.4f },
+            { 22, -12 },
+            { -22, -12 }
+        };
+
+        int i = 0;
+        for ( int pno : controllerRedirect )
+        {
+            if ( pno != -1 )
+            {
+                uint16_t pidx = pno;
+                odin::make_player( this, {"player", pidx}, startingPositions[ i ], pidx );
+                EntityPlayer* ep = (EntityPlayer*) entities[ {"player", pidx} ].base();
+                ep->player = &players[ pidx ];
+                listeners.push_back( [this, pidx]( const InputManager& inmn ) {
+                    return player_input( inmn, {"player", pidx}, pidx );
+                } );
+            }
+            ++i;
+        }
+
+  //      if ( controllerRedirect[ 0 ] != -1 )
+  //      {
+  //          uint16_t cidx = controllerRedirect[ 0 ];
+
+  //      odin::make_player( this, {"player", cidx}, {-22, 11.4f}, cidx );
+		//EntityPlayer * ep1 = (EntityPlayer *) entities[{"player", cidx}].base();
+		//ep1->player = &players[cidx];
+  //      listeners.push_back( [this, cidx]( const InputManager& inmn ) {
+  //          return player_input( inmn, {"player", cidx}, cidx );
+  //      } );
+  //      }
+		////players[0] = EntityView({ "player", 0 }, this);
 
 
-		// create player 2
-		odin::make_player(this, { "player", 1 }, { 22, 11.4f },1);
-		EntityPlayer * ep2 = (EntityPlayer *)entities[{ "player", 1 }].base();
-	    ep2->player = &players[1];
-		listeners.push_back([this](const InputManager& inmn) {
-			return player_input(inmn, { "player", 1 }, 1);
-		});
+		//// create player 2
+  //      if ( controllerRedirect[ 1 ] != -1 )
+  //      {
+  //          uint16_t cidx = controllerRedirect[ 1 ];
+		//odin::make_player(this, { "player", cidx }, { 22, 11.4f },cidx);
+		//EntityPlayer * ep2 = (EntityPlayer *)entities[{ "player", cidx }].base();
+	 //   ep2->player = &players[cidx];
+		//listeners.push_back([this, cidx](const InputManager& inmn) {
+		//	return player_input(inmn, { "player", cidx }, cidx);
+		//});
+  //      }
 
-		//players[1] = EntityView({ "player", 1 }, this);
-		// create player 3
-		odin::make_player(this, { "player", 2 }, { 22, -12 }, 2);
-		EntityPlayer * ep3 = (EntityPlayer *)entities[{ "player", 2 }].base();
-		ep3->player = &players[2];
-		listeners.push_back([this](const InputManager& inmn) {
-			return player_input(inmn, { "player", 2 }, 2);
-		});
-		//players[2] = EntityView({ "player", 2 }, this);
+		////players[1] = EntityView({ "player", 1 }, this);
+		//// create player 3
+  //      if ( controllerRedirect[ 2 ] != -1 )
+  //      {
+  //          uint16_t cidx = controllerRedirect[ 2 ];
+		//odin::make_player(this, { "player", cidx }, { 22, -12 }, cidx);
+		//EntityPlayer * ep3 = (EntityPlayer *)entities[{ "player", cidx }].base();
+		//ep3->player = &players[cidx];
+		//listeners.push_back([this, cidx](const InputManager& inmn) {
+		//	return player_input(inmn, { "player", cidx }, cidx);
+		//});
+  //      }
+		////players[2] = EntityView({ "player", 2 }, this);
 
-		// create player 4
-		odin::make_player(this, { "player", 3 }, { -22, -12 }, 3);
-		EntityPlayer * ep4 = (EntityPlayer *)entities[{ "player", 3 }].base();
-		ep4->player = &players[3];
-		listeners.push_back([this](const InputManager& inmn) {
-			return player_input(inmn, { "player", 3 }, 3);
-		});
+		//// create player 4
+  //      if ( controllerRedirect[ 3 ] != -1 )
+  //      {
+  //          uint16_t cidx = controllerRedirect[ 3 ];
+		//odin::make_player(this, { "player", cidx }, { -22, -12 }, cidx);
+		//EntityPlayer * ep4 = (EntityPlayer *)entities[{ "player", cidx }].base();
+		//ep4->player = &players[cidx];
+		//listeners.push_back([this, cidx](const InputManager& inmn) {
+		//	return player_input(inmn, { "player", cidx }, cidx);
+		//});
+  //      }
 		//players[3] = EntityView({ "player", 3 }, this);
 
         //odin::make_horse( this, "horse", {0.0f, 5.f} );

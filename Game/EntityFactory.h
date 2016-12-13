@@ -33,7 +33,11 @@ enum Textures {
 	RED,
 	WIN_TEXTURE,
 	READY_TEXTURE,
-	BACKGROUND_ANIM
+	BACKGROUND_ANIM,
+    PLAYER_0_CARD,
+    PLAYER_1_CARD,
+    PLAYER_2_CARD,
+    PLAYER_3_CARD,
 };
 
 // Where the entity is positioned relative to
