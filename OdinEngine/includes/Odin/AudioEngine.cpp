@@ -299,8 +299,11 @@ namespace odin {
 			return false; //if event not in map, it's not playing
 
 		//if found, check playback state
-		FMOD_STUDIO_PLAYBACK_STATE* state = NULL;
-		if (tFoundIt->second->getPlaybackState(state) == FMOD_STUDIO_PLAYBACK_PLAYING) {
+		FMOD_STUDIO_PLAYBACK_STATE state;
+
+		tFoundIt->second->getPlaybackState(&state);
+
+		if (state == FMOD_STUDIO_PLAYBACK_PLAYING) {
 			return true;
 		}
 		return false;

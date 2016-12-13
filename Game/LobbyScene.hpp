@@ -167,6 +167,13 @@ public:
         pAudioEngine->setEventParameter( "event:/Music/EnergeticTheme", "GameOver", 0.0 );
     }
 
+	void pause(unsigned ticks) override
+	{
+		Scene::pause(ticks);
+		if(pAudioEngine->isEventPlaying("event:/Music/IntroTheme"))
+			pAudioEngine->stopEvent("event:/Music/IntroTheme");
+	}
+
     void resume( unsigned ticks ) override
     {
         Scene::resume( ticks );
@@ -181,6 +188,10 @@ public:
         odin::load_texture( 2, "Textures/p2.png" );
         odin::load_texture( 3, "Textures/p3.png" );
         odin::load_texture( 4, "Textures/p4.png" );
+
+		//play music if not already playing
+		if (!pAudioEngine->isEventPlaying("event:/Music/IntroTheme"))
+			pAudioEngine->playEvent("event:/Music/IntroTheme");
     }
 
     int findPlayerBySlot( int slot ) const
@@ -236,8 +247,27 @@ public:
                     }
                 }
 
-                if ( gamepads.wasButtonPressed( i, SDL_CONTROLLER_BUTTON_START ) )
-                    playerReady[ i ] = !playerReady[ i ];
+				if (gamepads.wasButtonPressed(i, SDL_CONTROLLER_BUTTON_START)) {
+					playerReady[i] = !playerReady[i];
+
+					switch (i) {
+					case 0:
+						pAudioEngine->playEvent("event:/Desperado/Select_p1");
+						break;
+					case 1:
+						pAudioEngine->playEvent("event:/Desperado/Select_p2");
+						break;
+					case 2:
+						pAudioEngine->playEvent("event:/Desperado/Select_p3");
+						break;
+					case 3:
+						pAudioEngine->playEvent("event:/Desperado/Select_p4");
+						break;
+					default:
+						break;
+					}
+				}
+					
             }
             else
             {

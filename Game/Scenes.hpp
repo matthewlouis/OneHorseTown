@@ -128,8 +128,9 @@ public:
 			filt.maskBits = PLATFORM;
 			fixt->SetFilterData(filt);
 
-			if (Player::deadPlayers >= Player::totalPlayers - 1) //if last player
+			if (Player::deadPlayers >= Player::totalPlayers - 1) { //if last player
 				player->focus = true;
+			}
         }
     }
 };
@@ -506,6 +507,7 @@ public:
 		Scene::exit(ticks);
 		pAudioEngine->stopAllEvents();
 		pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", 0.0);
+		pAudioEngine->setEventParameter("event:/Desperado/Die", "lastkill", 0.0);
 		pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "GameOver", 0.0);
 		energyLevel = 0;
 		Player::deadPlayers = 0;
@@ -548,7 +550,13 @@ public:
 			float maxscale = 5.0f;
 			int delayAmount = 200;
 
+			pAudioEngine->setEventParameter("event:/Desperado/Die", "lastkill", 1.0);
+			
+
 			if (gameOverStartTicks == 0) {
+				if (pAudioEngine->isEventPlaying("event:/Music/EnergeticTheme"))
+					pAudioEngine->stopEvent("event:/Music/EnergeticTheme"); //mute music
+
 				lastToDiePlayer->anim->frameDelay = 0;
 				lastToDiePlayer->anim->incrementFrame();
 
@@ -563,7 +571,10 @@ public:
 					}
 				}
 			}
-			else if (ticks - gameOverStartTicks > 1000) {
+			else if (ticks - gameOverStartTicks > 1750) {
+				if (!pAudioEngine->isEventPlaying("event:/Music/EnergeticTheme"))
+					pAudioEngine->playEvent("event:/Music/EnergeticTheme"); //play music if not already playing
+
 				delayAmount = 0;
 
 				entities["wintex"].pDrawable->color.a = 1.0f;

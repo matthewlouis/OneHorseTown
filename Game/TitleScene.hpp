@@ -134,7 +134,7 @@ public:
 
 	void pause(unsigned ticks) override {
 		glUniform(uFadeOut, 0.0f);
-		pAudioEngine->stopEvent("event:/Music/IntroTheme");
+		//pAudioEngine->stopEvent("event:/Music/IntroTheme");
 		Scene::pause(ticks);
 	}
 
