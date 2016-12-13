@@ -423,7 +423,7 @@ public:
         LevelScene::draw();
 
         using namespace glm;
-
+		
         glUseProgram( program );
         glUniform( uTexture, _gfx.texture );
         glUniform( uFacingDirection, _gfx.direction );
@@ -468,6 +468,8 @@ public:
 		odin::load_texture(BULLET_TEXTURE, "Textures/bullet.png");
 		odin::load_texture(WIN_TEXTURE, "Textures/win.png");
 		odin::load_texture(READY_TEXTURE, "Textures/readytext.png");
+		//odin::load_texture(AMMO_COUNTER, "Textures/ammocounter.png");
+		//odin::load_texture(SKULL_COIN, "Textures/skullcoin.png");
 
 		//background animation
 		odin::load_texture(BACKGROUND_ANIM, "Textures/sunrisebg.png");

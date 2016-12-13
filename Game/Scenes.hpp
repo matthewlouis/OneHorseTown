@@ -131,7 +131,7 @@ public:
 			filter.maskBits = PLATFORM;
 			player->psx->GetFixtureList()->SetFilterData(filter);
 
-			if (Player::deadPlayers >= Player::totalPlayers - 1) { //if last player
+			if (Player::deadPlayers >= Player::totalPlayers - 1 && Player::lastShooterPoints == 2) { //if last player
 				player->focus = true;
 			}
         }
@@ -722,10 +722,11 @@ public:
 
 
 		if (!gameOver && Player::deadPlayers >= numberPlayers - 1) {
-			for each (Player& p in players)
+			for (int i = 0; i < numberPlayers; ++i)
 			{
+				Player& p = players[i];
 				if (p.alive) {
-					if (p.awardPoint() == maxPoints) {
+					if (p.awardPoint(i) == maxPoints) {
 						gameOverSequence();
 						break;
 					}
@@ -744,12 +745,12 @@ public:
 				p.respawn();
 		}
 
-		int maxPoints = 0;
+		int max = 0;
 		for each (Player& p in players)
-			if (p.points > maxPoints)
-				maxPoints = p.points;
+			if (p.points > max)
+				max = p.points;
 
-		energyLevel = maxPoints * 0.4f;
+		energyLevel = max * 0.4f;
 		energyLevel = energyLevel > 1.0f ? 1.0f : energyLevel;
 		pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "Energy", energyLevel);
 
@@ -767,6 +768,7 @@ public:
 
 	void gameOverSequence() {
 		gameOver = true;
+
 		pAudioEngine->setEventParameter("event:/Music/EnergeticTheme", "GameOver", 1.0f);
 		timeOnDeadPlayer = SDL_GetTicks();
 		//entities["wintex"].pDrawable->color = glm::vec4(255, 255, 255, 1);
@@ -1144,6 +1146,9 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction,
 		// PLAY CLICKING SOUND
 		return;
 	}
+
+	Player::lastShooterPoints = players[pIndex].points;
+
 	players[pIndex].bulletCount--;
 
 	float length = 100.f;
