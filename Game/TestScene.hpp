@@ -288,7 +288,7 @@ public:
         void onEvent( int e ) override
         {
             EntityPlayer::onEvent( e );
-            if ( e == 1 && player )
+            if ( e == 1 && player && player->respawning <= 0)
             {
                 player->alive = false;
                 pScene->_spawnParticle( pScene->entities[ { "player", (unsigned short) playerIndex } ].position );
