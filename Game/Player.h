@@ -54,10 +54,11 @@ public:
 	b2Vec2 spawnPoint;
 
 	//TODO: keeping track of ammunition
-	int bulletCount = 3;
+	int bulletCount = 6;
 	int killCount = 0;
 	int lives = 3;
 	bool alive = true;
+	int points = 0;
 
 	//for director focus
 	bool focus = false;
@@ -324,8 +325,12 @@ public:
 	}
 
 	void respawn() {
+
 		if (alive)
 			return;
+
+		reload();
+		Player::deadPlayers--;
 		
 		currentState = IDLE;
 		anim->switchAnimState(IDLE);
@@ -338,6 +343,15 @@ public:
 		psx->GetFixtureList()->SetFilterData(filter);
 
 		psx->SetTransform(spawnPoint, 0);
+	}
+
+	int awardPoint() {
+		printf("POINTS = %d", points + 1);
+		return ++points;
+	}
+
+	void reload() {
+		bulletCount = 6;
 	}
 
 };

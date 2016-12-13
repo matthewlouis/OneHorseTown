@@ -397,6 +397,7 @@ public:
 	Player      players[MAX_PLAYERS];
 	Player		*winningPlayer, *lastToDiePlayer;
 	int			timeOnDeadPlayer;
+	int			maxPoints = 3;
 
 	bool		gameOver = false;
 	Uint32		gameOverStartTicks;
@@ -706,12 +707,19 @@ public:
 
 
 		if (!gameOver && Player::deadPlayers >= numberPlayers - 1) {
-			Player::deadPlayers = 0;
 			for each (Player& p in players)
 			{
-				p.respawn();
+				if (p.alive) {
+					if (p.awardPoint() == maxPoints) {
+						gameOverSequence();
+						break;
+					}
+				}
 			}
-			//gameOverSequence();
+			if (!gameOver) {
+				for each (Player& p in players)
+					p.respawn();
+			}
 		}
 
 		energyLevel = Player::deadPlayers * 0.4f;
@@ -1096,6 +1104,12 @@ std::tuple<EntityBase*, Vec2, float> LevelScene::resolveBulletCollision(Vec2 pos
 
 inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction, int pIndex)
 {
+	if (players[pIndex].bulletCount <= 0) {
+		// PLAY CLICKING SOUND
+		return;
+	}
+	players[pIndex].bulletCount--;
+
 	float length = 100.f;
 	float rotation = 0;
 	Vec2 offset = { 0,0 };
@@ -1115,48 +1129,48 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction,
 	switch (direction) {
 	case odin::NORTH_WEST:
 		collisionData = resolveBulletCollision(pos, { -1,1 });
-		length = std::get<2>(collisionData);
+		length = std::get<2>(collisionData) - 20;
 		rotation = -PI / 4;
 		offset = { SIN45 * -length / 2 - BULLET_PADDING_ANGLED, SIN45 * length / 2 + BULLET_PADDING_ANGLED };
 		break;
 	case odin::NORTH_EAST:
 		collisionData = resolveBulletCollision(pos, { 1,1 });
-		length = std::get<2>(collisionData);
+		length = std::get<2>(collisionData) - 20;
 		rotation = PI / 4;
 		offset = { SIN45 * length / 2 + BULLET_PADDING_ANGLED, SIN45 * length / 2 + BULLET_PADDING_ANGLED };
 		break;
 	case odin::SOUTH_WEST:
 		collisionData = resolveBulletCollision(pos, { -1,-1 });
-		length = std::get<2>(collisionData);
+		length = std::get<2>(collisionData) - 20;
 		rotation = PI / 4;
 		offset = { SIN45 * -length / 2 - BULLET_PADDING_ANGLED, SIN45 * -length / 2 - BULLET_PADDING_ANGLED  + 7};
 		break;
 	case odin::SOUTH_EAST:
 		collisionData = resolveBulletCollision(pos, { 1,-1 });
-		length = std::get<2>(collisionData);
+		length = std::get<2>(collisionData) - 20;
 		rotation = -PI / 4;
 		offset = { SIN45 * length / 2 + BULLET_PADDING_ANGLED, SIN45 * -length / 2 - BULLET_PADDING_ANGLED + 7};
 		break;
 	case odin::NORTH:
 		collisionData = resolveBulletCollision(pos, { 0,1 });
-		length = std::get<2>(collisionData);
+		length = std::get<2>(collisionData) - 20;
 		rotation = PI / 2;
 		offset = { 4, length / 2 + BULLET_PADDING};
 		break;
 	case odin::SOUTH:
 		collisionData = resolveBulletCollision(pos, { 0, -1 });
-		length = std::get<2>(collisionData);
+		length = std::get<2>(collisionData) - 20;
 		rotation = -PI / 2;
 		offset = { 4, -length / 2 - BULLET_PADDING };
 		break;
 	case odin::WEST:
 		collisionData = resolveBulletCollision(pos, { -1,0 });
-		length = std::get<2>(collisionData);
+		length = std::get<2>(collisionData) - 20;
 		offset = { -length / 2 - BULLET_PADDING, 4 };
 		break;
 	case odin::EAST:
 		collisionData = resolveBulletCollision(pos, { 1,0 });
-		length = std::get<2>(collisionData);
+		length = std::get<2>(collisionData) - 20;
 		offset = { length / 2 + BULLET_PADDING, 4 };
 		break;
 	default:
