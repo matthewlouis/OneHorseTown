@@ -29,6 +29,7 @@ class Player {
 public:
 	static int deadPlayers;
 	static int totalPlayers;
+	static int lastShooterPoints;
 
 	const float FALL_THRESHOLD = 0.1f;
 	//arm
@@ -191,11 +192,13 @@ public:
 
 		if (respawning > 0) {
 			respawning--;
-			if ((respawning / 15) % 2 == 0) {
+			if ((respawning / 8) % 2 == 0) {
 				gfx->visible = true;
+				arm_gfx->visible = true;
 			}
 			else {
 				gfx->visible = false;
+				arm_gfx->visible = false;
 			}
 		}
 
@@ -334,23 +337,27 @@ public:
 
 		reload();
 		Player::deadPlayers--;
-		respawning = 300;
+		respawning = 120;
 
 		currentState = IDLE;
 		anim->switchAnimState(IDLE);
 		active = true;
 		alive = true;
+		falling = false;
 
 		b2Filter filter = b2Filter();
 		filter.categoryBits = PLAYER;
 		filter.maskBits = PLATFORM | BULLET | PLAYER;
 		psx->GetFixtureList()->SetFilterData(filter);
 
+		arm_gfx->color = glm::vec4(1,1,1,1);
+
 		psx->SetTransform(spawnPoint, 0);
 	}
 
-	int awardPoint() {
-		return ++points;
+	int awardPoint(int pIndex) {
+		printf("Player %d: %d points", pIndex, ++points);
+		return points;
 	}
 
 	void reload() {
