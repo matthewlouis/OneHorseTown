@@ -38,6 +38,8 @@ enum Textures {
     PLAYER_1_CARD,
     PLAYER_2_CARD,
     PLAYER_3_CARD,
+	AMMO_COUNTER,
+	SKULL_COIN
 };
 
 // Where the entity is positioned relative to
@@ -245,11 +247,11 @@ namespace odin
 			ntt.position = { pos.x + (platform.x*length),pos.y };
 
 			b2BodyDef bodyDef;
-			bodyDef.position = { offset.x / physicsScale + (platform.getPhysicsDim().x*length) / 2 ,offset.y / physicsScale };
+			bodyDef.position = { offset.x / physicsScale + (platform.getPhysicsDim().x*length) / 2 ,offset.y / physicsScale - 0.1f};
 			bodyDef.angle = 0;
 			bodyDef.type = b2_staticBody;
 
-			auto pb = PhysicalComponent::makeRect(platform.getPhysicsDim().x*length - 1, platform.getPhysicsDim().y, pScene->b2world, bodyDef, 1.0, PLATFORM,  PLAYER | BULLET | DEAD_ENTITY);
+			auto pb = PhysicalComponent::makeRect(platform.getPhysicsDim().x*length - 1, platform.getPhysicsDim().y + 0.1, pScene->b2world, bodyDef, 1.0, PLATFORM,  PLAYER | BULLET | DEAD_ENTITY);
 			ntt.pBody = pb.pBody;
 			pb.pBody = nullptr;
 		}
