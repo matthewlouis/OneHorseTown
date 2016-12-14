@@ -480,12 +480,12 @@ public:
 			decltype(auto) pointInd = entities[points];
 			pointInd.pDrawable = newGraphics(GraphicalComponent::makeRect(10, 8, { 1, 1, 1 }, 1.0f));
 			pointInd.pDrawable->texture = SKULL_COIN;
-			pointInd.pAnimator = newAnimator(AnimatorComponent({ 8, 8 }));
+			pointInd.pAnimator = newAnimator(AnimatorComponent({ 9, 9 }));
 			pointInd.pDrawable->visible = true;
 
 			EntityId ammo("ammo", i);
 			decltype(auto) ammoInd = entities[ammo];
-			ammoInd.pDrawable = newGraphics(GraphicalComponent::makeRect(16, 8, { 1, 1, 1 }, 1.0f));
+			ammoInd.pDrawable = newGraphics(GraphicalComponent::makeRect(26, 8, { 1, 1, 1 }, 1.0f));
 			ammoInd.pDrawable->texture = AMMO_COUNTER;
 			ammoInd.pAnimator = newAnimator(AnimatorComponent({ 1, 1, 1, 1, 1, 1, 1 }));
 			pointInd.pDrawable->visible = true;
@@ -1180,7 +1180,7 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction,
 
 	players[pIndex].bulletCount--;
 
-	entities[{"ammo", (uint16_t)pIndex}].pAnimator->switchAnimState(7 - players[pIndex].bulletCount);
+	entities[{"ammo", (uint16_t)pIndex}].pAnimator->switchAnimState(7 - (players[pIndex].bulletCount+1));
 
 	float length = 100.f;
 	float rotation = 0;
