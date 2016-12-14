@@ -222,6 +222,14 @@ public:
         return true;
     }
 
+    int playerCount() const
+    {
+        int count = 0;
+        for ( bool player : playerConnected )
+            count += (int) player;
+        return count;
+    }
+
     void update( unsigned ticks ) override
     {
         Scene::update( ticks );
@@ -234,6 +242,7 @@ public:
             {
                 if ( !playerReady[ i ] )
                 {
+					/*turning off swapping
                     if ( gamepads.wasButtonPressed( i, SDL_CONTROLLER_BUTTON_DPAD_LEFT ) )
                     {
                         int j = _cyclePlayer( i, MAX_PLAYERS - 1 );
@@ -245,6 +254,7 @@ public:
                         int j = _cyclePlayer( i, 1 );
                         std::swap( playerSlot[ i ], playerSlot[ j ] );
                     }
+					*/
                 }
 
 				if (gamepads.wasButtonPressed(i, SDL_CONTROLLER_BUTTON_START)) {
@@ -286,7 +296,7 @@ public:
             if ( playerConnected[ i ] == playerReady[ i ] )
                 validPlayers++;
 
-        DELAY_TRIGGER( _allReadyTimeout, ticks, validPlayers == MAX_PLAYERS && !emptyLobby() )
+        DELAY_TRIGGER( _allReadyTimeout, ticks, validPlayers == MAX_PLAYERS && playerCount() > 1 )
         {
             std::array< int, MAX_PLAYERS > playerDat;
             playerDat.fill( -1 );

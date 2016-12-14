@@ -16,6 +16,38 @@ int main( int argc, char** argv )
 {
     srand((unsigned)time(NULL));
 
+    //previously we were not initting all of the subsystems.
+    //best thing to do here is init everything
+    if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+    {
+        printf("SDL_Init failed: %s.\n", SDL_GetError());
+        SDL_Quit();
+    }
+
+    SDL_DisplayMode DM;
+    SDL_GetCurrentDisplayMode( 0, &DM );
+    auto screen_w = DM.w;
+    auto screen_h = DM.h;
+
+    PIXEL_SIZE = (screen_w / VIRTUAL_WIDTH) - 1;
+
+    if ( PIXEL_SIZE < 1 )
+    {
+        printf( "Screen resolution is too small" );
+        SDL_Quit();
+    }
+
+    // Screen width.
+    WIDTH = int( VIRTUAL_WIDTH * PIXEL_SIZE );
+
+    // Screen height.
+    HEIGHT = int( VIRTUAL_HEIGHT * PIXEL_SIZE );
+
+    // OpenGL draw scaling.
+    LOW_WIDTH = int( WIDTH / PIXEL_SIZE );
+    LOW_HEIGHT = int( HEIGHT / PIXEL_SIZE );
+
+
     SDL_Window* sdl_window = create_window( "One Horse Town", WIDTH, HEIGHT );
 
     Game game( WIDTH, HEIGHT, sdl_window );
@@ -34,14 +66,6 @@ int main( int argc, char** argv )
 
 SDL_Window* create_window( const char* title, int width, int height )
 {
-	//previously we were not initting all of the subsystems.
-	//best thing to do here is init everything
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
-	{
-		printf("SDL_Init failed: %s.\n", SDL_GetError());
-		SDL_Quit();
-	}
-
 	initAudio(); //must call first for SDL audio playback
 
 	//Request minimum version for compatibility.
