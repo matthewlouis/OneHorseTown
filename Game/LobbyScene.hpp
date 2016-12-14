@@ -242,6 +242,7 @@ public:
             {
                 if ( !playerReady[ i ] )
                 {
+					/*turning off swapping
                     if ( gamepads.wasButtonPressed( i, SDL_CONTROLLER_BUTTON_DPAD_LEFT ) )
                     {
                         int j = _cyclePlayer( i, MAX_PLAYERS - 1 );
@@ -253,6 +254,7 @@ public:
                         int j = _cyclePlayer( i, 1 );
                         std::swap( playerSlot[ i ], playerSlot[ j ] );
                     }
+					*/
                 }
 
 				if (gamepads.wasButtonPressed(i, SDL_CONTROLLER_BUTTON_START)) {

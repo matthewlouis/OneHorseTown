@@ -534,7 +534,7 @@ public:
     }
 
 	void update(unsigned ticks)
-    {
+	{
 		Scene::update(ticks);
 
 		//play any sound events players have triggered
@@ -545,7 +545,7 @@ public:
 				p.soundEvent = {}; //reset soundevent
 			}
 		}
-		
+
 
 		//game over zoom in and win text display
 		if (gameOver) {
@@ -555,7 +555,7 @@ public:
 			int delayAmount = 200;
 
 			pAudioEngine->setEventParameter("event:/Desperado/Die", "lastkill", 1.0);
-			
+
 
 			if (gameOverStartTicks == 0) {
 				if (pAudioEngine->isEventPlaying("event:/Music/EnergeticTheme"))
@@ -607,9 +607,9 @@ public:
 				}
 			}
 
-			if(ticks - gameOverStartTicks > 2000)
+			if (ticks - gameOverStartTicks > 2000)
 				entities["wintex"].pAnimator->switchAnimState(1);
-			
+
 			camera.setPosition(cameraPos, true);
 			camera.setScale(scale);
 
@@ -637,14 +637,14 @@ public:
 			AnimatorComponent *ac = entities["wready"].pAnimator;
 			ac->incrementFrame();
 
-			if(ac->currentFrame % 3 == 1)
+			if (ac->currentFrame % 3 == 1)
 				entities[EntityId(0)].pAnimator->incrementFrame(); //next background frame
 
 			if (ac->animState == 0 && ac->currentFrame >= ac->maxFrames - 1) { //if READY displayed and animation finished
 				ac->switchAnimState(1); //change to DRAW animation state
 			}
-			else if (ac->animState == 1){
-				if(ac->currentFrame >= 6)
+			else if (ac->animState == 1) {
+				if (ac->currentFrame >= 6)
 					entities[EntityId(0)].pAnimator->incrementFrame(); //next background frame
 
 				if (ac->currentFrame == 6) {//DRAW has appeared
@@ -652,7 +652,7 @@ public:
 				}
 				else if (ac->currentFrame >= ac->maxFrames - 1) {
 					startingGame = false;
-					entities.remove("wready");
+					entities["wready"].pDrawable->visible = false;
 				}
 			}
 
@@ -661,6 +661,7 @@ public:
 
 			return;
 		}
+
 
 		//poll input events
 		for (auto& lstn : listeners)
@@ -733,9 +734,13 @@ public:
 				}
 			}
 			if (!gameOver) {
-				for each (Player& p in players)
-					if(!p.alive) 
+				
+
+				for each (Player& p in players) {
+					if (!p.alive) {
 						p.respawn();
+					}
+				}
 			}
 		}
 
@@ -1056,10 +1061,7 @@ inline void LevelScene::player_input(const InputManager& mngr, EntityId eid, int
     {
 		//arm_anim.play = true;
 		//arm_anim.currentFrame = 1;
-		players[pindex].arm_anim->switchAnimState(1);
-		players[pindex].arm_anim->loop = false;
-		players[pindex].aiming = true;
-		players[pindex].delay = 15;
+		
 		fireBullet(ntt.position, aimDirection, pindex);
     }
     if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_B))
@@ -1143,9 +1145,15 @@ std::tuple<EntityBase*, Vec2, float> LevelScene::resolveBulletCollision(Vec2 pos
 inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction, int pIndex)
 {
 	if (players[pIndex].bulletCount <= 0) {
-		// PLAY CLICKING SOUND
+		pAudioEngine->playEvent("event:/Desperado/Empty");
 		return;
 	}
+
+	//animate arm
+	players[pIndex].arm_anim->switchAnimState(1);
+	players[pIndex].arm_anim->loop = false;
+	players[pIndex].aiming = true;
+	players[pIndex].delay = 15;
 
 	Player::lastShooterPoints = players[pIndex].points;
 
