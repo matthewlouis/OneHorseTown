@@ -17,6 +17,7 @@
 #include <array>
 #include <bitset>
 #include <memory>
+#include <vector>
 
 //for clocking assembly
 #include <tchar.h>
@@ -133,6 +134,7 @@ public:
 
 			if (Player::deadPlayers >= Player::totalPlayers - 1 && Player::lastShooterPoints == 2) { //if last player
 				player->focus = true;
+				printf("\n**focus**\n");
 			}
         }
     }
@@ -413,6 +415,9 @@ public:
 	float	    silhouette; //for adjusting character colors
 	bool	    usingASM = true;
 
+	glm::vec2 pointsOffset[MAX_PLAYERS];
+
+
 	LevelScene(int width, int height, std::string audioBank = "", int numberPlayers = MAX_PLAYERS)
 		: Scene(width, height)
 		, audioBankName(audioBank)
@@ -430,6 +435,7 @@ public:
 		, uSilhoutte(glGetUniformLocation(program, "uSilhoutte"))
 		, uInteractive(glGetUniformLocation(program, "uInteractive"))
     {
+		Player::totalPlayers = numberPlayers;
     }
 
 	void init(unsigned ticks)
@@ -475,20 +481,45 @@ public:
 		wintex.pDrawable->texture = WIN_TEXTURE;
 		wintex.pAnimator = newAnimator(AnimatorComponent({ 1, 1 }));
 
+		pointsOffset[0] = glm::vec2(-230, 135);
+		pointsOffset[1] = glm::vec2(230, 135);
+		pointsOffset[2] = glm::vec2(230, -110);
+		pointsOffset[3] = glm::vec2(-230, -110);
+
 		for (int i = 0; i < numberPlayers; ++i) {
-			EntityId points("points", i);
-			decltype(auto) pointInd = entities[points];
-			pointInd.pDrawable = newGraphics(GraphicalComponent::makeRect(10, 8, { 1, 1, 1 }, 1.0f));
-			pointInd.pDrawable->texture = SKULL_COIN;
-			pointInd.pAnimator = newAnimator(AnimatorComponent({ 9, 9 }));
-			pointInd.pDrawable->visible = true;
+			EntityId pointA("pointA", i);
+			decltype(auto) pointAInd = entities[pointA];
+			pointAInd.pDrawable = newGraphics(GraphicalComponent::makeRect(10, 8, { 1, 1, 1 }, 1.0f));
+			pointAInd.pDrawable->texture = SKULL_COIN;
+			pointAInd.pAnimator = newAnimator(AnimatorComponent({ 9, 9 }));
+			pointAInd.pAnimator->switchAnimState(1);
+			pointAInd.pAnimator->frameDelay = 16;
+			pointAInd.pDrawable->visible = true;
+
+			EntityId pointB("pointB", i);
+			decltype(auto) pointBInd = entities[pointB];
+			pointBInd.pDrawable = newGraphics(GraphicalComponent::makeRect(10, 8, { 1, 1, 1 }, 1.0f));
+			pointBInd.pDrawable->texture = SKULL_COIN;
+			pointBInd.pAnimator = newAnimator(AnimatorComponent({ 9, 9 }));
+			pointBInd.pAnimator->switchAnimState(1);
+			pointBInd.pAnimator->frameDelay = 16;
+			pointBInd.pDrawable->visible = true;
+
+			EntityId pointC("pointC", i);
+			decltype(auto) pointCInd = entities[pointC];
+			pointCInd.pDrawable = newGraphics(GraphicalComponent::makeRect(10, 8, { 1, 1, 1 }, 1.0f));
+			pointCInd.pDrawable->texture = SKULL_COIN;
+			pointCInd.pAnimator = newAnimator(AnimatorComponent({ 9, 9 }));
+			pointCInd.pAnimator->switchAnimState(1);
+			pointCInd.pAnimator->frameDelay = 16;
+			pointCInd.pDrawable->visible = true;
 
 			EntityId ammo("ammo", i);
 			decltype(auto) ammoInd = entities[ammo];
 			ammoInd.pDrawable = newGraphics(GraphicalComponent::makeRect(26, 8, { 1, 1, 1 }, 1.0f));
 			ammoInd.pDrawable->texture = AMMO_COUNTER;
 			ammoInd.pAnimator = newAnimator(AnimatorComponent({ 1, 1, 1, 1, 1, 1, 1 }));
-			pointInd.pDrawable->visible = true;
+			ammoInd.pDrawable->visible = false;
 		}
 
 		listeners.push_back([this](const InputManager& inmn) {
@@ -563,7 +594,9 @@ public:
 		}
 		for (uint16_t i = 0; i < numberPlayers; ++i) {
 			glm::vec2 position = entities[{"player", i}].position;
-			entities[{"points", i}].position = glm::vec2(position.x + 10, position.y + 10);
+			entities[{"pointA", i}].position = pointsOffset[i];
+			entities[{"pointB", i}].position = glm::vec2( pointsOffset[i].x, pointsOffset[i].y-8);
+			entities[{"pointC", i}].position = glm::vec2(pointsOffset[i].x, pointsOffset[i].y-16);
 			entities[{"ammo", i}].position = glm::vec2(position.x, position.y + 20);
 		}
 
@@ -752,6 +785,17 @@ public:
 					if (p.awardPoint(i) == maxPoints) {
 						gameOverSequence();
 						break;
+					}
+
+					switch (p.points)
+					{
+					case 1: entities[{"pointA", (uint16_t)i}].pAnimator->switchAnimState(0);
+						break;
+					case 2: entities[{"pointB", (uint16_t)i}].pAnimator->switchAnimState(0);
+						break;
+					case 3: entities[{"pointC", (uint16_t)i}].pAnimator->switchAnimState(0);
+						break;
+
 					}
 				}
 			}
@@ -1078,6 +1122,16 @@ inline void LevelScene::player_input(const InputManager& mngr, EntityId eid, int
     {
 
     }
+
+	// Handle Duck input on button X
+	if (mngr.gamepads.wasButtonPressed(pindex, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
+	{
+		entities[{"ammo", (uint16_t)pindex}].pDrawable->visible = true;
+	}
+	if (mngr.gamepads.wasButtonReleased(pindex, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
+	{
+		entities[{"ammo", (uint16_t)pindex}].pDrawable->visible = false;
+	}
 
     //float rTrigger = mngr.gamepads.rightTrigger( pindex );
 
