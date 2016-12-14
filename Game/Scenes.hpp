@@ -727,6 +727,7 @@ public:
 			{
 				Player& p = players[i];
 				if (p.alive) {
+					//printf("\n%d: %f", i, p.points);
 					if (p.awardPoint(i) == maxPoints) {
 						gameOverSequence();
 						break;
@@ -746,8 +747,11 @@ public:
 
 		if (drawDetected()) {
 			printf("IT'S A DRAW... MULLIGAN!");
-			for each (Player& p in players)
-				p.respawn();
+			pAudioEngine->playEvent("event:/Desperado/Draw");
+			for each (Player& p in players) {
+				if(p.active)
+					p.respawn();
+			}
 		}
 
 		int max = 0;
@@ -764,9 +768,9 @@ public:
 	bool drawDetected() {
 		int totalBullets = 0;
 
-		for each (Player& p in players)
-			if (p.alive)
-				totalBullets += p.bulletCount;
+		for (int i = 0; i < numberPlayers; ++i)
+			if (players[i].alive)
+				totalBullets += players[i].bulletCount;
 
 		return totalBullets == 0 && Player::deadPlayers < numberPlayers - 1;
 	}

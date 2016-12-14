@@ -190,17 +190,7 @@ public:
 		if (!active)
 			return;
 
-		if (respawning > 0) {
-			respawning--;
-			if ((respawning / 8) % 2 == 0) {
-				gfx->visible = true;
-				arm_gfx->visible = true;
-			}
-			else {
-				gfx->visible = false;
-				arm_gfx->visible = false;
-			}
-		}
+		
 
 		//Determine Player state
 		Vec2 vel = psx->GetLinearVelocity();
@@ -319,6 +309,22 @@ public:
 			else
 				delay--;
 		}
+
+		if (respawning > 0) {
+			respawning--;
+			if ((respawning / 8) % 2 == 0) {
+				gfx->visible = true;
+				
+				if(aiming)
+					arm_gfx->visible = true;
+			}
+			else {
+				gfx->visible = false;
+
+				if(aiming)
+					arm_gfx->visible = false;
+			}
+		}
 	}
 
 	//called when player is killed
@@ -336,21 +342,22 @@ public:
 	void respawn() {
 
 		reload();
-		Player::deadPlayers--;
+		Player::deadPlayers = 0;
 		respawning = 120;
 
-		currentState = IDLE;
-		anim->switchAnimState(IDLE);
+		currentState = PlayerState::IN_AIR;
+		//anim->switchAnimState(IDLE);
 		active = true;
 		alive = true;
-		falling = false;
+		falling = true;
+		doubleJump = 0;
 
 		b2Filter filter = b2Filter();
 		filter.categoryBits = PLAYER;
 		filter.maskBits = PLATFORM | BULLET | PLAYER;
 		psx->GetFixtureList()->SetFilterData(filter);
 
-		arm_gfx->color = glm::vec4(1,1,1,1);
+		//arm_gfx->color = glm::vec4(1,1,1,1);
 
 		psx->SetTransform(spawnPoint, 0);
 	}
