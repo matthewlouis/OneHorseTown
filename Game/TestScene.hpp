@@ -414,24 +414,6 @@ public:
     {
         LevelScene::init( ticks );
 
-        odin::load_texture< GLubyte[4] >( NULL_TEXTURE, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF } );
-		odin::load_texture(GROUND1, "Textures/ground.png");
-		odin::load_texture(BARREL, "Textures/barrel.png");
-		odin::load_texture(PLAYER1_TEXTURE, "Textures/CowboySS.png");
-		odin::load_texture(PLAYER2_TEXTURE, "Textures/cowboy_r.png");
-		odin::load_texture(PLAYER3_TEXTURE, "Textures/cowboy_g.png");
-		odin::load_texture(PLAYER4_TEXTURE, "Textures/cowboy_b.png");
-		odin::load_texture(ARM_TEXTURE, "Textures/ArmSS.png");
-		odin::load_texture(BACKGROUND, "Textures/background.png");
-		odin::load_texture(BULLET_TEXTURE, "Textures/bullet.png");
-		odin::load_texture(WIN_TEXTURE, "Textures/win.png");
-		odin::load_texture(READY_TEXTURE, "Textures/readytext.png");
-		odin::load_texture(AMMO_COUNTER, "Textures/ammocounter.png");
-		odin::load_texture(SKULL_COIN, "Textures/skullcoin.png");
-
-		//background animation
-		odin::load_texture(BACKGROUND_ANIM, "Textures/sunrisebg.png");
-
         Entity2& bg = entities[ EntityId( 0 ) ];
         bg.pDrawable = newGraphics( GraphicalComponent::makeRect( width, height ) );
 		bg.pDrawable->texture = BACKGROUND_ANIM;
@@ -586,5 +568,26 @@ public:
         //pAudioEngine->toggleMute(); //mute audio
         #endif
 	}
+
+    void resume( unsigned tick ) override
+    {
+        odin::load_texture< GLubyte[4] >( NULL_TEXTURE, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF } );
+        odin::load_texture(GROUND1, "Textures/ground.png");
+        odin::load_texture(BARREL, "Textures/barrel.png");
+        odin::load_texture(PLAYER1_TEXTURE, "Textures/CowboySS.png");
+        odin::load_texture(PLAYER2_TEXTURE, "Textures/cowboy_r.png");
+        odin::load_texture(PLAYER3_TEXTURE, "Textures/cowboy_g.png");
+        odin::load_texture(PLAYER4_TEXTURE, "Textures/cowboy_b.png");
+        odin::load_texture(ARM_TEXTURE, "Textures/ArmSS.png");
+        odin::load_texture(BACKGROUND, "Textures/background.png");
+        odin::load_texture(BULLET_TEXTURE, "Textures/bullet.png");
+        odin::load_texture(WIN_TEXTURE, "Textures/win.png");
+        odin::load_texture(READY_TEXTURE, "Textures/readytext.png");
+        odin::load_texture(AMMO_COUNTER, "Textures/ammocounter.png");
+        odin::load_texture(SKULL_COIN, "Textures/skullcoin.png");
+
+        //background animation
+        odin::load_texture(BACKGROUND_ANIM, "Textures/sunrisebg.png");
+    }
 
 };
