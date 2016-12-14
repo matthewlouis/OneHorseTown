@@ -38,6 +38,8 @@ enum Textures {
     PLAYER_1_CARD,
     PLAYER_2_CARD,
     PLAYER_3_CARD,
+	AMMO_COUNTER,
+	SKULL_COIN
 };
 
 // Where the entity is positioned relative to

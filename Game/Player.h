@@ -87,7 +87,8 @@ public:
                b2Body *psx,
 			  GraphicalComponent *arm_gfx, 
 			  AnimatorComponent *arm_anim,
-               b2Body *arm_psx) {
+               b2Body *arm_psx)
+		{
 		if (active)
 			return;
 
@@ -319,6 +320,7 @@ public:
 			else
 				delay--;
 		}
+
 	}
 
 	//called when player is killed
