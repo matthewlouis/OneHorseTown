@@ -134,6 +134,7 @@ public:
 
 			if (Player::deadPlayers >= Player::totalPlayers - 1 && Player::lastShooterPoints == 2) { //if last player
 				player->focus = true;
+				printf("\n**focus**\n");
 			}
         }
     }
@@ -434,6 +435,7 @@ public:
 		, uSilhoutte(glGetUniformLocation(program, "uSilhoutte"))
 		, uInteractive(glGetUniformLocation(program, "uInteractive"))
     {
+		Player::totalPlayers = numberPlayers;
     }
 
 	void init(unsigned ticks)
