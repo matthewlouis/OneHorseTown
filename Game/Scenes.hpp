@@ -475,6 +475,22 @@ public:
 		wintex.pDrawable->texture = WIN_TEXTURE;
 		wintex.pAnimator = newAnimator(AnimatorComponent({ 1, 1 }));
 
+		for (int i = 0; i < numberPlayers; ++i) {
+			EntityId points("points", i);
+			decltype(auto) pointInd = entities[points];
+			pointInd.pDrawable = newGraphics(GraphicalComponent::makeRect(10, 8, { 1, 1, 1 }, 1.0f));
+			pointInd.pDrawable->texture = SKULL_COIN;
+			pointInd.pAnimator = newAnimator(AnimatorComponent({ 9, 9 }));
+			pointInd.pDrawable->visible = true;
+
+			EntityId ammo("ammo", i);
+			decltype(auto) ammoInd = entities[ammo];
+			ammoInd.pDrawable = newGraphics(GraphicalComponent::makeRect(26, 8, { 1, 1, 1 }, 1.0f));
+			ammoInd.pDrawable->texture = AMMO_COUNTER;
+			ammoInd.pAnimator = newAnimator(AnimatorComponent({ 1, 1, 1, 1, 1, 1, 1 }));
+			pointInd.pDrawable->visible = true;
+		}
+
 		listeners.push_back([this](const InputManager& inmn) {
 			if (inmn.wasKeyPressed(SDLK_g)) {
 				entities["wintex"].position.x -= 10;
@@ -544,6 +560,11 @@ public:
 				pAudioEngine->playEvent(p.soundEvent.event); //play it
 				p.soundEvent = {}; //reset soundevent
 			}
+		}
+		for (uint16_t i = 0; i < numberPlayers; ++i) {
+			glm::vec2 position = entities[{"player", i}].position;
+			entities[{"points", i}].position = glm::vec2(position.x + 10, position.y + 10);
+			entities[{"ammo", i}].position = glm::vec2(position.x, position.y + 20);
 		}
 
 
@@ -986,7 +1007,7 @@ inline void LevelScene::player_input(const InputManager& mngr, EntityId eid, int
     b2Body& body = *ntt.pBody;
     GraphicalComponent& gfx = *ntt.pDrawable;
     AnimatorComponent& anim = *ntt.pAnimator;
-    
+
 	if (!players[pindex].active)
 		players[pindex].init(&gfx, &anim, &body, &arm_gfx, &arm_anim, arm_ntt.pBody);
 
@@ -1162,6 +1183,8 @@ inline void LevelScene::fireBullet(Vec2 position, odin::Direction8Way direction,
 	Player::lastShooterPoints = players[pIndex].points;
 
 	players[pIndex].bulletCount--;
+
+	entities[{"ammo", (uint16_t)pIndex}].pAnimator->switchAnimState(7 - (players[pIndex].bulletCount+1));
 
 	float length = 100.f;
 	float rotation = 0;

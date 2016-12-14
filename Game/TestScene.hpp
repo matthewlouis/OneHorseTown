@@ -18,14 +18,6 @@ using odin::Entity;
 using odin::EntityId;
 using odin::Scene;
 
-struct ParticleDeleter
-{
-    unsigned deleteBy;
-
-    unsigned short firstDelete;
-    unsigned short lastDelete;
-};
-
 struct Particle
 {
     float     lifetime;
@@ -54,19 +46,6 @@ struct Particle
         p.lifetime -= step;
         p.position.x += p.velocity.x * step;
         p.position.y += p.velocity.y * step;
-    }
-};
-
-template< typename T >
-struct Fuzzy
-{
-    T value;
-    float variance = 0;
-
-    T resolve() const
-    {
-        float r = variance * ((std::rand() - (RAND_MAX / 2)) / float( RAND_MAX / 2 ));
-        return value * (1 + r);
     }
 };
 
@@ -245,21 +224,6 @@ public:
     }
 };
 
-class ParticleSystem
-{
-public:
-
-    std::vector< ParticleEmitter > emitters;
-
-    void update( float timeStep )
-    {
-        for ( auto& emitter : emitters )
-            emitter.update( timeStep );
-
-
-    }
-};
-
 class TestScene
     : public LevelScene
 {
@@ -299,10 +263,7 @@ public:
 
     std::vector< ParticleEmitter > emitters;
 
-    OpenCLKernel< Particle*, float > updater0;
-    //OpenCLKernel< Particle*, float > updater1;
-    //OpenCLKernel< Particle*, float > updater2;
-    //OpenCLKernel< Particle*, float > updater3;
+    //OpenCLKernel< Particle*, float > updater0;
 
     std::array< int, MAX_PLAYERS > controllerRedirect;
 
@@ -313,10 +274,7 @@ public:
                           begin( playerDat ),
                           end( playerDat ),
                           -1 ) )
-        , updater0( "ParticleSystem.cl" )
-        //, updater1( "ParticleSystem.cl" )
-        //, updater2( "ParticleSystem.cl" )
-        //, updater3( "ParticleSystem.cl" )
+        //, updater0( "ParticleSystem.cl" )
         , controllerRedirect( playerDat )
 	{
 	}
@@ -468,8 +426,8 @@ public:
 		odin::load_texture(BULLET_TEXTURE, "Textures/bullet.png");
 		odin::load_texture(WIN_TEXTURE, "Textures/win.png");
 		odin::load_texture(READY_TEXTURE, "Textures/readytext.png");
-		//odin::load_texture(AMMO_COUNTER, "Textures/ammocounter.png");
-		//odin::load_texture(SKULL_COIN, "Textures/skullcoin.png");
+		odin::load_texture(AMMO_COUNTER, "Textures/ammocounter.png");
+		odin::load_texture(SKULL_COIN, "Textures/skullcoin.png");
 
 		//background animation
 		odin::load_texture(BACKGROUND_ANIM, "Textures/sunrisebg.png");
@@ -541,63 +499,7 @@ public:
             ++i;
         }
 
-  //      if ( controllerRedirect[ 0 ] != -1 )
-  //      {
-  //          uint16_t cidx = controllerRedirect[ 0 ];
-
-  //      odin::make_player( this, {"player", cidx}, {-22, 11.4f}, cidx );
-		//EntityPlayer * ep1 = (EntityPlayer *) entities[{"player", cidx}].base();
-		//ep1->player = &players[cidx];
-  //      listeners.push_back( [this, cidx]( const InputManager& inmn ) {
-  //          return player_input( inmn, {"player", cidx}, cidx );
-  //      } );
-  //      }
-		////players[0] = EntityView({ "player", 0 }, this);
-
-
-		//// create player 2
-  //      if ( controllerRedirect[ 1 ] != -1 )
-  //      {
-  //          uint16_t cidx = controllerRedirect[ 1 ];
-		//odin::make_player(this, { "player", cidx }, { 22, 11.4f },cidx);
-		//EntityPlayer * ep2 = (EntityPlayer *)entities[{ "player", cidx }].base();
-	 //   ep2->player = &players[cidx];
-		//listeners.push_back([this, cidx](const InputManager& inmn) {
-		//	return player_input(inmn, { "player", cidx }, cidx);
-		//});
-  //      }
-
-		////players[1] = EntityView({ "player", 1 }, this);
-		//// create player 3
-  //      if ( controllerRedirect[ 2 ] != -1 )
-  //      {
-  //          uint16_t cidx = controllerRedirect[ 2 ];
-		//odin::make_player(this, { "player", cidx }, { 22, -12 }, cidx);
-		//EntityPlayer * ep3 = (EntityPlayer *)entities[{ "player", cidx }].base();
-		//ep3->player = &players[cidx];
-		//listeners.push_back([this, cidx](const InputManager& inmn) {
-		//	return player_input(inmn, { "player", cidx }, cidx);
-		//});
-  //      }
-		////players[2] = EntityView({ "player", 2 }, this);
-
-		//// create player 4
-  //      if ( controllerRedirect[ 3 ] != -1 )
-  //      {
-  //          uint16_t cidx = controllerRedirect[ 3 ];
-		//odin::make_player(this, { "player", cidx }, { -22, -12 }, cidx);
-		//EntityPlayer * ep4 = (EntityPlayer *)entities[{ "player", cidx }].base();
-		//ep4->player = &players[cidx];
-		//listeners.push_back([this, cidx](const InputManager& inmn) {
-		//	return player_input(inmn, { "player", cidx }, cidx);
-		//});
-  //      }
-		//players[3] = EntityView({ "player", 3 }, this);
-
-        //odin::make_horse( this, "horse", {0.0f, 5.f} );
-
-
-		//Setup level
+        //Setup level
 		odin::make_platform(this, "plat01", 30, {-240 ,-144}); // bottom floor
 		//odin::make_platform(this, "plat02", 6, { -48,-90 }); // center lower platform
 		odin::make_platform(this, "plat03", 4, { -32,-40 }); // center mid-lower platform
