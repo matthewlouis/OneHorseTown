@@ -49,7 +49,7 @@ public:
     template< typename ValueType >
     using EntityMap = odin::BinarySearchMap< EntityId, ValueType >;
 
-    static constexpr size_t COMP_MAX = 50;
+    static constexpr size_t COMP_MAX = 20;
 
     template< typename T >
     using Components = TypedAllocator< T, COMP_MAX >;

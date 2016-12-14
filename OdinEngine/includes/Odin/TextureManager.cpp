@@ -56,7 +56,7 @@ GLuint odin::load_texture( int index, int width, int height, void* data )
     //glGenerateMipmap( GL_TEXTURE_2D );
 
     // CAN'T BELIEVE I FORGOT THIS
-    glActiveTexture( GL_TEXTURE0 );
+    glActiveTexture( GL_TEXTURE0 + odin::NUM_TEX_UNITS );
     glBindTexture( GL_TEXTURE_2D, 0 );
 
     return texture_units[ index ];
