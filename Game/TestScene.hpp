@@ -470,6 +470,7 @@ public:
 		odin::load_texture(READY_TEXTURE, "Textures/readytext.png");
 		odin::load_texture(AMMO_COUNTER, "Textures/ammocounter.png");
 		odin::load_texture(SKULL_COIN, "Textures/skullcoin.png");
+		odin::load_texture(EMPTY_COIN, "Textures/emptycoin.png");
 
 		//background animation
 		odin::load_texture(BACKGROUND_ANIM, "Textures/sunrisebg.png");
